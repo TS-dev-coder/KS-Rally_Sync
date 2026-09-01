@@ -472,3 +472,154 @@ maybe('editing a target field does not clobber its other fields', async () => {
     assert.strictEqual(saved.name, 'Outpost');
   } finally { teardown(ctx); }
 });
+
+// ---------------------------------------------------------------------------
+// Field-by-field persistence audit. Every editable control in the app is
+// driven the way a person drives it — set the value, fire the event the
+// handler listens for — and then read back from state. This exists because a
+// stale-closure bug silently dropped edits, and speculation is a poor way to
+// find the rest.
+// ---------------------------------------------------------------------------
+
+function fire(ctx, node, type) {
+  node.dispatchEvent(new ctx.window.Event(type, { bubbles: true }));
+}
+
+function labelled(ctx, text) {
+  return ctx.window.document.querySelectorAll('.card-body .field, .card-body .grid-2 .field');
+}
+
+/** Finds the input whose .field-label matches, inside the open card body. */
+function fieldInput(ctx, labelText) {
+  const fields = ctx.window.document.querySelectorAll('.card-body .field');
+  for (const f of fields) {
+    const label = f.querySelector('.field-label');
+    if (label && label.textContent.trim().toLowerCase() === labelText.toLowerCase()) {
+      return f.querySelector('.input');
+    }
+  }
+  return null;
+}
+
+maybe('every Leads field persists when edited one after another', async () => {
+  const ctx = await boot();
+  try {
+    const { state } = ctx.RS;
+    const lead = state.upsertLead({ name: 'Start' });
+    ctx.RS.app.go('roster');
+    ctx.window.document.querySelector('.card-summary').click();
+
+    const edits = [
+      ['Name', 'Beast'],
+      ['X', '536'],
+      ['Y', '740'],
+      ['March Speed Up %', '88'],
+      ['Alliance', 'VNG'],
+      ['Squad', 'Wave 2'],
+      ['Rally capacity', '135000'],
+      ['March power', '48200000']
+    ];
+
+    for (const [label, value] of edits) {
+      const input = fieldInput(ctx, label);
+      assert.ok(input, 'no input found for field: ' + label);
+      input.value = value;
+      fire(ctx, input, 'change');
+    }
+
+    const saved = state.findLead(lead.id);
+    assert.strictEqual(saved.name, 'Beast');
+    assert.strictEqual(saved.x, 536);
+    assert.strictEqual(saved.y, 740);
+    assert.strictEqual(saved.marchSpeedUpPercent, 88);
+    assert.strictEqual(saved.alliance, 'VNG');
+    assert.strictEqual(saved.squad, 'Wave 2');
+    assert.strictEqual(saved.rallyCapacity, 135000);
+    assert.strictEqual(saved.power, 48200000);
+  } finally { teardown(ctx); }
+});
+
+maybe('every Targets field persists when edited one after another', async () => {
+  const ctx = await boot();
+  try {
+    const { state } = ctx.RS;
+    const target = state.upsertTarget({ name: 'Start', zoneKey: 'general' });
+    ctx.RS.app.go('targets');
+    const cards = ctx.window.document.querySelectorAll('.card-summary');
+    cards[cards.length - 1].click();
+
+    for (const [label, value] of [['Name', 'Sanctuary'], ['X', '604'], ['Y', '455']]) {
+      const input = fieldInput(ctx, label);
+      input.value = value;
+      fire(ctx, input, 'change');
+    }
+
+    const zone = fieldInput(ctx, 'Zone model');
+    zone.value = 'ruins';
+    fire(ctx, zone, 'change');
+
+    const window_ = fieldInput(ctx, 'Rally window (minutes)');
+    window_.value = '10';
+    fire(ctx, window_, 'change');
+
+    const saved = state.findTarget(target.id);
+    assert.strictEqual(saved.name, 'Sanctuary');
+    assert.strictEqual(saved.x, 604);
+    assert.strictEqual(saved.y, 455);
+    assert.strictEqual(saved.zoneKey, 'ruins');
+    assert.strictEqual(saved.gatherSeconds, 600, 'minutes must be stored as seconds');
+  } finally { teardown(ctx); }
+});
+
+maybe('zone constants persist and a cleared field does not become zero', async () => {
+  const ctx = await boot();
+  try {
+    const { state } = ctx.RS;
+
+    // Calibrate re-renders itself after every change, and the open zone stays
+    // open across renders — so each edit just needs a fresh node lookup.
+    ctx.RS.app.go('calibrate');
+    ctx.window.document.querySelectorAll('.card-summary')[0].click();
+
+    const perTile = fieldInput(ctx, 'Seconds per tile');
+    perTile.value = '4.5';
+    fire(ctx, perTile, 'change');
+    assert.strictEqual(state.findZone('general').constants.secPerTile, 4.5);
+
+    const offset = fieldInput(ctx, 'Fixed offset (s)');
+    offset.value = '2.5';
+    fire(ctx, offset, 'change');
+
+    let zone = state.findZone('general');
+    assert.strictEqual(zone.constants.offset, 2.5);
+    assert.strictEqual(zone.constants.secPerTile, 4.5, 'editing the offset must not reset the rate');
+
+    // Clearing the field must not silently mean "zero seconds per tile".
+    const cleared = fieldInput(ctx, 'Seconds per tile');
+    cleared.value = '';
+    fire(ctx, cleared, 'change');
+    assert.strictEqual(state.findZone('general').constants.secPerTile, 4.5,
+      'an empty rate field must be ignored, not stored as zero — zero makes every march instant');
+  } finally { teardown(ctx); }
+});
+
+maybe('settings fields persist', async () => {
+  const ctx = await boot();
+  try {
+    const { state } = ctx.RS;
+    ctx.RS.app.go('settings');
+
+    const inputs = ctx.window.document.querySelectorAll('.panel .input');
+    const clock = inputs[0];
+    clock.value = '-1.5';
+    fire(ctx, clock, 'change');
+    assert.strictEqual(state.data.settings.clockOffsetSeconds, -1.5);
+
+    ctx.RS.app.go('settings');
+    const buffer = ctx.window.document.querySelectorAll('.panel .input')[1];
+    buffer.value = '4';
+    fire(ctx, buffer, 'change');
+    assert.strictEqual(state.data.settings.safetyBufferSeconds, 4);
+    assert.strictEqual(state.data.settings.clockOffsetSeconds, -1.5, 'clock offset must survive');
+  } finally { teardown(ctx); }
+});

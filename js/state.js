@@ -325,10 +325,16 @@
     return { ok: true, fit: fit, reason: null };
   }
 
-  /** Drops any non-numeric edit so a cleared input cannot poison the model. */
+  /**
+   * Drops any non-numeric edit so a cleared input cannot poison the model.
+   * Blank counts as non-numeric: Number('') is 0, and a zero seconds-per-tile
+   * would silently make every march instant.
+   */
   function assignNumeric(targetObject, changes) {
     Object.keys(changes).forEach(function (key) {
-      var value = Number(changes[key]);
+      var raw = changes[key];
+      if (raw === null || raw === undefined || String(raw).trim() === '') return;
+      var value = Number(raw);
       if (isFinite(value)) targetObject[key] = value;
     });
   }

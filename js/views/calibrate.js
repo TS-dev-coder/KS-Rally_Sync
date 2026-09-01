@@ -188,7 +188,7 @@
         type: 'number', step: '0.001', inputmode: 'decimal',
         value: String(zone.constants.secPerTile),
         onchange: function (e) {
-          S.updateZone(zone.zoneKey, { constants: { secPerTile: Number(e.target.value) } });
+          S.updateZone(zone.zoneKey, { constants: { secPerTile: e.target.value } });
           root.RallySync.app.refresh();
         }
       })),
@@ -196,7 +196,7 @@
         type: 'number', step: '0.1', inputmode: 'decimal',
         value: String(zone.constants.offset),
         onchange: function (e) {
-          S.updateZone(zone.zoneKey, { constants: { offset: Number(e.target.value) } });
+          S.updateZone(zone.zoneKey, { constants: { offset: e.target.value } });
           root.RallySync.app.refresh();
         }
       }))
@@ -285,7 +285,7 @@
       value: String(zone.segmented[key]),
       onchange: function (e) {
         var changes = {};
-        changes[key] = Number(e.target.value);
+        changes[key] = e.target.value;
         S.updateZone(zone.zoneKey, { segmented: changes });
         root.RallySync.app.refresh();
       }

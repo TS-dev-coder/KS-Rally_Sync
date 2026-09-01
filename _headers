@@ -1,0 +1,22 @@
+# Cloudflare Pages headers.
+#
+# The app is plain files with no build step, so nothing is content-hashed and a
+# filename can never prove it is current. Caching hard would therefore risk the
+# exact failure this replaced: new HTML paired with old JavaScript.
+#
+# So everything revalidates. That is far cheaper than it sounds — the browser
+# sends its ETag, Cloudflare answers 304 Not Modified in a couple of hundred
+# bytes, and only genuinely changed files transfer. In return a deploy is live
+# the moment it finishes, with no cache window at all.
+
+/*
+  Cache-Control: public, max-age=0, must-revalidate
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer
+  X-Frame-Options: SAMEORIGIN
+
+# A share link carries one person's slot in the fragment, which never leaves the
+# browser. Belt and braces: keep referrers off these too.
+/index.html
+  Cache-Control: public, max-age=0, must-revalidate
+  Referrer-Policy: no-referrer

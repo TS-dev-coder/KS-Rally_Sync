@@ -16,6 +16,29 @@ It also hosts anywhere static (GitHub Pages, Netlify, Cloudflare Pages) — just
 folder. On a phone, use **Add to Home Screen**: iOS wipes website storage after 7 days of
 non-use, and installed web apps are exempt from that.
 
+### Deploying to Cloudflare Pages (recommended)
+
+Connect this repository once and every push to `main` is live in roughly 10–30 seconds,
+with the CDN purged as part of the deploy — no cache window to wait out.
+
+In the Cloudflare dashboard: **Workers & Pages → Create → Pages → Connect to Git**, pick
+this repository, then:
+
+| Setting | Value |
+|---|---|
+| Framework preset | None |
+| Build command | *(leave empty)* |
+| Build output directory | `/` |
+| Root directory | `/` |
+
+There is no build step — Cloudflare just serves the repository as it stands.
+
+The `_headers` file makes every response revalidate rather than sit in a cache. That sounds
+expensive and is not: the browser sends its ETag and gets a ~200 byte `304 Not Modified`
+back unless the file genuinely changed. Because nothing here is content-hashed, a filename
+can never prove it is current, and caching hard would risk serving new HTML alongside old
+JavaScript.
+
 ### Deploying to GitHub Pages
 
 Pushing to `main` is all that is needed; the empty `.nojekyll` file tells Pages to serve the

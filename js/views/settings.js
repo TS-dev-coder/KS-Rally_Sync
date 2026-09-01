@@ -27,10 +27,47 @@
       message = null;
     }
 
+    container.appendChild(themeSection());
     container.appendChild(clockSection());
     container.appendChild(bufferSection());
     container.appendChild(backupSection());
     container.appendChild(aboutSection());
+  }
+
+  // ------------------------------------------------------------------- theme
+
+  function themeSection() {
+    var current = S.data.settings.theme || 'system';
+    var section = el('section.panel');
+    section.appendChild(el('div.panel-head', {}, [
+      el('h2.panel-title', { text: 'Appearance' })
+    ]));
+    section.appendChild(el('p.panel-note', {
+      text: 'Follows your device by default. Dark uses layered dark greys rather than pure black, which is easier on the eyes during a long night event.'
+    }));
+
+    var options = [
+      ['system', 'System', 'theme-swatch-system'],
+      ['light', 'Light', 'theme-swatch-light'],
+      ['dark', 'Dark', 'theme-swatch-dark']
+    ];
+
+    section.appendChild(el('div.theme-row', {}, options.map(function (opt) {
+      return el('button.theme-btn' + (current === opt[0] ? ' is-selected' : ''), {
+        type: 'button',
+        'aria-pressed': current === opt[0] ? 'true' : 'false',
+        onclick: function () {
+          S.updateSettings({ theme: opt[0] });
+          root.RallySync.app.applyTheme(opt[0]);
+          root.RallySync.app.refresh();
+        }
+      }, [
+        el('span.theme-swatch.' + opt[2]),
+        el('span', { text: opt[1] })
+      ]);
+    })));
+
+    return section;
   }
 
   // -------------------------------------------------------------------- clock

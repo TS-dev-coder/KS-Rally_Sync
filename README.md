@@ -18,14 +18,34 @@ non-use, and installed web apps are exempt from that.
 
 ## Use it
 
-1. **Leads** — add each player who opens rallies: name, city X/Y, March Speed Up %.
-2. **Targets** — fill in your kingdom's Castle and turret coordinates once.
-3. **Calculate** — pick a target, pick who is marching, set the landing time. Launch times
-   appear immediately, sorted by who has to act first, with a live countdown each.
-4. **Copy for Discord** — pastes a monospaced table into chat.
+1. **Leads** — add each player who opens rallies: name, city X/Y, March Speed Up %. Paste a
+   whole roster at once, or tap coordinates on a map instead of typing them.
+2. **Targets** — fill in your kingdom's coordinates once. Castle, turrets, Ruins, Sanctuary,
+   Fortress and Outpost come preloaded.
+3. **Calculate** — set a base time, choose how long after it marches should land, pick who is
+   going. Launch times appear immediately, sorted by who acts first, each with a countdown.
+4. **Share** — copy a table for Discord, or send each person a link that shows only their own
+   countdown.
 
-Every screen with a game value on it has a collapsible **"Where do I find this?"** panel
-with the in-game steps.
+Every screen with a game value on it has a collapsible **"Where do I find this?"** panel with
+the in-game steps.
+
+## Features
+
+- **Base time, not "now"** — anchor the plan to the moment your alliance agreed on, and the
+  times stop drifting with the clock.
+- **Sync or Sequence** — land together, or stagger by a set gap (Sanctuary and Fortress
+  pushes usually want 10–15s).
+- **Multiple targets in one run** — part of the roster on the Castle, the rest on a turret.
+- **Alliance and squad grouping** — tag leads, select a whole group in one tap, and group the
+  results by alliance, squad or target with committed power per group.
+- **Rally capacity and power** — optional, and never part of the timing math.
+- **Event setups** — save a named target/roster/mode combination and reload it next event.
+- **Alarm** — sound and vibration before your launch, plus a full-screen GO countdown.
+- **Per-person share links** — the whole plan rides in the URL fragment, so nothing is
+  uploaded anywhere and the recipient needs no setup.
+- **Drag to reorder** — sequence order by drag handle or arrow keys.
+- **Light and dark** — follows your system by default.
 
 ## Accuracy
 
@@ -53,6 +73,7 @@ be hand-tuned or reset to its research default.
 ## Timing chain
 
 ```
+base time  +  offset      = landing time
 landing time
   − march time          (measured, or from the zone formula)
   = departure time
@@ -71,11 +92,18 @@ seconds off silently ruins every result.
 index.html               markup and script order
 css/styles.css           the whole design system
 js/dom.js                DOM and time-formatting helpers
+js/icons.js              inline SVG icon set
 js/zones.js              zone definitions and default constants
 js/calculations.js       pure march-time and launch-time math
+js/roster-import.js      parses a pasted roster
+js/share.js              encodes one person's slot into a link
+js/alarm.js              WebAudio tones and vibration
 js/storage.js            localStorage with a memory fallback
 js/state.js              app state and persistence
 js/guide.js              in-game "where to find this" instructions
+js/mappicker.js          tap-a-map coordinate picker
+js/focus.js              full-screen single-person countdown
+js/dragorder.js          pointer-based drag reordering
 js/views/*.js            one file per screen
 js/app.js                bootstrap, tabs, one-second heartbeat
 tests/                   node --test suite

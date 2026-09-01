@@ -16,7 +16,7 @@
     {
       key: 'general',
       label: 'Open map',
-      blurb: 'Normal kingdom map with no known obstruction.'
+      blurb: 'Free-form world map with no known obstruction. Use this for Outposts, Sanctuaries, Fortresses and any other structure outside the Castle Forbidden Zone.'
     },
     {
       key: 'castle_relic',

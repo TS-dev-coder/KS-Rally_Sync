@@ -107,9 +107,7 @@
     }
 
     S.recordMeasurement(lead.id, target.id, seconds);
-    var zoneKey = lead.crossesRelic
-      ? Z.slowerZone(S.data.zones, target.zoneKey, 'castle_relic')
-      : target.zoneKey;
+    var zoneKey = target.zoneKey;
     var result = S.recalibrateZone(zoneKey);
 
     draft.observed = '';

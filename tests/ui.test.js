@@ -23,8 +23,10 @@ try {
 
 const ROOT = path.join(__dirname, '..');
 const SCRIPTS = [
-  'js/dom.js', 'js/zones.js', 'js/calculations.js', 'js/storage.js',
-  'js/state.js', 'js/guide.js',
+  'js/dom.js', 'js/icons.js', 'js/zones.js', 'js/calculations.js',
+  'js/roster-import.js', 'js/share.js', 'js/alarm.js',
+  'js/storage.js', 'js/state.js', 'js/guide.js',
+  'js/mappicker.js', 'js/focus.js', 'js/dragorder.js',
   'js/views/roster.js', 'js/views/targets.js', 'js/views/calculate.js',
   'js/views/calibrate.js', 'js/views/settings.js', 'js/app.js'
 ];
@@ -110,14 +112,15 @@ maybe('sync mode renders a launch time computed from the zone formula', async ()
     const target = state.upsertTarget({
       name: 'Test Castle', x: 100, y: 0, zoneKey: 'general', gatherSeconds: 300
     });
-    const lead = state.upsertLead({ name: 'Solo', x: 0, y: 0, marchSpeedUpPercent: 0 });
+    const lead = state.upsertLead({ name: 'TS', x: 0, y: 0, marchSpeedUpPercent: 0 });
 
     const landing = Date.now() + 2 * 3600 * 1000;
     state.updateSettings({
       selectedTargetId: target.id,
       selectedLeadIds: [lead.id],
       mode: 'sync',
-      landingMs: landing
+      baseMs: landing,
+      landingOffsetSeconds: 0
     });
 
     ctx.RS.app.go('roster');
@@ -141,21 +144,22 @@ maybe('the slower lead is listed first and the faster lead launches later', asyn
     const target = state.upsertTarget({
       name: 'T', x: 200, y: 0, zoneKey: 'general', gatherSeconds: 300
     });
-    const slow = state.upsertLead({ name: 'Slowpoke', x: 0, y: 0, marchSpeedUpPercent: 0 });
-    const fast = state.upsertLead({ name: 'Speedy', x: 0, y: 0, marchSpeedUpPercent: 120 });
+    const slow = state.upsertLead({ name: 'Beast', x: 0, y: 0, marchSpeedUpPercent: 0 });
+    const fast = state.upsertLead({ name: 'Ash', x: 0, y: 0, marchSpeedUpPercent: 120 });
 
     state.updateSettings({
       selectedTargetId: target.id,
       selectedLeadIds: [fast.id, slow.id], // deliberately out of launch order
       mode: 'sync',
-      landingMs: Date.now() + 2 * 3600 * 1000
+      baseMs: Date.now() + 2 * 3600 * 1000,
+      landingOffsetSeconds: 0
     });
     ctx.RS.app.go('roster');
     ctx.RS.app.go('calculate');
 
     const names = Array.from(ctx.window.document.querySelectorAll('.result-name'))
       .map((n) => n.textContent);
-    assert.deepStrictEqual(names, ['Slowpoke', 'Speedy']);
+    assert.deepStrictEqual(names, ['Beast', 'Ash']);
   } finally { teardown(ctx); }
 });
 
@@ -166,7 +170,7 @@ maybe('a logged march turns that lead exact and refits its zone', async () => {
     const target = state.upsertTarget({
       name: 'Castle', x: 100, y: 0, zoneKey: 'general', gatherSeconds: 300
     });
-    const lead = state.upsertLead({ name: 'Scout', x: 0, y: 0, marchSpeedUpPercent: 0 });
+    const lead = state.upsertLead({ name: 'Irfan', x: 0, y: 0, marchSpeedUpPercent: 0 });
 
     state.recordMeasurement(lead.id, target.id, 240);
     const fit = state.recalibrateZone('general');
@@ -177,7 +181,8 @@ maybe('a logged march turns that lead exact and refits its zone', async () => {
       selectedTargetId: target.id,
       selectedLeadIds: [lead.id],
       mode: 'sync',
-      landingMs: Date.now() + 2 * 3600 * 1000
+      baseMs: Date.now() + 2 * 3600 * 1000,
+      landingOffsetSeconds: 0
     });
     ctx.RS.app.go('roster');
     ctx.RS.app.go('calculate');
@@ -195,13 +200,14 @@ maybe('a lead with no speed set is blocked inline instead of getting a wrong tim
     const target = state.upsertTarget({
       name: 'Castle', x: 100, y: 0, zoneKey: 'general', gatherSeconds: 300
     });
-    const broken = state.upsertLead({ name: 'Nospeed', x: 0, y: 0 });
+    const broken = state.upsertLead({ name: 'Cabo', x: 0, y: 0 });
 
     state.updateSettings({
       selectedTargetId: target.id,
       selectedLeadIds: [broken.id],
       mode: 'sync',
-      landingMs: Date.now() + 2 * 3600 * 1000
+      baseMs: Date.now() + 2 * 3600 * 1000,
+      landingOffsetSeconds: 0
     });
     ctx.RS.app.go('roster');
     ctx.RS.app.go('calculate');
@@ -220,8 +226,8 @@ maybe('sequence mode staggers the displayed landing times by the gap', async () 
     const target = state.upsertTarget({
       name: 'Castle', x: 100, y: 0, zoneKey: 'general', gatherSeconds: 0
     });
-    const a = state.upsertLead({ name: 'A', x: 0, y: 0, marchSpeedUpPercent: 0 });
-    const b = state.upsertLead({ name: 'B', x: 0, y: 0, marchSpeedUpPercent: 0 });
+    const a = state.upsertLead({ name: 'Mike', x: 0, y: 0, marchSpeedUpPercent: 0 });
+    const b = state.upsertLead({ name: 'Irfan', x: 0, y: 0, marchSpeedUpPercent: 0 });
 
     const landing = Date.now() + 2 * 3600 * 1000;
     state.updateSettings({
@@ -229,7 +235,8 @@ maybe('sequence mode staggers the displayed landing times by the gap', async () 
       selectedLeadIds: [a.id, b.id],
       mode: 'sequence',
       gapSeconds: 5,
-      landingMs: landing
+      baseMs: landing,
+      landingOffsetSeconds: 0
     });
     ctx.RS.app.go('roster');
     ctx.RS.app.go('calculate');
@@ -265,12 +272,12 @@ maybe('setup data round-trips through localStorage', async () => {
     assert.strictEqual(storage.available(), true, 'localStorage should be usable here');
 
     const leadId = state.upsertLead({
-      name: 'Persisted', x: 12, y: 34, marchSpeedUpPercent: 45
+      name: 'TS', x: 12, y: 34, marchSpeedUpPercent: 45
     }).id;
 
     // It really reached the browser store, not just memory.
     const raw = ctx.window.localStorage.getItem('rallysync.v1.leads');
-    assert.ok(raw && raw.indexOf('Persisted') !== -1, 'lead was not written to localStorage');
+    assert.ok(raw && raw.indexOf('TS') !== -1, 'lead was not written to localStorage');
 
     // Drop the in-memory copy and reload the way a fresh page load would.
     state.data.leads = [];
@@ -278,7 +285,7 @@ maybe('setup data round-trips through localStorage', async () => {
 
     const lead = state.findLead(leadId);
     assert.ok(lead, 'lead did not survive the reload');
-    assert.strictEqual(lead.name, 'Persisted');
+    assert.strictEqual(lead.name, 'TS');
     assert.strictEqual(lead.marchSpeedUpPercent, 45);
     assert.strictEqual(lead.x, 12);
   } finally { teardown(ctx); }
@@ -309,7 +316,7 @@ maybe('export produces a backup that import can restore', async () => {
   const ctx = await boot();
   try {
     const { state, storage } = ctx.RS;
-    state.upsertLead({ name: 'Backup Me', x: 1, y: 2, marchSpeedUpPercent: 10 });
+    state.upsertLead({ name: 'Ash', x: 1, y: 2, marchSpeedUpPercent: 10 });
 
     const payload = JSON.parse(JSON.stringify(storage.exportAll()));
     storage.clearAll();
@@ -319,7 +326,7 @@ maybe('export produces a backup that import can restore', async () => {
     const result = storage.importAll(payload);
     assert.strictEqual(result.ok, true);
     state.load();
-    assert.ok(state.data.leads.some((l) => l.name === 'Backup Me'));
+    assert.ok(state.data.leads.some((l) => l.name === 'Ash'));
   } finally { teardown(ctx); }
 });
 
@@ -330,4 +337,89 @@ maybe('import rejects a file that is not a RallySync backup', async () => {
     assert.strictEqual(result.ok, false);
     assert.match(result.error, /different app/i);
   } finally { teardown(ctx); }
+});
+
+maybe('the landing time is anchored to an explicit base, not the moving clock', async () => {
+  const ctx = await boot();
+  try {
+    const { state } = ctx.RS;
+    const base = Date.now() + 3 * 3600 * 1000;
+    state.updateSettings({ baseMs: base, landingOffsetSeconds: 300 });
+
+    // Landing is base + offset, and stays put as real time passes.
+    assert.strictEqual(state.landingMs(), base + 300000);
+    assert.strictEqual(state.baseIsExplicit(), true);
+    assert.strictEqual(state.baseMs(), base);
+
+    state.updateSettings({ landingOffsetSeconds: 600 });
+    assert.strictEqual(state.landingMs(), base + 600000);
+  } finally { teardown(ctx); }
+});
+
+maybe('a base left over from a past event falls back to now', async () => {
+  const ctx = await boot();
+  try {
+    const { state } = ctx.RS;
+    state.updateSettings({ baseMs: Date.now() - 5 * 3600 * 1000, landingOffsetSeconds: 0 });
+
+    // A stale base would silently produce launch times in the past.
+    assert.strictEqual(state.baseIsExplicit(), false);
+    assert.ok(Math.abs(state.baseMs() - state.now()) < 2000);
+  } finally { teardown(ctx); }
+});
+
+maybe('theme choice is applied to the document and persisted', async () => {
+  const ctx = await boot();
+  try {
+    const html = ctx.window.document.documentElement;
+
+    ctx.RS.app.applyTheme('dark');
+    assert.strictEqual(html.getAttribute('data-theme'), 'dark');
+
+    ctx.RS.app.applyTheme('light');
+    assert.strictEqual(html.getAttribute('data-theme'), 'light');
+
+    // 'system' removes the override so prefers-color-scheme takes over.
+    ctx.RS.app.applyTheme('system');
+    assert.strictEqual(html.getAttribute('data-theme'), null);
+
+    ctx.RS.state.updateSettings({ theme: 'dark' });
+    ctx.RS.state.load();
+    assert.strictEqual(ctx.RS.state.data.settings.theme, 'dark');
+  } finally { teardown(ctx); }
+});
+
+maybe('a share link renders only that person and hides the nav', async () => {
+  const ctx = await boot();
+  const slot = {
+    name: 'Cabo', targetName: "King's Castle",
+    rallyOpenMs: Date.now() + 600000,
+    departMs: Date.now() + 900000,
+    landingMs: Date.now() + 1000000,
+    marchSeconds: 100, gatherSeconds: 300, tier: 'estimated'
+  };
+  const encoded = ctx.RS.share.encodeSlot(slot);
+  teardown(ctx);
+
+  const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+  const dom = new JSDOM(html, {
+    url: 'http://localhost:8765/index.html#go=' + encoded,
+    runScripts: 'outside-only', pretendToBeVisual: true
+  });
+  try {
+    for (const file of SCRIPTS) {
+      dom.window.eval(fs.readFileSync(path.join(ROOT, file), 'utf8'));
+    }
+    await new Promise((resolve) => {
+      if (dom.window.document.readyState === 'complete') resolve();
+      else dom.window.addEventListener('load', resolve, { once: true });
+    });
+    await new Promise((resolve) => dom.window.setTimeout(resolve, 0));
+
+    const doc = dom.window.document;
+    assert.ok(doc.body.classList.contains('is-solo'), 'solo mode should be flagged on body');
+    assert.match(doc.querySelector('#main').textContent, /Cabo/);
+    assert.match(doc.querySelector('#main').textContent, /King/);
+    assert.strictEqual(doc.querySelectorAll('#nav .nav-btn').length, 0, 'nav must not render');
+  } finally { dom.window.close(); }
 });

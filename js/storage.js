@@ -64,7 +64,7 @@
   }
 
   /** Keys owned by the app, for export and reset. */
-  var KEYS = ['leads', 'targets', 'zones', 'samples', 'measurements', 'settings'];
+  var KEYS = ['leads', 'targets', 'zones', 'samples', 'measurements', 'settings', 'presets'];
 
   function exportAll() {
     var payload = { app: 'RallySync', version: 1, exportedISO: new Date().toISOString(), data: {} };

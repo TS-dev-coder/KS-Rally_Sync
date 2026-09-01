@@ -308,16 +308,9 @@
       errors.push('No March Speed Up % set.');
     }
 
-    // Route override: a lead who reports crossing the Relic uses the slower zone
-    // (RESEARCH-NOTES 5.1 and 5.2 — worse zone wins, penalties are never summed).
+    // The zone is a property of the destination, not of who is marching: the
+    // Castle always sits in the Forbidden Zone (RESEARCH-NOTES 5.1).
     var zoneKeyUsed = target.zoneKey;
-    if (lead.crossesRelic) {
-      var worse = root.RallySync.zones.slowerZone(zones, target.zoneKey, 'castle_relic');
-      if (worse !== zoneKeyUsed) {
-        zoneKeyUsed = worse;
-        notes.push('Route crosses the Relic — using the slower zone. Verify against a real march.');
-      }
-    }
 
     var zone = root.RallySync.zones.findZone(zones, zoneKeyUsed);
     if (!zone) errors.push('Unknown zone "' + zoneKeyUsed + '".');
@@ -392,6 +385,8 @@
       var row = {
         leadId: lead.id,
         name: lead.name,
+        targetId: target.id,
+        targetName: target.name,
         order: index,
         slot: slot,
         distance: resolved.distance,
@@ -429,9 +424,66 @@
     return { rows: rows, ok: ok, blockers: [] };
   }
 
+  /**
+   * Runs several targets in one plan — e.g. part of the roster on the Castle
+   * while the rest take a turret.
+   *
+   * Each target is planned independently (so a sequence stagger applies within
+   * a target's own wave, not across unrelated targets) and the rows are then
+   * merged into one launch order.
+   *
+   * @param {{groups:Array<{target:object, leads:Array}>}} input
+   * @returns {{rows:Array, ok:boolean, blockers:string[]}}
+   */
+  function buildMultiPlan(input) {
+    var groups = (input.groups || []).filter(function (g) {
+      return g && g.target && g.leads && g.leads.length > 0;
+    });
+
+    if (groups.length === 0) {
+      return { rows: [], ok: false, blockers: ['No rally leads selected.'] };
+    }
+
+    var rows = [];
+    var blockers = [];
+    var ok = true;
+
+    groups.forEach(function (groupItem) {
+      var plan = buildPlan({
+        leads: groupItem.leads,
+        target: groupItem.target,
+        zones: input.zones,
+        measurements: input.measurements,
+        mode: input.mode,
+        gapSeconds: input.gapSeconds,
+        gatherSeconds: Number(groupItem.target.gatherSeconds) || 0,
+        landingMs: input.landingMs,
+        nowMs: input.nowMs
+      });
+
+      if (plan.blockers.length > 0) {
+        blockers = blockers.concat(plan.blockers);
+        ok = false;
+        return;
+      }
+      if (!plan.ok) ok = false;
+      rows = rows.concat(plan.rows);
+    });
+
+    rows.sort(function (a, b) {
+      if (a.rallyOpenMs === null && b.rallyOpenMs === null) return 0;
+      if (a.rallyOpenMs === null) return 1;
+      if (b.rallyOpenMs === null) return -1;
+      return a.rallyOpenMs - b.rallyOpenMs;
+    });
+
+    return { rows: rows, ok: ok, blockers: blockers };
+  }
+
   root.RallySync = root.RallySync || {};
   root.RallySync.calc = {
     TIER: TIER,
+    buildMultiPlan: buildMultiPlan,
     distanceTiles: distanceTiles,
     speedMultiplier: speedMultiplier,
     segmentLengthInsideCircle: segmentLengthInsideCircle,

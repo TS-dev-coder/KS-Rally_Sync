@@ -123,7 +123,7 @@ in calculation functions, per PRD Section 10.
 
 | Zone key | Default model | Default constants | Confidence |
 |---|---|---|---|
-| `general` | affine | 2.778 s/tile, +3.2 s | UNVERIFIED (Model A) |
+| `general` | affine | 2.778 s/tile, +3.2 s | UNVERIFIED (Model A). Covers Outposts, Sanctuaries and Fortresses, which sit outside the Forbidden Zone — see 5.3 |
 | `castle_relic` | affine | 5.405 s/tile, +3.2 s | UNVERIFIED (Model A red-zone coefficient) |
 | `turret` | affine | 2.778 s/tile, +3.2 s | UNVERIFIED — assumed same as general; turrets sitting inside the Forbidden Zone may behave as `castle_relic`, unknown |
 | `ruins` | affine | 5.405 s/tile, +3.2 s | **GUESS** — no source quantifies the Ruins penalty at all. Copied from the red-zone value purely as a placeholder. Calibrate before trusting. |
@@ -138,17 +138,18 @@ in calculation functions, per PRD Section 10.
   on the Relic, charges that portion at `secPerTileInside` and the remainder at
   `secPerTileOutside`. Parameters (relic x/y, radius, both rates) are all tunable.
 
-### 5.1 Route-dependent vs target-dependent penalty — UNRESOLVED
+### 5.1 The zone belongs to the target — RESOLVED
 
-No source states whether the Relic slow applies to any march targeting the Castle, or only to
-marches whose path crosses it. Per the user's instruction, **both are supported**:
+Initially both readings were supported: a zone tag on the target, plus a per-lead
+"my route crosses the Relic" override.
 
-- the zone tag lives on the **target** (target-dependent behaviour, the default), and
-- each rally lead has an optional **"route crosses the Relic"** override that switches that
-  one lead to the slow zone, off by default (route-dependent behaviour).
+**Resolved by the user from direct play: the King's Castle is always inside the Forbidden
+Zone, so the penalty is a property of the destination, not of who is marching.** The
+per-lead override has been removed entirely — a rally lead is just their name, coordinates
+and March Speed Up %. `resolveMarchSeconds` reads the zone from the target and nothing else.
 
-Calibration data will eventually reveal which is correct. Until then the app does not claim
-to know.
+This also removed a whole class of user error: there is no longer a checkbox that silently
+changes one person's march model.
 
 ### 5.2 Multi-zone routes (PRD Section 15 edge case)
 
@@ -158,6 +159,18 @@ summing two rates would double-charge the same tiles and is definitely wrong. Ta
 slower rate is the conservative choice — it errs toward launching early, which is
 recoverable, rather than late, which is not. When the `segmented` model is enabled for a
 zone it handles overlap correctly by construction and no flag is raised.
+
+### 5.3 Outposts, Sanctuaries and Fortresses
+
+These are ordinary world-map structures outside the Castle Forbidden Zone, so they carry no
+Relic penalty and use the free-form `general` model. Sources: the Kingshot Help Center
+sections for [Outposts & Sanctuaries](https://centurygames.helpshift.com/hc/en/140-kingshot/faq/7450-outposts-sanctuaries/)
+and [Sanctuary Battle](https://centurygames.helpshift.com/hc/en/140-kingshot/section/1738-sanctuary-battle/).
+
+Community guidance for Sanctuary and Fortress pushes recommends **staggering rallies 10–15
+seconds apart** so the first rally weakens the garrison before the second lands — which is
+exactly what Sequence mode produces. Capture requires holding the structure (Outposts 15–30
+minutes by level; Sanctuaries 30 minutes), but hold duration is outside this tool's scope.
 
 ---
 
@@ -181,9 +194,9 @@ not mitigate it. Mitigations shipped instead: JSON **export/import backup**, and
 - [ ] Settle Model A vs Model B with one measured long march on open map.
 - [ ] Quantify the Ruins penalty — currently a pure placeholder.
 - [ ] Determine whether turrets inside the Forbidden Zone use the red-zone rate.
-- [ ] Determine whether the Relic penalty is route- or target-dependent (Section 5.1).
 - [ ] Confirm the +3.2 s offset is real and not an artifact of Model A's fitting.
-- [ ] Confirm gather time for non-Castle rally targets (Castle = 300 s confirmed).
+- [ ] Confirm gather time for non-Castle rally targets (Castle = 5 min confirmed).
+- [ ] Confirm whether Sanctuary/Fortress/Outpost rallies use the same 5-minute window.
 
 ---
 

@@ -317,28 +317,39 @@ test('missing coordinates block that lead with an error', () => {
   assert.ok(resolved.errors.some((e) => /coordinates/i.test(e)));
 });
 
-test('the relic route override upgrades a lead to the slower zone, never summing penalties', () => {
-  const zs = testZones();
-  const resolved = calc.resolveMarchSeconds({
-    lead: { id: 'l1', x: 0, y: 0, marchSpeedUpPercent: 0, crossesRelic: true },
-    target: { id: 't1', x: 100, y: 0, zoneKey: 'general' },
-    zones: zs,
-    measurement: null
-  });
-  assert.strictEqual(resolved.zoneKeyUsed, 'castle_relic');
-  // Exactly the red-zone rate — not the sum of both zones' rates.
-  near(resolved.seconds, 100 / 0.185 + 3.2, 1e-9);
-  assert.ok(resolved.notes.some((n) => /Relic/i.test(n)));
-});
-
-test('the relic override never makes an already-slower zone faster', () => {
-  const resolved = calc.resolveMarchSeconds({
-    lead: { id: 'l1', x: 0, y: 0, marchSpeedUpPercent: 0, crossesRelic: true },
+test('the zone comes from the target, not from the lead', () => {
+  // The Castle always sits in the Forbidden Zone, so the penalty is a property
+  // of where you are marching, never of who is marching.
+  const onCastle = calc.resolveMarchSeconds({
+    lead: { id: 'l1', x: 0, y: 0, marchSpeedUpPercent: 0 },
     target: { id: 't1', x: 100, y: 0, zoneKey: 'castle_relic' },
     zones: testZones(),
     measurement: null
   });
-  assert.strictEqual(resolved.zoneKeyUsed, 'castle_relic');
+  assert.strictEqual(onCastle.zoneKeyUsed, 'castle_relic');
+  near(onCastle.seconds, 100 / 0.185 + 3.2, 1e-9);
+
+  // Same lead, same distance, open-map target: the faster rate applies.
+  const onOpenMap = calc.resolveMarchSeconds({
+    lead: { id: 'l1', x: 0, y: 0, marchSpeedUpPercent: 0 },
+    target: { id: 't2', x: 100, y: 0, zoneKey: 'general' },
+    zones: testZones(),
+    measurement: null
+  });
+  assert.strictEqual(onOpenMap.zoneKeyUsed, 'general');
+  near(onOpenMap.seconds, 100 / 0.36 + 3.2, 1e-9);
+});
+
+test('a lead carries no zone state of its own', () => {
+  // Stray legacy fields on a lead must not influence the model chosen.
+  const withJunk = calc.resolveMarchSeconds({
+    lead: { id: 'l1', x: 0, y: 0, marchSpeedUpPercent: 0, crossesRelic: true },
+    target: { id: 't1', x: 100, y: 0, zoneKey: 'general' },
+    zones: testZones(),
+    measurement: null
+  });
+  assert.strictEqual(withJunk.zoneKeyUsed, 'general');
+  near(withJunk.seconds, 100 / 0.36 + 3.2, 1e-9);
 });
 
 // ------------------------------------------------------------ plan building
@@ -350,8 +361,8 @@ test('calculateLaunchTime subtracts march time from landing time', () => {
 });
 
 const planLeads = [
-  { id: 'fast', name: 'Fast', x: 0, y: 0, marchSpeedUpPercent: 100 },
-  { id: 'slow', name: 'Slow', x: 0, y: 0, marchSpeedUpPercent: 0 }
+  { id: 'fast', name: 'Ash', x: 0, y: 0, marchSpeedUpPercent: 100 },
+  { id: 'slow', name: 'Beast', x: 0, y: 0, marchSpeedUpPercent: 0 }
 ];
 const planTarget = { id: 'castle', name: 'Castle', x: 100, y: 0, zoneKey: 'general' };
 const LANDING = Date.parse('2026-09-01T20:00:00Z');
@@ -432,7 +443,7 @@ test('buildPlan blocks with a clear reason when inputs are missing', () => {
 
 test('one lead with missing data does not block the rest of the roster', () => {
   const plan = calc.buildPlan({
-    leads: [planLeads[0], { id: 'broken', name: 'Broken', x: 0, y: 0 }],
+    leads: [planLeads[0], { id: 'broken', name: 'Cabo', x: 0, y: 0 }],
     target: planTarget, zones: testZones(),
     mode: 'sync', landingMs: LANDING, gatherSeconds: 300, nowMs: LANDING - 3600000
   });

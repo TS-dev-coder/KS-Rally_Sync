@@ -1,5 +1,9 @@
 /**
- * views/targets.js — manage target structures and the zone model each one uses.
+ * views/targets.js — manage target structures and the zone model each uses.
+ *
+ * The rally window is entered in MINUTES because that is how the game states it
+ * (a Castle rally marches at 5:00). It is stored in seconds so the timing math
+ * stays in one unit.
  */
 ;(function (root) {
   'use strict';
@@ -8,7 +12,10 @@
   var S = root.RallySync.state;
   var Z = root.RallySync.zones;
   var G = root.RallySync.guide;
+  var I = root.RallySync.icons;
+  var MP = root.RallySync.mapPicker;
   var el = d.el;
+  var icon = I.icon;
 
   var expanded = {};
 
@@ -21,14 +28,19 @@
         el('h2.view-title', { text: 'Targets' }),
         el('p.view-sub', { text: 'Set your kingdom’s coordinates once. Reused every event.' })
       ]),
-      el('button.btn.btn-primary', { type: 'button', onclick: addTarget }, ['+ Add'])
+      el('button.btn.btn-primary', { type: 'button', onclick: addTarget }, [
+        icon('plus', 15), el('span', { text: 'Add' })
+      ])
     ]));
 
     var needsCoords = targets.filter(function (t) { return t.x === null || t.y === null; }).length;
     if (needsCoords > 0) {
       container.appendChild(el('div.banner.banner-info', {}, [
-        el('strong', { text: needsCoords + ' target' + (needsCoords === 1 ? '' : 's') + ' still need coordinates. ' }),
-        'Open one and fill in the X/Y you see in game.'
+        icon('alert', 16),
+        el('span', {}, [
+          el('strong', { text: needsCoords + ' target' + (needsCoords === 1 ? '' : 's') + ' still need coordinates. ' }),
+          'Open one and fill in the X/Y you see in game, or pick it on the map.'
+        ])
       ]));
     }
 
@@ -65,7 +77,7 @@
         ])
       ]),
       missing ? el('span.tag.tag-error', { text: 'set X/Y' }) : null,
-      el('span.chev', { text: isOpen ? '▾' : '▸' })
+      el('span.chev', {}, [icon(isOpen ? 'chevronDown' : 'chevronRight', 14)])
     ]));
 
     if (!isOpen) return card;
@@ -77,36 +89,43 @@
       onchange: function (e) { patch(target, { name: e.target.value }); }
     })));
 
-    body.appendChild(el('div.grid-2', {}, [
-      field('X', el('input.input', {
-        type: 'number', inputmode: 'numeric', value: valueOf(target.x), placeholder: '—',
-        onchange: function (e) { patch(target, { x: e.target.value }); }
-      })),
-      field('Y', el('input.input', {
-        type: 'number', inputmode: 'numeric', value: valueOf(target.y), placeholder: '—',
-        onchange: function (e) { patch(target, { y: e.target.value }); }
-      }))
+    body.appendChild(el('div.coord-row', {}, [
+      el('div.grid-2', {}, [
+        field('X', el('input.input', {
+          type: 'number', inputmode: 'numeric', value: valueOf(target.x), placeholder: '—',
+          onchange: function (e) { patch(target, { x: e.target.value }); }
+        })),
+        field('Y', el('input.input', {
+          type: 'number', inputmode: 'numeric', value: valueOf(target.y), placeholder: '—',
+          onchange: function (e) { patch(target, { y: e.target.value }); }
+        }))
+      ]),
+      el('button.btn.btn-secondary.btn-map', {
+        type: 'button',
+        onclick: function () { openMapFor(target); }
+      }, [icon('pin', 15), el('span', { text: 'Pick on map' })])
     ]));
     body.appendChild(G.helpBlock('targetCoords'));
 
     var zoneSelect = el('select.input', {
       onchange: function (e) { patch(target, { zoneKey: e.target.value }); }
     }, Z.ZONE_DEFS.map(function (def) {
-      return el('option', {
-        value: def.key,
-        selected: def.key === target.zoneKey
-      }, [def.label]);
+      return el('option', { value: def.key, selected: def.key === target.zoneKey }, [def.label]);
     }));
     var activeZone = Z.zoneDef(target.zoneKey);
     body.appendChild(field('Zone model', zoneSelect, activeZone ? activeZone.blurb : null));
 
     body.appendChild(field(
-      'Rally window (seconds)',
+      'Rally window (minutes)',
       el('input.input', {
-        type: 'number', inputmode: 'numeric', value: valueOf(target.gatherSeconds), placeholder: '300',
-        onchange: function (e) { patch(target, { gatherSeconds: e.target.value }); }
+        type: 'number', inputmode: 'decimal', step: '0.5', min: '0',
+        value: minutesValue(target.gatherSeconds), placeholder: '5',
+        onchange: function (e) {
+          var minutes = Number(e.target.value);
+          patch(target, { gatherSeconds: isFinite(minutes) ? Math.max(0, minutes) * 60 : 0 });
+        }
       }),
-      'Castle rallies march at 5:00 (300s) whether or not they filled. Use 0 for a solo march.'
+      'Castle rallies march at 5 minutes whether or not they filled. Use 0 for a solo march.'
     ));
     body.appendChild(G.helpBlock('rallyWindow'));
 
@@ -119,8 +138,8 @@
             S.deleteTarget(target.id);
           }
         }
-      }, ['Delete']),
-      el('button.btn.btn-ghost', {
+      }, [icon('trash', 15), el('span', { text: 'Delete' })]),
+      el('button.btn.btn-secondary', {
         type: 'button',
         onclick: function () { expanded[target.id] = false; root.RallySync.app.refresh(); }
       }, ['Done'])
@@ -130,12 +149,40 @@
     return card;
   }
 
+  function openMapFor(target) {
+    MP.open({
+      title: 'Where is ' + (target.name || 'this target') + '?',
+      subtitle: 'Tap or drag to place it. Other targets and your leads are shown for reference.',
+      x: target.x, y: target.y,
+      markers: markers(target.id),
+      onPick: function (x, y) { patch(target, { x: x, y: y }); }
+    });
+  }
+
+  function markers(exceptTargetId) {
+    var out = [];
+    S.data.targets.forEach(function (t) {
+      if (t.id !== exceptTargetId && t.x !== null && t.y !== null) {
+        out.push({ x: t.x, y: t.y, label: t.name, kind: 'target' });
+      }
+    });
+    S.data.leads.forEach(function (l) {
+      if (l.x !== null && l.y !== null) out.push({ x: l.x, y: l.y, label: l.name, kind: 'lead' });
+    });
+    return out;
+  }
+
+  /** "5 min", "2.5 min", or "none" for a solo march. */
   function formatWindow(seconds) {
     var s = Number(seconds) || 0;
     if (s === 0) return 'none';
-    var m = Math.floor(s / 60);
-    var r = s % 60;
-    return m + ':' + d.pad2(r);
+    var minutes = s / 60;
+    return (Math.round(minutes * 10) / 10) + ' min';
+  }
+
+  function minutesValue(seconds) {
+    var s = Number(seconds) || 0;
+    return String(Math.round((s / 60) * 100) / 100);
   }
 
   function field(label, input, help) {
@@ -150,5 +197,5 @@
   function valueOf(v) { return v === null || v === undefined ? '' : String(v); }
 
   root.RallySync.views = root.RallySync.views || {};
-  root.RallySync.views.targets = { render: render };
+  root.RallySync.views.targets = { render: render, formatWindow: formatWindow };
 })(typeof globalThis !== 'undefined' ? globalThis : this);

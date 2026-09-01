@@ -51,13 +51,33 @@
       note: 'Read it at the instant of departure. Reading it later gives you time remaining, not total march time.'
     },
     rallyWindow: {
-      title: 'Rally window',
+      title: 'What is the rally window?',
       steps: [
-        'A Castle rally marches at exactly 5:00 whether or not it filled.',
-        'Leave this at 300 for Castle and turret rallies.',
-        'Set it to 0 for a solo march with no gather.'
+        'It is the gather countdown between opening a rally and the troops leaving.',
+        'A Castle rally marches at exactly 5 minutes whether or not it filled.',
+        'Leave this at 5 for Castle and turret rallies.',
+        'Set it to 0 for a solo march, which departs immediately.'
       ],
-      note: null
+      note: 'RallySync subtracts this automatically, so the time it gives you is when to TAP the rally button — not when troops leave.'
+    },
+    bulkPaste: {
+      title: 'Pasting a roster',
+      steps: [
+        'One player per line: name, X, Y, then March Speed Up %.',
+        'Commas, spaces, brackets and x:/y: labels all work.',
+        'Add [Alliance] and {Squad} in brackets if you want them grouped.',
+        'Check the preview, then import.'
+      ],
+      note: 'Lines it cannot read are listed separately rather than skipped silently, so nobody goes missing.'
+    },
+    rallyPower: {
+      title: 'Rally capacity and power',
+      steps: [
+        'Open the rally screen in game to see your march capacity.',
+        'Power is the marching power shown for that troop selection.',
+        'Both are optional — they only drive the committed totals.'
+      ],
+      note: 'Neither affects march timing. They are there so you can see how much force is landing on each target.'
     }
   };
 

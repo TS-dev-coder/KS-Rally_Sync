@@ -9,14 +9,17 @@
 
   var d = root.RallySync.dom;
   var S = root.RallySync.state;
+  var I = root.RallySync.icons;
+  var SH = root.RallySync.share;
+  var F = root.RallySync.focus;
   var el = d.el;
 
   var TABS = [
-    { key: 'calculate', label: 'Calculate', icon: '◎', view: 'calculate' },
-    { key: 'roster', label: 'Leads', icon: '⚔', view: 'roster' },
-    { key: 'targets', label: 'Targets', icon: '⌖', view: 'targets' },
-    { key: 'calibrate', label: 'Tune', icon: '⚙', view: 'calibrate' },
-    { key: 'settings', label: 'More', icon: '≡', view: 'settings' }
+    { key: 'calculate', label: 'Calculate', icon: 'crosshair', view: 'calculate' },
+    { key: 'roster', label: 'Leads', icon: 'users', view: 'roster' },
+    { key: 'targets', label: 'Targets', icon: 'pin', view: 'targets' },
+    { key: 'calibrate', label: 'Tune', icon: 'sliders', view: 'calibrate' },
+    { key: 'settings', label: 'More', icon: 'menu', view: 'settings' }
   ];
 
   var current = 'calculate';
@@ -28,14 +31,26 @@
 
   function start() {
     S.load();
-    current = S.data.settings.tab || 'calculate';
-    if (!tabByKey(current)) current = 'calculate';
+    applyTheme(S.data.settings.theme);
 
     main = d.$('#main');
     nav = d.$('#nav');
     clockNode = d.$('#clock-utc');
     localNode = d.$('#clock-local');
     offsetNode = d.$('#clock-offset');
+
+    // A share link is somebody else's device: show only their slot.
+    var shared = SH.slotFromHash(root.location.hash);
+    if (shared) {
+      root.document.body.classList.add('is-solo');
+      F.renderStandalone(main, shared);
+      tick();
+      root.setInterval(tick, 250);
+      return;
+    }
+
+    current = S.data.settings.tab || 'calculate';
+    if (!tabByKey(current)) current = 'calculate';
 
     renderNav();
     render();
@@ -62,7 +77,7 @@
         'aria-current': tab.key === current ? 'page' : null,
         onclick: function () { go(tab.key); }
       }, [
-        el('span.nav-icon', { text: tab.icon }),
+        el('span.nav-icon', {}, [I.icon(tab.icon, 21)]),
         el('span.nav-label', { text: tab.label })
       ]));
     });
@@ -104,12 +119,21 @@
       offsetNode.classList.toggle('is-visible', offset !== 0);
     }
 
-    if (current === 'calculate' && root.RallySync.views.calculate.tick) {
+    if (main && main.dataset.tab === 'calculate' && root.RallySync.views.calculate.tick) {
       root.RallySync.views.calculate.tick(now);
     }
   }
 
-  root.RallySync.app = { start: start, go: go, refresh: refresh, tick: tick };
+  /** 'system' removes the attribute so prefers-color-scheme takes over. */
+  function applyTheme(theme) {
+    var html = root.document.documentElement;
+    if (theme === 'light' || theme === 'dark') html.setAttribute('data-theme', theme);
+    else html.removeAttribute('data-theme');
+  }
+
+  root.RallySync.app = {
+    start: start, go: go, refresh: refresh, tick: tick, applyTheme: applyTheme
+  };
 
   if (root.document.readyState === 'loading') {
     root.document.addEventListener('DOMContentLoaded', start);

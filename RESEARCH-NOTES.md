@@ -1,0 +1,202 @@
+# RESEARCH-NOTES.md
+
+Output of the mandatory research phase (PRD Section 3). Completed **2026-09-01**.
+
+**Bottom line up front:** there is no officially published march-time formula for Kingshot,
+and the community sources that do publish one **disagree by a factor of ~2 on the single
+most important constant**. Nothing in this document should be treated as ground truth.
+RallySync is therefore built so that *measured* march times always beat *calculated* ones,
+and every calculated number carries a visible confidence badge.
+
+---
+
+## 1. Source quality warning (read this first)
+
+Every source found is an unattributed community/SEO site. None cite a primary source, none
+show their fitting data, and several appear to echo each other's wording nearly verbatim —
+which means "three sources agree" may really be one source repeated three times. Century
+Games (the developer) publishes no march formula in the in-game help or Help Center.
+
+Treat the constants below as **starting hypotheses for calibration**, not facts.
+
+---
+
+## 2. What multiple sources agree on
+
+| Claim | Confidence | Sources |
+|---|---|---|
+| Distance is **straight-line Euclidean** in tiles: `sqrt((x2-x1)^2 + (y2-y1)^2)` | Medium-high — two independent tools state it; no source proposes Chebyshev/Manhattan | kingshotguide.org, KingshotPro Map Planner |
+| March time scales **inversely with `1 + MarchSpeedUp%`** | Medium-high | Both of the above, plus KingshotPro Rally Planner |
+| A **Relic inside the Forbidden Zone** near the King's Castle significantly slows any march passing near it | Medium — described qualitatively, never quantified | kingshotmastery.com Castle Battle guide, kingshotguide.org |
+| The **Ruins** are a separate chokepoint with a heavy march-speed penalty | Medium — qualitative only | wizardstower.com Ruins guide |
+| Standard alliance practice: slowest march launches first, everyone else offsets to match | High — this is just arithmetic, and it is what every rally timer does | Multiple rally timers |
+
+---
+
+## 3. What sources DISAGREE on — unresolved
+
+### 3.1 Baseline seconds-per-tile (the critical constant)
+
+Two mutually incompatible models are published.
+
+**Model A — "coefficient" model.** The kingshotguide.org March Sync Timer states the
+normal-zone formula as `round(distance / speed + 3.2)` with a normal-zone coefficient of
+**0.360** and a forbidden/red-zone coefficient of **0.185**. Reading
+`speed = coefficient x (1 + MarchSpeedUp%)` tiles/second, this implies:
+
+- normal zone: `1 / 0.360` = **2.778 s/tile** at 100% speed, plus a **+3.2 s** fixed offset
+- red zone: `1 / 0.185` = **5.405 s/tile** at 100% speed (~1.95x slower than normal)
+
+**Model B — "6 seconds per tile" model.** The KingshotPro Map Planner states "roughly 6
+seconds per tile at 100% march speed", divided by the speed multiplier, with **no fixed
+offset** and no zone handling at all.
+
+**These differ by ~2.16x on a long march.** Neither shows its data. This disagreement is not
+resolvable from public sources — it can only be settled by measuring a real march.
+
+> **Consequence for the app:** both models ship as selectable presets in Calibration, both
+> badged UNVERIFIED, and the app pushes hard toward replacing them with measured data.
+
+### 3.2 The "ceiling model" for the red zone — NOT IMPLEMENTABLE AS PUBLISHED
+
+kingshotguide.org says the red zone "uses the community-fit ceiling model" but **never
+defines it**. No page found anywhere states the equation, its parameters, or its fitting
+data. The PRD (Section 2) quotes this same phrase, inherited from the same source.
+
+**Decision:** RallySync does **not** implement a fake "ceiling model". Guessing an equation
+and labelling it with a real-sounding name would be exactly the false confidence PRD
+Section 14 warns against. Instead the red zone uses the same tunable affine form as every
+other zone, with its own slower `secPerTile`, plus an optional geometric `segmented` model
+(Section 5) that is physically motivated rather than invented.
+
+### 3.3 Troop type
+
+**No source found addresses whether troop type changes march speed.** Guides consistently
+describe infantry as "slow" and cavalry as "fast", but that language is about *battlefield*
+positioning in combat, not world-map march time. No calculator asks for troop type.
+
+**Decision (confirmed with the user):** `troopType` is **dropped** from the data model
+entirely. It is not stored, not displayed, and not in the calculation signature. If
+calibration data ever shows a per-type split, it can be reintroduced as a multiplier.
+
+### 3.4 Rally gather time
+
+Not documented in any source found. **Resolved by the user from direct play:** a Castle
+rally has a **fixed 5-minute (300 s) assembly window, and the march departs at the 5-minute
+mark whether or not the rally filled.** This is treated as an exact constant, not an
+estimate, and is configurable per target for non-castle cases.
+
+### 3.5 Does the game show march time before you commit?
+
+**Resolved by the user from direct play: no.** The march duration is only visible *after*
+the rally assembly window ends and the march actually begins. This is the single most
+important product finding in this document — see Section 4.
+
+---
+
+## 4. Accuracy strategy: measurement beats formula
+
+Because a march's true duration becomes visible in-game once it departs, every real march is
+a free, exact data point. RallySync exploits this with a three-tier priority chain,
+evaluated per rally lead per target:
+
+1. **MEASURED (exact).** A recorded real march time for this exact (lead, target) pair. Used
+   verbatim; no formula involved. Same city, same target, same speed stat produces the same
+   march time every event, so one observation makes that pair permanently exact.
+2. **CALIBRATED (fitted).** No pair measurement, but the target's zone has >= 1 calibration
+   sample. Zone constants are least-squares fitted to the samples and used.
+3. **ESTIMATED (unverified).** Neither of the above. Research-phase defaults from Section
+   3.1 are used and the result is badged UNVERIFIED.
+
+Every result row shows which tier produced it. A lead whose march time is measured is exact;
+the disclaimer and safety-buffer advice apply to tiers 2 and 3.
+
+**Staleness:** a measurement is invalidated automatically whenever the lead's coordinates or
+March Speed Up % change, or the target's coordinates change, since those inputs define it.
+
+---
+
+## 5. Zone model decisions
+
+Zone constants live in editable config (`js/zones.js` defaults -> localStorage), never inline
+in calculation functions, per PRD Section 10.
+
+| Zone key | Default model | Default constants | Confidence |
+|---|---|---|---|
+| `general` | affine | 2.778 s/tile, +3.2 s | UNVERIFIED (Model A) |
+| `castle_relic` | affine | 5.405 s/tile, +3.2 s | UNVERIFIED (Model A red-zone coefficient) |
+| `turret` | affine | 2.778 s/tile, +3.2 s | UNVERIFIED — assumed same as general; turrets sitting inside the Forbidden Zone may behave as `castle_relic`, unknown |
+| `ruins` | affine | 5.405 s/tile, +3.2 s | **GUESS** — no source quantifies the Ruins penalty at all. Copied from the red-zone value purely as a placeholder. Calibrate before trusting. |
+
+**Two formula types are implemented:**
+
+- `affine`: `t = secPerTile * distance / (1 + speedPct/100) + offset`. Covers Model A, Model
+  B (`secPerTile: 6, offset: 0`), flat-penalty zones (large `offset`), and pure linear
+  (`offset: 0`).
+- `segmented`: physically-motivated model for the route-dependent case. Computes the length
+  of the straight line from origin to target that falls inside a circle of radius `r` centred
+  on the Relic, charges that portion at `secPerTileInside` and the remainder at
+  `secPerTileOutside`. Parameters (relic x/y, radius, both rates) are all tunable.
+
+### 5.1 Route-dependent vs target-dependent penalty — UNRESOLVED
+
+No source states whether the Relic slow applies to any march targeting the Castle, or only to
+marches whose path crosses it. Per the user's instruction, **both are supported**:
+
+- the zone tag lives on the **target** (target-dependent behaviour, the default), and
+- each rally lead has an optional **"route crosses the Relic"** override that switches that
+  one lead to the slow zone, off by default (route-dependent behaviour).
+
+Calibration data will eventually reveal which is correct. Until then the app does not claim
+to know.
+
+### 5.2 Multi-zone routes (PRD Section 15 edge case)
+
+**Decision: use the worse (slowest) single zone, and flag the row for manual review.** Not
+summed. Rationale: penalties are expressed as *rates* (s/tile), not additive time costs, so
+summing two rates would double-charge the same tiles and is definitely wrong. Taking the
+slower rate is the conservative choice — it errs toward launching early, which is
+recoverable, rather than late, which is not. When the `segmented` model is enabled for a
+zone it handles overlap correctly by construction and no flag is raised.
+
+---
+
+## 6. Clock accuracy and storage durability
+
+The game runs on UTC; all internal math is UTC epoch milliseconds, with local time derived
+for display only. A device clock a few seconds off silently corrupts every result, and the
+app is offline-only by design (no NTP). A manual **clock offset** setting is provided
+(Settings -> "my clock is N seconds fast/slow", set by eye against the in-game event timer)
+and is applied to the live clock and all countdowns. Default 0.
+
+**Storage durability:** iOS caps script-writable storage at 7 days of non-use and will wipe
+it — this affects `localStorage` and IndexedDB identically, so the storage engine choice does
+not mitigate it. Mitigations shipped instead: JSON **export/import backup**, and an
+**Add to Home Screen** hint (installed web apps are exempt from the 7-day cap).
+
+---
+
+## 7. Open items for future calibration
+
+- [ ] Settle Model A vs Model B with one measured long march on open map.
+- [ ] Quantify the Ruins penalty — currently a pure placeholder.
+- [ ] Determine whether turrets inside the Forbidden Zone use the red-zone rate.
+- [ ] Determine whether the Relic penalty is route- or target-dependent (Section 5.1).
+- [ ] Confirm the +3.2 s offset is real and not an artifact of Model A's fitting.
+- [ ] Confirm gather time for non-Castle rally targets (Castle = 300 s confirmed).
+
+---
+
+## 8. Sources
+
+- Kingshot March Sync Timer — https://www.kingshotguide.org/calculator/kingshot-march-sync-timer
+- KingshotPro Map Planner — https://kingshotpro.com/calculators/map-planner.html
+- KingshotPro Rally Planner — https://kingshotpro.com/calculators/rally-planner.html
+- Kingshot Castle Battle Guide — https://kingshotmastery.com/guides/kingshot-castle-battle-guide
+- Kingshot Ruins Guide (The Wizard's Tower) — https://wizardstower.com/guides/kingshot/ruins
+- Castle Battle, Kingshot Help Center — https://centurygames.helpshift.com/hc/en/140-kingshot/faq/9047-castle-battle-1783425489/
+- Rally Timer (Kingshot Calculator) — https://www.kingshotcalculator.net/rally-timer
+
+Sites returning HTTP 403 to automated fetch (listed for human follow-up, not used as
+sources): kingshotguide.com/calculator/rally-timer,
+kingshotmastery.com/strategies/rally-timing-strategy

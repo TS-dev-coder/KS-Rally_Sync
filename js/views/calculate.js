@@ -219,8 +219,10 @@
           label: name,
           // Don't repeat the type when the name already is it.
           badge: name.toLowerCase() === typeLabel.toLowerCase() ? null : typeLabel,
-          sub: incomplete ? 'no coordinates set' : 'X:' + t.x + ' Y:' + t.y +
-            ' · rally ' + C.formatDuration(t.gatherSeconds),
+          sub: incomplete
+            ? 'no coordinates set'
+            : t.x + ',' + t.y + ' · ' + Z.zoneLabel(t.zoneKey) +
+              ' · rally ' + C.formatDuration(t.gatherSeconds),
           warn: incomplete ? 'set X/Y' : null
         };
       }),
@@ -248,13 +250,6 @@
         children.push(el('div.banner.banner-error', {}, [
           icon('alert', 16),
           el('span', { text: 'Set this target’s coordinates on the Targets tab before calculating.' })
-        ]));
-      } else {
-        children.push(el('p.group-note', {}, [
-          el('span.tag.tag-zone', { text: Z.zoneLabel(target.zoneKey) }),
-          el('span.mono', { text: ' X:' + target.x + ' Y:' + target.y }),
-          el('span.dot', { text: '·' }),
-          el('span', { text: 'rally window ' + C.formatDuration(target.gatherSeconds) })
         ]));
       }
     }

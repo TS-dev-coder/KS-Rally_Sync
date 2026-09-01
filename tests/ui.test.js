@@ -852,3 +852,32 @@ maybe('lead chips carry their coordinates inline, not only in a tooltip', async 
       'a lead with nothing set should read as incomplete on the chip itself');
   } finally { teardown(ctx); }
 });
+
+maybe('the chosen target shows its detail on the closed selector', async () => {
+  const ctx = await boot();
+  try {
+    const { state } = ctx.RS;
+    const castle = state.upsertTarget({
+      name: "King's Castle", x: 512, y: 512, zoneKey: 'castle_relic',
+      gatherSeconds: 300, type: 'castle'
+    });
+    state.updateSettings({ selectedTargetId: castle.id });
+    ctx.RS.app.go('calculate');
+    ctx.RS.app.refresh();
+
+    const sub = ctx.window.document.querySelector('.ss-label-sub');
+    assert.ok(sub, 'the closed selector should carry a detail line');
+    assert.match(sub.textContent, /512,512/, 'coordinates');
+    assert.match(sub.textContent, /Castle/, 'zone model');
+    assert.match(sub.textContent, /rally 5m/, 'rally window');
+
+    // A target with nothing set says so rather than showing a blank line.
+    const blank = state.upsertTarget({ name: 'Terror', type: 'other' });
+    state.updateSettings({ selectedTargetId: blank.id });
+    ctx.RS.app.refresh();
+    assert.match(
+      ctx.window.document.querySelector('.ss-label-sub').textContent,
+      /no coordinates set/
+    );
+  } finally { teardown(ctx); }
+});

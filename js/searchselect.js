@@ -73,9 +73,16 @@
         }));
         return;
       }
-      label.appendChild(el('span.ss-label-main', { text: current.label }));
-      if (current.badge) label.appendChild(el('span.tag.tag-squad', { text: current.badge }));
-      if (current.warn) label.appendChild(el('span.tag.tag-error', { text: current.warn }));
+      // The detail shows on the closed control too, not only in the open list:
+      // what you have selected matters more than what you could select.
+      label.appendChild(el('span.ss-label-stack', {}, [
+        el('span.ss-label-top', {}, [
+          el('span.ss-label-main', { text: current.label }),
+          current.badge ? el('span.tag.tag-squad', { text: current.badge }) : null,
+          current.warn ? el('span.tag.tag-error', { text: current.warn }) : null
+        ]),
+        current.sub ? el('span.ss-label-sub', { text: current.sub }) : null
+      ]));
     }
 
     function matches() {

@@ -1644,3 +1644,16 @@ body.is-solo .app { padding-bottom: 30px; }
 .chip-stacked.is-selected .chip-sub { color: var(--accent-ink); opacity: 0.72; }
 .chip-stacked.is-incomplete .chip-sub { color: var(--amber); }
 .chip-stacked.is-selected.is-incomplete .chip-sub { color: var(--accent-ink); opacity: 0.8; }
+
+/* The closed select carries the same second line its options do. */
+.ss-label-stack { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ss-label-top { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.ss-label-sub {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--text-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

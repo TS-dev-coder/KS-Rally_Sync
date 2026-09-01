@@ -60,6 +60,15 @@
       ],
       note: 'RallySync subtracts this automatically, so the time it gives you is when to TAP the rally button — not when troops leave.'
     },
+    baseTime: {
+      title: 'Base time and wait — what are they?',
+      steps: [
+        'BASE TIME is the moment you are counting from. Tap Now, or set the time your alliance agreed on.',
+        'WAIT THIS LONG is how far after the base the marches should land.',
+        'TROOPS LAND AT is the result: base plus wait. Everything else works backwards from it.'
+      ],
+      note: 'Example: base 20:00, wait 5m, so troops land 20:05. RallySync then subtracts each march and the rally window to tell every person when to tap.'
+    },
     bulkPaste: {
       title: 'Pasting a roster',
       steps: [

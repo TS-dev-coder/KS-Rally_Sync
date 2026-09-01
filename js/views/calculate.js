@@ -301,10 +301,17 @@
     var settings = S.data.settings;
     var children = [];
 
+    children.push(el('p.group-note', {
+      text: 'Marches land a set time after a base you choose. Point the base at whatever moment your alliance is counting from.'
+    }));
+
     // 1. The anchor everything is measured from.
     children.push(el('div.anchor-row', {}, [
       el('div.anchor-main', {}, [
-        el('span.anchor-label', { text: 'BASE TIME' }),
+        el('span.anchor-label', {}, [
+          el('span.anchor-op', { text: '' }),
+          el('span', { text: 'BASE TIME' })
+        ]),
         el('button.anchor-value', {
           type: 'button',
           title: 'Set the base time',
@@ -312,7 +319,8 @@
         }, [
           el('span.anchor-time', { text: d.utcClock(S.baseMs()) }),
           el('span.anchor-zone', { text: 'UTC' })
-        ])
+        ]),
+        el('span.anchor-hint', { text: 'the moment you are counting from' })
       ]),
       el('button.btn.btn-ghost.btn-sm', {
         type: 'button',
@@ -332,14 +340,18 @@
 
     // 2. How long after the base the marches land.
     children.push(el('div.offset-row', {}, [
-      el('span.anchor-label', { text: 'LAND AFTER' }),
+      el('span.anchor-label', {}, [
+        el('span.anchor-op', { text: '+' }),
+        el('span', { text: 'WAIT THIS LONG' })
+      ]),
       el('div.time-set', {}, [
         el('button.btn.btn-nudge', { type: 'button', onclick: function () { nudge(-60); } }, ['−1m']),
         el('button.btn.btn-nudge', { type: 'button', onclick: function () { nudge(-10); } }, ['−10s']),
         el('span.offset-display', { text: C.formatDuration(offsetSeconds()) }),
         el('button.btn.btn-nudge', { type: 'button', onclick: function () { nudge(10); } }, ['+10s']),
         el('button.btn.btn-nudge', { type: 'button', onclick: function () { nudge(60); } }, ['+1m'])
-      ])
+      ]),
+      el('span.anchor-hint', { text: 'how long after the base the marches touch down' })
     ]));
 
     children.push(el('div.quick-row', {}, [0, 5, 10, 15, 30].map(function (mins) {
@@ -355,7 +367,10 @@
 
     // 3. The resulting landing time, stated plainly.
     children.push(el('div.lands-row', {}, [
-      el('span.anchor-label', { text: 'LANDS AT' }),
+      el('span.anchor-label', {}, [
+        el('span.anchor-op', { text: '=' }),
+        el('span', { text: 'TROOPS LAND AT' })
+      ]),
       el('span.lands-value', { text: d.utcClock(landingMs()) }),
       el('span.lands-zone', { text: 'UTC' }),
       el('span.lands-local', {
@@ -369,6 +384,7 @@
           ' rally window is already subtracted — times below are when to TAP the rally button.'
       }));
     }
+    children.push(G.helpBlock('baseTime'));
     return group('Landing time', children, 'UTC');
   }
 

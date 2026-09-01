@@ -25,11 +25,29 @@ Treat the constants below as **starting hypotheses for calibration**, not facts.
 
 | Claim | Confidence | Sources |
 |---|---|---|
-| Distance is **straight-line Euclidean** in tiles: `sqrt((x2-x1)^2 + (y2-y1)^2)` | Medium-high — two independent tools state it; no source proposes Chebyshev/Manhattan | kingshotguide.org, KingshotPro Map Planner |
+| Distance is **straight-line Euclidean** in tiles | **CONFIRMED IN GAME** — see below | the game itself |
 | March time scales **inversely with `1 + MarchSpeedUp%`** | Medium-high | Both of the above, plus KingshotPro Rally Planner |
 | A **Relic inside the Forbidden Zone** near the King's Castle significantly slows any march passing near it | Medium — described qualitatively, never quantified | kingshotmastery.com Castle Battle guide, kingshotguide.org |
 | The **Ruins** are a separate chokepoint with a heavy march-speed penalty | Medium — qualitative only | wizardstower.com Ruins guide |
 | Standard alliance practice: slowest march launches first, everyone else offsets to match | High — this is just arithmetic, and it is what every rally timer does | Multiple rally timers |
+
+### 2a. The distance metric, confirmed from the game itself
+
+**2026-09-02.** Panning the world map pops a bubble showing the distance from your Town
+Center, in km. Read directly from a running client, with the TC at X:536 Y:740:
+
+| map position | Euclidean | Manhattan | Chebyshev | game showed |
+|---|---|---|---|---|
+| X:547 Y:757 | 20.25 | 28 | 17 | **20 km** |
+| X:542 Y:744 | 7.21 | 10 | 6 | **7 km** |
+
+Euclidean, floored, and **one tile is exactly one kilometre**. The rival metrics are not
+close. This closes an open question that no community source could settle, and it is why the
+app now states distances in km — the same number the game shows, so the two can be compared
+without conversion.
+
+The game clock also reads UTC in its own top bar, confirming the app is right to do all its
+arithmetic there.
 
 ---
 
@@ -503,7 +521,6 @@ zone; log one and see.
 - [ ] Any march at all on a Castle or the Ruins, neither of which has ever been measured.
 - [ ] Test whether confirmed Beast/Terror targets march faster than open map after the
       August 2026 buff, which would justify a zone of their own.
-- [ ] Confirm the distance metric with a near-axis vs near-diagonal pair (Section 6a).
 - [ ] Quantify the Ruins penalty — currently a pure placeholder.
 - [ ] Determine whether turrets inside the Forbidden Zone use the red-zone rate.
 - [ ] Confirm the +3.2 s offset is real and not an artifact of Model A's fitting.

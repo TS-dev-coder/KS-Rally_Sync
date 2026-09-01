@@ -814,7 +814,7 @@ maybe('each result row shows the coordinates and speed behind its number', async
     assert.match(facts, /X:536 Y:740/, 'the lead coordinates should be on the row');
     assert.match(facts, /X:508 Y:730/, 'and the target coordinates too');
     assert.match(facts, /\+25%/, 'and the speed that scaled the march');
-    assert.match(facts, /29\.7 tiles/);
+    assert.match(facts, /29 km/);
   } finally { teardown(ctx); }
 });
 
@@ -861,7 +861,7 @@ maybe('lead chips carry their coordinates inline, not only in a tooltip', async 
     chips.forEach((c) => { byName[c.querySelector('.chip-name').textContent] = c; });
 
     // Coordinates, speed, and the distance to the chosen target.
-    assert.strictEqual(byName.TS.querySelector('.chip-sub').textContent, '536,740 · +25% · 30t');
+    assert.strictEqual(byName.TS.querySelector('.chip-sub').textContent, '536,740 · +25% · 29 km');
     assert.strictEqual(byName.Cabo.querySelector('.chip-sub').textContent, 'no coordinates');
     assert.ok(byName.Cabo.classList.contains('is-incomplete'),
       'a lead with nothing set should read as incomplete on the chip itself');

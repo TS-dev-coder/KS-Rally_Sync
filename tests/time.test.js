@@ -55,3 +55,15 @@ test('countdown formats minutes and seconds, signed', () => {
   assert.strictEqual(dom.countdown(3725), '1:02:05');
   assert.strictEqual(dom.countdown(-7), '-0:07');
 });
+
+test('distance is formatted the way the game states it', () => {
+  // Verified against the game: panning the map shows distance from the Town
+  // Center in km, and one tile is exactly one kilometre. It floors — 20.25
+  // reads as 20km and 7.21 as 7km — so matching that lets the app's numbers be
+  // compared with the game's directly.
+  assert.strictEqual(dom.km(20.25), '20 km');
+  assert.strictEqual(dom.km(7.21), '7 km');
+  assert.strictEqual(dom.km(409.7), '409 km');
+  assert.strictEqual(dom.km(0), '0 km');
+  assert.strictEqual(dom.km(NaN), '—', 'a missing distance must not read as 0 km');
+});

@@ -55,6 +55,21 @@
     return node;
   }
 
+  /**
+   * Distance the way the game states it.
+   *
+   * Checked against the game itself: panning the map shows a bubble reading the
+   * distance from your Town Center, and one map tile is exactly one kilometre.
+   * At X:547 Y:757 from a TC at 536,740 it reads 20km against a Euclidean 20.25;
+   * at X:542 Y:744 it reads 7km against 7.21. The game floors, so this does too,
+   * and the app's numbers can be compared with the game's directly.
+   */
+  function km(tiles) {
+    var value = Number(tiles);
+    if (!isFinite(value)) return '—';
+    return Math.floor(value) + ' km';
+  }
+
   // ------------------------------------------------------------ time display
 
   function pad2(n) { return (n < 10 ? '0' : '') + n; }
@@ -127,6 +142,7 @@
   root.RallySync = root.RallySync || {};
   root.RallySync.dom = {
     $: $, $$: $$, el: el, clear: clear, on: on,
+    km: km,
     pad2: pad2,
     utcClock: utcClock,
     localClock: localClock,

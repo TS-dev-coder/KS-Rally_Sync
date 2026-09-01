@@ -492,7 +492,7 @@
       // selecting them rather than after reading the results.
       var reach = '';
       if (!missing && target && target.x !== null && target.y !== null) {
-        reach = ' · ' + C.distanceTiles(lead, target).toFixed(0) + 't';
+        reach = ' · ' + d.km(C.distanceTiles(lead, target));
       }
       var detail = missing
         ? 'no coordinates'
@@ -1019,7 +1019,7 @@
         ? fact('from', 'X:' + lead.x + ' Y:' + lead.y) : null,
       target && target.x !== null && target.y !== null
         ? fact('to', 'X:' + target.x + ' Y:' + target.y) : null,
-      fact('dist', row.distance.toFixed(1) + ' tiles'),
+      fact('dist', d.km(row.distance)),
       lead && lead.marchSpeedUpPercent !== null
         ? fact('speed', '+' + lead.marchSpeedUpPercent + '%') : null,
       lead && lead.power ? fact('power', compact(lead.power)) : null

@@ -86,6 +86,10 @@ green is the moment it is genuinely live.
 Every screen with a game value on it has a collapsible **"Where do I find this?"** panel with
 the in-game steps.
 
+Distances are shown in **km**, the same unit and the same number the game itself displays when
+you pan the map — one map tile is one kilometre — so the two can be compared without
+converting anything.
+
 ## Features
 
 - **One time to set** — "start rallies at". The landing time is derived from whoever is

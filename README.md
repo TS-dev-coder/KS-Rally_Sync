@@ -16,6 +16,24 @@ It also hosts anywhere static (GitHub Pages, Netlify, Cloudflare Pages) — just
 folder. On a phone, use **Add to Home Screen**: iOS wipes website storage after 7 days of
 non-use, and installed web apps are exempt from that.
 
+### Deploying to GitHub Pages
+
+Pushing to `main` is all that is needed; the empty `.nojekyll` file tells Pages to serve the
+files as they are rather than running Jekyll over them first.
+
+A deploy is usually live in a minute or two, but can take closer to ten when the build queue
+is busy — and every file is then cached for a further `max-age=600`. If a change has not
+appeared, check which of the two is responsible before reaching for a hard reload:
+
+```
+curl -sI https://<user>.github.io/<repo>/css/styles.css | grep -i last-modified
+```
+
+Older than your push means the build has not deployed yet and refreshing cannot help.
+Newer than your push means the build is out and it really is your browser cache.
+The repo's Actions tab shows the same thing: the `pages build and deployment` job going
+green is the moment it is genuinely live.
+
 ## Use it
 
 1. **Leads** — add each player who opens rallies: name, city X/Y, March Speed Up %. Paste a

@@ -860,7 +860,8 @@ maybe('lead chips carry their coordinates inline, not only in a tooltip', async 
     const byName = {};
     chips.forEach((c) => { byName[c.querySelector('.chip-name').textContent] = c; });
 
-    assert.strictEqual(byName.TS.querySelector('.chip-sub').textContent, '536,740 · +25%');
+    // Coordinates, speed, and the distance to the chosen target.
+    assert.strictEqual(byName.TS.querySelector('.chip-sub').textContent, '536,740 · +25% · 30t');
     assert.strictEqual(byName.Cabo.querySelector('.chip-sub').textContent, 'no coordinates');
     assert.ok(byName.Cabo.classList.contains('is-incomplete'),
       'a lead with nothing set should read as incomplete on the chip itself');

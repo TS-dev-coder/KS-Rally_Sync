@@ -35,8 +35,13 @@
     },
     {
       key: 'hq',
-      label: 'Alliance HQ',
-      blurb: 'Marches on an alliance headquarters measured roughly 1.6x slower per tile than open map. One sample, at long range.'
+      label: 'Enemy HQ (attack)',
+      blurb: 'Attacking an enemy alliance headquarters carries about four minutes of fixed overhead on top of the usual per-tile rate. Measured over three marches from 404 to 678 tiles.'
+    },
+    {
+      key: 'hq_own',
+      label: 'Own HQ (reinforce)',
+      blurb: 'Reinforcing your own alliance headquarters. Carries a far smaller overhead than attacking an enemy one — about 22 seconds. One sample, at short range.'
     }
   ];
 
@@ -52,7 +57,8 @@
     { key: 'sanctuary', label: 'Sanctuary', zoneKey: 'general', gatherSeconds: 300 },
     { key: 'fortress', label: 'Fortress', zoneKey: 'general', gatherSeconds: 300 },
     { key: 'outpost', label: 'Outpost', zoneKey: 'general', gatherSeconds: 300 },
-    { key: 'hq', label: 'Alliance HQ', zoneKey: 'hq', gatherSeconds: 300 },
+    { key: 'hq', label: 'Enemy HQ', zoneKey: 'hq', gatherSeconds: 300 },
+    { key: 'hq_own', label: 'Own HQ (reinforce)', zoneKey: 'hq_own', gatherSeconds: 300 },
     { key: 'ruins', label: 'Ruins', zoneKey: 'ruins', gatherSeconds: 300 },
     { key: 'other', label: 'Other', zoneKey: 'general', gatherSeconds: 300 }
   ];
@@ -78,6 +84,7 @@
     if (target && target.zoneKey === 'turret') return 'turret';
     if (target && target.zoneKey === 'ruins') return 'ruins';
     if (target && target.zoneKey === 'hq') return 'hq';
+    if (target && target.zoneKey === 'hq_own') return 'hq_own';
     return 'other';
   }
 
@@ -111,17 +118,26 @@
         turret: { secPerTile: 1.313, offset: 3.2 },
 
         /**
-         * Three HQ marches at +25%, spanning 404 to 678 tiles, fit a straight
-         * line to within half a second: 1.3622 s/tile on a 238 s fixed
-         * overhead.
+         * ATTACKING an enemy HQ. Three marches at +25%, spanning 404 to 678
+         * tiles and all close to an axis, fit a straight line to within half a
+         * second: 1.3622 s/tile on a 238 s fixed overhead.
          *
          * The overhead is the whole story. Measured only near 405 tiles it
          * looked like a higher per-tile rate; the 678 tile march showed the
          * rate falling with distance, which is what a large constant does when
-         * you divide it back out. Note how close 1.362 is to the 1.313 of open
-         * map - the target type appears to change the overhead, not the speed.
+         * divided back out. Note how close 1.362 is to the 1.313 of open map:
+         * the action changes the overhead, not the speed.
          */
         hq: { secPerTile: 1.3622, offset: 238.0 },
+
+        /**
+         * REINFORCING your own HQ is a different action entirely. A 14.4 tile
+         * reinforcement took 38 s, where the attack model predicts 254 s. At
+         * the usual 1.3622 s/tile that implies about 22 s of overhead rather
+         * than 238. One sample, so the rate and the overhead cannot yet be
+         * separated.
+         */
+        hq_own: { secPerTile: 1.3622, offset: 22.3 },
 
         // The community's own claim that the Forbidden Zone runs 1.95x slower,
         // applied to the measured open-map rate. Untested.
@@ -137,6 +153,7 @@
         general: { sampleCount: 2, minDistance: 29.7, maxDistance: 34.2, speedPercents: [25] },
         turret: null,
         hq: { sampleCount: 3, minDistance: 404.3, maxDistance: 678.1, speedPercents: [25] },
+        hq_own: { sampleCount: 1, minDistance: 14.4, maxDistance: 14.4, speedPercents: [25] },
         castle_relic: null,
         ruins: null
       }
@@ -150,7 +167,8 @@
         castle_relic: { secPerTile: 1 / 0.185, offset: 3.2 },
         turret: { secPerTile: 1 / 0.360, offset: 3.2 },
         ruins: { secPerTile: 1 / 0.185, offset: 3.2 },
-        hq: { secPerTile: 1 / 0.360, offset: 3.2 }
+        hq: { secPerTile: 1 / 0.360, offset: 3.2 },
+        hq_own: { secPerTile: 1 / 0.360, offset: 3.2 }
       }
     },
     sixSecond: {
@@ -162,7 +180,8 @@
         castle_relic: { secPerTile: 6 * (0.360 / 0.185), offset: 0 },
         turret: { secPerTile: 6, offset: 0 },
         ruins: { secPerTile: 6 * (0.360 / 0.185), offset: 0 },
-        hq: { secPerTile: 6, offset: 0 }
+        hq: { secPerTile: 6, offset: 0 },
+        hq_own: { secPerTile: 6, offset: 0 }
       }
     }
   };
@@ -180,7 +199,8 @@
     castle_relic: 'unverified',
     turret: 'unverified',
     ruins: 'guess',
-    hq: 'unverified'
+    hq: 'unverified',
+    hq_own: 'guess'
   };
 
   /** Default parameters for the optional geometric Relic model. All tunable. */

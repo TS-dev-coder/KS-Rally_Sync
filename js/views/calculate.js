@@ -431,6 +431,7 @@
 
   function leadGroup() {
     var settings = S.data.settings;
+    var target = S.findTarget(settings.selectedTargetId);
     var selected = selectedLeads();
     var selectedIds = selected.map(function (l) { return l.id; });
 
@@ -487,10 +488,17 @@
       // Shown in the chip rather than a tooltip: there is no hover on a phone,
       // which is exactly where checking a coordinate matters most.
       var missing = lead.x === null || lead.y === null;
+      // Distance to the chosen target, so you can see who is far before
+      // selecting them rather than after reading the results.
+      var reach = '';
+      if (!missing && target && target.x !== null && target.y !== null) {
+        reach = ' · ' + C.distanceTiles(lead, target).toFixed(0) + 't';
+      }
       var detail = missing
         ? 'no coordinates'
         : lead.x + ',' + lead.y +
-          (lead.marchSpeedUpPercent === null ? ' · no speed' : ' · +' + lead.marchSpeedUpPercent + '%');
+          (lead.marchSpeedUpPercent === null ? ' · no speed' : ' · +' + lead.marchSpeedUpPercent + '%') +
+          reach;
 
       chips.appendChild(el('button.chip.chip-stacked' +
         (isSelected ? ' is-selected' : '') + (missing ? ' is-incomplete' : ''), {

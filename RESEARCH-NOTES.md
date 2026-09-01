@@ -426,6 +426,40 @@ versions of this model, so their ratios to the observed times (2.01, 2.03, 1.33,
 0.77) describe the revision history, not the game. Only the current model against all six
 observations means anything, and there five fit within half a second.
 
+### Seventh measurement — attacking and reinforcing are different actions
+
+**2026-09-02.** The short HQ march asked for above: 14.4 tiles, **38 seconds**, where the
+overhead model predicted 254.
+
+Taken at face value that destroyed the model, and worse, made march time non-monotonic in
+distance: an HQ at 14.4 tiles taking 38 s while a Terror at 29.7 tiles took 34.5 s. Twice as
+far and faster. Consecutive slopes between HQ marches read 2.055, 1.152, 1.365 and 6.412
+s/tile, which no line, curve or distance metric can produce.
+
+**The missing variable was the action, not the geometry.** That march was *reinforcing the
+player's own alliance HQ*; the four long ones were *attacks on enemy HQs*. Those are
+different operations, and there was never any reason to expect them to share a rate.
+
+Separated out, the attack model is untouched and still fits to within half a second:
+
+| enemy-HQ attack | predicts | actual |
+|---|---|---|
+| 404.3 t | 678.6 s | 679 s |
+| 409.7 t | 684.4 s | 684 s |
+| 678.1 t | 977.0 s | 977 s |
+
+And reinforcing gets its own zone. At the usual 1.3622 s/tile the 38 s march implies about
+**22 s of overhead**, against 238 s for an attack. One sample, so the rate and the overhead
+cannot be separated yet.
+
+**The lesson, recorded because it has now happened three times:** every wrong model in this
+document came from pooling observations that looked comparable and were not. Terror with
+base, distance with target type, attack with reinforcement. The data was never noisy; the
+categories were wrong.
+
+**Still unexplained:** the 756 tile attack at 1378 s, the only strongly diagonal route.
+Flagged in the app, deliberately not modelled.
+
 **Still untested:** every sample so far was at +25%, so the speed multiplier is assumed, not
 measured — and it matters more now, because it is unknown whether the 238 s overhead scales
 with speed or sits outside it. Two marches to the same target at different speeds would
@@ -456,6 +490,8 @@ zone; log one and see.
       per target type, and the per-tile rate is roughly universal.
 - [ ] **A short march (~30 tiles) to an alliance HQ.** Confirms the overhead outright: it
       should take about 4m 31s, against 53 s or 34 s under the refuted models.
+- [ ] **A second reinforcement of your own HQ, at a clearly longer range.** Would separate
+      the reinforcement rate from its overhead; one sample cannot.
 - [ ] **A second strongly diagonal march** (dx and dy roughly equal). Would confirm or kill
       the grid-path reading of the 756 tile anomaly, which is currently flagged but not
       modelled.

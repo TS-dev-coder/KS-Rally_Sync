@@ -489,8 +489,13 @@
     var chips = el('div.chips');
     S.data.leads.forEach(function (lead) {
       var isSelected = selectedIds.indexOf(lead.id) !== -1;
+      var detail = (lead.x === null || lead.y === null)
+        ? 'no coordinates set'
+        : 'X:' + lead.x + ' Y:' + lead.y +
+          (lead.marchSpeedUpPercent === null ? ' · no speed %' : ' · +' + lead.marchSpeedUpPercent + '%');
       chips.appendChild(el('button.chip' + (isSelected ? ' is-selected' : ''), {
         type: 'button',
+        title: (lead.name || 'Unnamed') + ' — ' + detail,
         onclick: function () { toggleLead(lead.id); }
       }, [isSelected ? icon('check', 13) : null, lead.name || 'Unnamed']));
     });
@@ -926,7 +931,15 @@
       fact('march', C.formatDuration(row.marchSeconds)),
       gathering ? fact('departs', d.utcClock(row.departMs)) : null,
       fact('lands', d.utcClock(row.landingMs)),
+      // The inputs behind the number, so a mistyped coordinate or speed is
+      // visible here rather than only on the Leads tab.
+      lead && lead.x !== null && lead.y !== null
+        ? fact('from', 'X:' + lead.x + ' Y:' + lead.y) : null,
+      target && target.x !== null && target.y !== null
+        ? fact('to', 'X:' + target.x + ' Y:' + target.y) : null,
       fact('dist', row.distance.toFixed(1) + ' tiles'),
+      lead && lead.marchSpeedUpPercent !== null
+        ? fact('speed', '+' + lead.marchSpeedUpPercent + '%') : null,
       lead && lead.power ? fact('power', compact(lead.power)) : null
     ]));
 

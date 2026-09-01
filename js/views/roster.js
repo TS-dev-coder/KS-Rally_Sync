@@ -60,6 +60,17 @@
       return;
     }
 
+    var duplicates = leads.filter(isDuplicateName).length;
+    if (duplicates > 0) {
+      container.appendChild(el('div.banner.banner-warn', {}, [
+        icon('alert', 16),
+        el('span', {}, [
+          el('strong', { text: duplicates + ' leads share a name. ' }),
+          'They will appear as identical rows with different launch times, which is how somebody taps at the wrong moment. Rename or delete the spares.'
+        ])
+      ]));
+    }
+
     container.appendChild(filterBar());
 
     var visible = leads.filter(matchesFilter);
@@ -268,7 +279,8 @@
         el('div.card-title', {}, [
           el('span', { text: lead.name || 'Unnamed lead' }),
           lead.alliance ? el('span.tag.tag-zone', { text: lead.alliance }) : null,
-          lead.squad ? el('span.tag.tag-squad', { text: lead.squad }) : null
+          lead.squad ? el('span.tag.tag-squad', { text: lead.squad }) : null,
+          isDuplicateName(lead) ? el('span.tag.tag-warn', { text: 'duplicate name' }) : null
         ]),
         el('div.card-meta', {}, [
           el('span', { text: coordText(lead) }),
@@ -387,6 +399,18 @@
   function patch(lead, changes) {
     var current = S.findLead(lead.id) || lead;
     S.upsertLead(Object.assign({}, current, changes));
+  }
+
+  /**
+   * Two leads with the same name produce two identical-looking rows with
+   * different launch times, which is how somebody taps at the wrong moment.
+   */
+  function isDuplicateName(lead) {
+    var name = String(lead.name || '').trim().toLowerCase();
+    if (name === '') return false;
+    return S.data.leads.filter(function (other) {
+      return String(other.name || '').trim().toLowerCase() === name;
+    }).length > 1;
   }
 
   function isComplete(lead) {

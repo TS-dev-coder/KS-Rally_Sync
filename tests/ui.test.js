@@ -779,3 +779,50 @@ maybe('logging a march reports how far the shipped default was out', async () =>
     assert.strictEqual(Math.round(plan.rows[0].marchSeconds), 35);
   } finally { teardown(ctx); }
 });
+
+maybe('each result row shows the coordinates and speed behind its number', async () => {
+  const ctx = await boot();
+  try {
+    const { state } = ctx.RS;
+    const target = state.upsertTarget({
+      name: 'Terror', x: 508, y: 730, zoneKey: 'general', gatherSeconds: 300
+    });
+    const lead = state.upsertLead({ name: 'TS', x: 536, y: 740, marchSpeedUpPercent: 25 });
+
+    state.updateSettings({
+      selectedTargetId: target.id, selectedLeadIds: [lead.id],
+      mode: 'sync', startMs: Date.now() + 600000
+    });
+    ctx.RS.app.go('roster');
+    ctx.RS.app.go('calculate');
+
+    const facts = ctx.window.document.querySelector('.result .result-facts').textContent;
+    assert.match(facts, /X:536 Y:740/, 'the lead coordinates should be on the row');
+    assert.match(facts, /X:508 Y:730/, 'and the target coordinates too');
+    assert.match(facts, /\+25%/, 'and the speed that scaled the march');
+    assert.match(facts, /29\.7 tiles/);
+  } finally { teardown(ctx); }
+});
+
+maybe('leads sharing a name are flagged, because identical rows get mistapped', async () => {
+  const ctx = await boot();
+  try {
+    const { state } = ctx.RS;
+    state.upsertLead({ name: 'TS', x: 430, y: 604, marchSpeedUpPercent: 62 });
+    ctx.RS.app.go('roster');
+    assert.strictEqual(
+      ctx.window.document.querySelectorAll('.tag-warn').length, 0,
+      'one lead of that name is fine'
+    );
+
+    state.upsertLead({ name: 'ts', x: 536, y: 740, marchSpeedUpPercent: 25 });
+    ctx.RS.app.refresh();
+
+    const text = ctx.window.document.querySelector('#main').textContent;
+    assert.match(text, /share a name/i, 'the clash should be called out');
+    assert.strictEqual(
+      ctx.window.document.querySelectorAll('.tag-warn').length, 2,
+      'both offenders tagged, and the match ignores case'
+    );
+  } finally { teardown(ctx); }
+});

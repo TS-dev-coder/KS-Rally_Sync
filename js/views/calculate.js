@@ -489,15 +489,25 @@
     var chips = el('div.chips');
     S.data.leads.forEach(function (lead) {
       var isSelected = selectedIds.indexOf(lead.id) !== -1;
-      var detail = (lead.x === null || lead.y === null)
-        ? 'no coordinates set'
-        : 'X:' + lead.x + ' Y:' + lead.y +
-          (lead.marchSpeedUpPercent === null ? ' · no speed %' : ' · +' + lead.marchSpeedUpPercent + '%');
-      chips.appendChild(el('button.chip' + (isSelected ? ' is-selected' : ''), {
+      // Shown in the chip rather than a tooltip: there is no hover on a phone,
+      // which is exactly where checking a coordinate matters most.
+      var missing = lead.x === null || lead.y === null;
+      var detail = missing
+        ? 'no coordinates'
+        : lead.x + ',' + lead.y +
+          (lead.marchSpeedUpPercent === null ? ' · no speed' : ' · +' + lead.marchSpeedUpPercent + '%');
+
+      chips.appendChild(el('button.chip.chip-stacked' +
+        (isSelected ? ' is-selected' : '') + (missing ? ' is-incomplete' : ''), {
         type: 'button',
-        title: (lead.name || 'Unnamed') + ' — ' + detail,
         onclick: function () { toggleLead(lead.id); }
-      }, [isSelected ? icon('check', 13) : null, lead.name || 'Unnamed']));
+      }, [
+        isSelected ? icon('check', 13) : null,
+        el('span.chip-main', {}, [
+          el('span.chip-name', { text: lead.name || 'Unnamed' }),
+          el('span.chip-sub', { text: detail })
+        ])
+      ]));
     });
     children.push(chips);
 

@@ -826,3 +826,29 @@ maybe('leads sharing a name are flagged, because identical rows get mistapped', 
     );
   } finally { teardown(ctx); }
 });
+
+maybe('lead chips carry their coordinates inline, not only in a tooltip', async () => {
+  const ctx = await boot();
+  try {
+    const { state } = ctx.RS;
+    const target = state.upsertTarget({
+      name: 'Terror', x: 508, y: 730, zoneKey: 'general', gatherSeconds: 300
+    });
+    const ready = state.upsertLead({ name: 'TS', x: 536, y: 740, marchSpeedUpPercent: 25 });
+    const blank = state.upsertLead({ name: 'Cabo' });
+
+    state.updateSettings({ selectedTargetId: target.id, selectedLeadIds: [ready.id] });
+    // go() is a no-op when already on that tab, so force the re-render.
+    ctx.RS.app.go('calculate');
+    ctx.RS.app.refresh();
+
+    const chips = Array.from(ctx.window.document.querySelectorAll('.chip-stacked'));
+    const byName = {};
+    chips.forEach((c) => { byName[c.querySelector('.chip-name').textContent] = c; });
+
+    assert.strictEqual(byName.TS.querySelector('.chip-sub').textContent, '536,740 · +25%');
+    assert.strictEqual(byName.Cabo.querySelector('.chip-sub').textContent, 'no coordinates');
+    assert.ok(byName.Cabo.classList.contains('is-incomplete'),
+      'a lead with nothing set should read as incomplete on the chip itself');
+  } finally { teardown(ctx); }
+});

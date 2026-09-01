@@ -126,7 +126,23 @@
 
       if (alarmOn && A.isPrimed()) {
         if (seconds <= 10 && seconds > 0 && !fired.warn) { fired.warn = true; A.warn(); }
+        if (seconds <= 5 && seconds > 0) {
+          var pipKey = 'pip' + Math.ceil(seconds);
+          if (!fired[pipKey]) { fired[pipKey] = true; A.pip(); }
+        }
         if (seconds <= 0 && seconds > -3 && !fired.go) { fired.go = true; A.go(); }
+
+        var who = slot.name || 'Rally';
+        [60, 30, 10].forEach(function (mark) {
+          if (seconds <= mark && seconds > mark - 2 && !fired['say' + mark]) {
+            fired['say' + mark] = true;
+            A.speak(who + ', rally in ' + Math.round(seconds) + ' seconds');
+          }
+        });
+        if (seconds <= 0 && seconds > -3 && !fired.sayGo) {
+          fired.sayGo = true;
+          A.speak(who + ', go now');
+        }
       }
     }
 

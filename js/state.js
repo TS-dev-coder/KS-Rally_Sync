@@ -30,7 +30,9 @@
     groupBy: 'none',          // none | alliance | squad | target
 
     alarmEnabled: true,
-    alarmLeadSeconds: 10,     // warning pips this long before a launch
+    alarmLeadSeconds: 10,
+    alarmVolume: 0.8,
+    speechEnabled: true,     // warning pips this long before a launch
 
     theme: 'system',          // system | light | dark
 

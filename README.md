@@ -45,9 +45,12 @@ the in-game steps.
   results by alliance, squad or target with committed power per group.
 - **Rally capacity and power** — optional, and never part of the timing math.
 - **Event setups** — save a named target/roster/mode combination and reload it next event.
-- **Alarm, on by default** — sound and vibration before your launch and again at the moment
-  itself, plus a full-screen GO countdown. Arms itself on your first tap, because browsers
-  refuse audio before that.
+- **Alarm, on by default** — a heads-up tone, a tick every second through the last five, and
+  a longer tone at the launch, with vibration on mobile. Plus a full-screen GO countdown.
+  Arms itself on your first tap, because browsers refuse audio before that.
+- **Spoken callouts** — "TS, rally in 30 seconds", then "TS, go now", at 60 / 30 / 10 seconds
+  and the moment itself. Uses your device's own voice, so it needs no assets and works
+  offline. Toggle and volume under More.
 - **Per-person share links** — the whole plan rides in the URL fragment, so nothing is
   uploaded anywhere and the recipient needs no setup.
 - **Drag to reorder** — sequence order by drag handle or arrow keys.

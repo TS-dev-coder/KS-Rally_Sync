@@ -1626,3 +1626,5 @@ body.is-solo .app { padding-bottom: 30px; }
   border-radius: 8px;
 }
 .ss-footer .btn-link { margin-left: auto; }
+
+.volume-slider { padding: 0; height: 34px; accent-color: var(--accent); background: none; border: none; }

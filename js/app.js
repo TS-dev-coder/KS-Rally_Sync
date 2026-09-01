@@ -33,6 +33,8 @@
   function start() {
     S.load();
     applyTheme(S.data.settings.theme);
+    A.setVolume(S.data.settings.alarmVolume);
+    A.setSpeech(S.data.settings.speechEnabled);
 
     main = d.$('#main');
     nav = d.$('#nav');

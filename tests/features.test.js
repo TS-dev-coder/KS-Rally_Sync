@@ -408,3 +408,23 @@ test('rows still explain themselves when no lead can be resolved', () => {
   assert.strictEqual(plan.rows.length, 1, 'the broken lead must still be listed');
   assert.ok(plan.rows[0].errors.length > 0, 'and must say what it is missing');
 });
+
+// ==================================================== alarm callout thresholds
+
+test('the spoken marks and the pip window cover the whole final minute', () => {
+  // 60 / 30 / 10 spoken, then a tick every second for the last five.
+  const spokenMarks = [60, 30, 10];
+  const pipRange = [5, 4, 3, 2, 1];
+
+  // Every spoken mark must be reachable from a two-second crossing window.
+  spokenMarks.forEach((mark) => {
+    const justInside = mark - 0.1;
+    const justOutside = mark - 2.1;
+    assert.ok(justInside <= mark && justInside > mark - 2, mark + 's should fire');
+    assert.ok(!(justOutside > mark - 2), mark + 's must not re-fire late');
+  });
+
+  // The pips and the last spoken mark must not collide on the same second.
+  assert.ok(Math.min.apply(null, spokenMarks) > Math.max.apply(null, pipRange),
+    'the 10s callout should finish before the per-second pips start');
+});

@@ -172,12 +172,61 @@
           }
         })
       ]));
-      section.appendChild(el('button.btn.btn-secondary', {
-        type: 'button',
-        onclick: function () {
-          if (root.RallySync.alarm.prime()) root.RallySync.alarm.warn();
-        }
-      }, ['Test the alarm']));
+      section.appendChild(el('label.field', {}, [
+        el('span.field-label', { text: 'Volume' }),
+        el('input.input.volume-slider', {
+          type: 'range', min: '0', max: '1', step: '0.05',
+          value: String(settings.alarmVolume === undefined ? 0.8 : settings.alarmVolume),
+          oninput: function (e) {
+            var v = Number(e.target.value);
+            root.RallySync.alarm.setVolume(v);
+            S.updateSettings({ alarmVolume: v });
+          }
+        })
+      ]));
+
+      var speechOn = settings.speechEnabled !== false;
+      section.appendChild(el('label.toggle-row', {}, [
+        el('input', {
+          type: 'checkbox', checked: speechOn,
+          onchange: function (e) {
+            S.updateSettings({ speechEnabled: e.target.checked });
+            root.RallySync.alarm.setSpeech(e.target.checked);
+            root.RallySync.app.refresh();
+          }
+        }),
+        el('span', {}, [
+          el('span.toggle-label', { text: 'Say it out loud' }),
+          el('span.toggle-help', {
+            text: root.RallySync.alarm.speechSupported()
+              ? 'Calls each lead by name — “TS, rally in 30 seconds”, then “TS, go now” — at 60, 30 and 10 seconds. Uses your device’s own voice, so it works offline.'
+              : 'This browser has no speech support, so only the tones will play.'
+          })
+        ])
+      ]));
+
+      section.appendChild(el('div.button-row', {}, [
+        el('button.btn.btn-secondary', {
+          type: 'button',
+          onclick: function () {
+            if (root.RallySync.alarm.prime()) root.RallySync.alarm.warn();
+          }
+        }, ['Test warning']),
+        speechOn ? el('button.btn.btn-secondary', {
+          type: 'button',
+          onclick: function () {
+            root.RallySync.alarm.prime();
+            var lead = S.data.leads[0];
+            root.RallySync.alarm.speak((lead && lead.name ? lead.name : 'TS') + ', rally in 30 seconds');
+          }
+        }, ['Test voice']) : null,
+        el('button.btn.btn-secondary', {
+          type: 'button',
+          onclick: function () {
+            if (root.RallySync.alarm.prime()) root.RallySync.alarm.go();
+          }
+        }, ['Test launch alarm'])
+      ]));
     }
 
     return section;

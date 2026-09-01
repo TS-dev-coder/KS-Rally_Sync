@@ -932,7 +932,7 @@
 
     live.push({
       node: node, countdownNode: countdownNode, pill: countdownPill,
-      rallyOpenMs: row.rallyOpenMs, leadId: row.leadId
+      rallyOpenMs: row.rallyOpenMs, leadId: row.leadId, name: row.name || 'Rally'
     });
     return node;
   }
@@ -980,6 +980,7 @@
     var soonest = null;
     var leadSeconds = Number(S.data.settings.alarmLeadSeconds) || 10;
     var alarmOn = S.data.settings.alarmEnabled !== false;
+    var speakOn = alarmOn && S.data.settings.speechEnabled !== false;
 
     for (var i = 0; i < live.length; i++) {
       var item = live[i];
@@ -992,9 +993,15 @@
       item.node.classList.toggle('is-next', seconds > 0 && seconds <= 60);
 
       if (alarmOn && A.isPrimed()) {
+        // Heads-up, then a tick every second for the last five, then the launch.
         if (seconds <= leadSeconds && seconds > 0) A.fireOnce(item.leadId + ':warn', 'warn');
+        if (seconds <= 5 && seconds > 0) {
+          A.fireOnce(item.leadId + ':pip:' + Math.ceil(seconds), 'pip');
+        }
         if (seconds <= 0 && seconds > -3) A.fireOnce(item.leadId + ':go', 'go');
       }
+
+      if (speakOn) announce(item, seconds);
 
       if (seconds > -1 && (soonest === null || seconds < soonest)) soonest = seconds;
     }
@@ -1003,6 +1010,24 @@
       if (live.length === 0) nextGoNode.textContent = 'no plan yet';
       else if (soonest === null) nextGoNode.textContent = 'all launched';
       else nextGoNode.textContent = 'first go in ' + d.countdown(soonest);
+    }
+  }
+
+  /** Spoken callouts by name, so you can keep your eyes on the game. */
+  var SAY_AT = [60, 30, 10];
+
+  function announce(item, seconds) {
+    for (var i = 0; i < SAY_AT.length; i++) {
+      var mark = SAY_AT[i];
+      // A two-second window catches the crossing even if a tick is delayed, and
+      // the spoken number is the real remaining time rather than the mark.
+      if (seconds <= mark && seconds > mark - 2) {
+        A.sayOnce(item.leadId + ':say:' + mark,
+          item.name + ', rally in ' + Math.round(seconds) + ' seconds');
+      }
+    }
+    if (seconds <= 0 && seconds > -3) {
+      A.sayOnce(item.leadId + ':say:go', item.name + ', go now');
     }
   }
 

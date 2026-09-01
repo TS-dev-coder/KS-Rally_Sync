@@ -19,7 +19,7 @@ non-use, and installed web apps are exempt from that.
 ## Use it
 
 1. **Leads** — add each player who opens rallies: name, city X/Y, March Speed Up %. Paste a
-   whole roster at once, or tap coordinates on a map instead of typing them.
+   whole roster at once instead of adding people one at a time.
 2. **Targets** — fill in your kingdom's coordinates once. Castle, turrets, Ruins, Sanctuary,
    Fortress and Outpost come preloaded.
 3. **Calculate** — set a base time, choose how long after it marches should land, pick who is
@@ -101,7 +101,6 @@ js/alarm.js              WebAudio tones and vibration
 js/storage.js            localStorage with a memory fallback
 js/state.js              app state and persistence
 js/guide.js              in-game "where to find this" instructions
-js/mappicker.js          tap-a-map coordinate picker
 js/focus.js              full-screen single-person countdown
 js/dragorder.js          pointer-based drag reordering
 js/views/*.js            one file per screen

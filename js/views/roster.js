@@ -12,7 +12,6 @@
   var S = root.RallySync.state;
   var G = root.RallySync.guide;
   var I = root.RallySync.icons;
-  var MP = root.RallySync.mapPicker;
   var RI = root.RallySync.rosterImport;
   var el = d.el;
   var icon = I.icon;
@@ -295,21 +294,15 @@
       onchange: function (e) { patch(lead, { name: e.target.value }); }
     })));
 
-    body.appendChild(el('div.coord-row', {}, [
-      el('div.grid-2', {}, [
-        field('X', el('input.input', {
-          type: 'number', inputmode: 'numeric', value: valueOf(lead.x), placeholder: '—',
-          onchange: function (e) { patch(lead, { x: e.target.value }); }
-        })),
-        field('Y', el('input.input', {
-          type: 'number', inputmode: 'numeric', value: valueOf(lead.y), placeholder: '—',
-          onchange: function (e) { patch(lead, { y: e.target.value }); }
-        }))
-      ]),
-      el('button.btn.btn-secondary.btn-map', {
-        type: 'button',
-        onclick: function () { openMapFor(lead); }
-      }, [icon('pin', 15), el('span', { text: 'Pick on map' })])
+    body.appendChild(el('div.grid-2', {}, [
+      field('X', el('input.input', {
+        type: 'number', inputmode: 'numeric', value: valueOf(lead.x), placeholder: '—',
+        onchange: function (e) { patch(lead, { x: e.target.value }); }
+      })),
+      field('Y', el('input.input', {
+        type: 'number', inputmode: 'numeric', value: valueOf(lead.y), placeholder: '—',
+        onchange: function (e) { patch(lead, { y: e.target.value }); }
+      }))
     ]));
     body.appendChild(G.helpBlock('cityCoords'));
 
@@ -351,7 +344,6 @@
     ]));
     body.appendChild(G.helpBlock('rallyPower'));
 
-
     body.appendChild(el('div.card-actions', {}, [
       el('button.btn.btn-ghost.btn-danger', {
         type: 'button',
@@ -370,34 +362,6 @@
 
     card.appendChild(body);
     return card;
-  }
-
-  function openMapFor(lead) {
-    MP.open({
-      title: 'Where is ' + (lead.name || 'this lead') + '?',
-      subtitle: 'Tap or drag to place their city. Targets are shown for reference.',
-      x: lead.x, y: lead.y,
-      markers: mapMarkers(lead.id),
-      onPick: function (x, y) {
-        patch(lead, { x: x, y: y });
-      }
-    });
-  }
-
-  /** Everything already placed, so a mistyped coordinate stands out. */
-  function mapMarkers(exceptLeadId) {
-    var markers = [];
-    S.data.targets.forEach(function (t) {
-      if (t.x !== null && t.y !== null) {
-        markers.push({ x: t.x, y: t.y, label: t.name, kind: 'target' });
-      }
-    });
-    S.data.leads.forEach(function (l) {
-      if (l.id !== exceptLeadId && l.x !== null && l.y !== null) {
-        markers.push({ x: l.x, y: l.y, label: l.name, kind: 'lead' });
-      }
-    });
-    return markers;
   }
 
   function datalist(id, values) {

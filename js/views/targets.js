@@ -13,7 +13,6 @@
   var Z = root.RallySync.zones;
   var G = root.RallySync.guide;
   var I = root.RallySync.icons;
-  var MP = root.RallySync.mapPicker;
   var el = d.el;
   var icon = I.icon;
 
@@ -39,7 +38,7 @@
         icon('alert', 16),
         el('span', {}, [
           el('strong', { text: needsCoords + ' target' + (needsCoords === 1 ? '' : 's') + ' still need coordinates. ' }),
-          'Open one and fill in the X/Y you see in game, or pick it on the map.'
+          'Open one and fill in the X/Y you see in game.'
         ])
       ]));
     }
@@ -89,21 +88,15 @@
       onchange: function (e) { patch(target, { name: e.target.value }); }
     })));
 
-    body.appendChild(el('div.coord-row', {}, [
-      el('div.grid-2', {}, [
-        field('X', el('input.input', {
-          type: 'number', inputmode: 'numeric', value: valueOf(target.x), placeholder: '—',
-          onchange: function (e) { patch(target, { x: e.target.value }); }
-        })),
-        field('Y', el('input.input', {
-          type: 'number', inputmode: 'numeric', value: valueOf(target.y), placeholder: '—',
-          onchange: function (e) { patch(target, { y: e.target.value }); }
-        }))
-      ]),
-      el('button.btn.btn-secondary.btn-map', {
-        type: 'button',
-        onclick: function () { openMapFor(target); }
-      }, [icon('pin', 15), el('span', { text: 'Pick on map' })])
+    body.appendChild(el('div.grid-2', {}, [
+      field('X', el('input.input', {
+        type: 'number', inputmode: 'numeric', value: valueOf(target.x), placeholder: '—',
+        onchange: function (e) { patch(target, { x: e.target.value }); }
+      })),
+      field('Y', el('input.input', {
+        type: 'number', inputmode: 'numeric', value: valueOf(target.y), placeholder: '—',
+        onchange: function (e) { patch(target, { y: e.target.value }); }
+      }))
     ]));
     body.appendChild(G.helpBlock('targetCoords'));
 
@@ -147,29 +140,6 @@
 
     card.appendChild(body);
     return card;
-  }
-
-  function openMapFor(target) {
-    MP.open({
-      title: 'Where is ' + (target.name || 'this target') + '?',
-      subtitle: 'Tap or drag to place it. Other targets and your leads are shown for reference.',
-      x: target.x, y: target.y,
-      markers: markers(target.id),
-      onPick: function (x, y) { patch(target, { x: x, y: y }); }
-    });
-  }
-
-  function markers(exceptTargetId) {
-    var out = [];
-    S.data.targets.forEach(function (t) {
-      if (t.id !== exceptTargetId && t.x !== null && t.y !== null) {
-        out.push({ x: t.x, y: t.y, label: t.name, kind: 'target' });
-      }
-    });
-    S.data.leads.forEach(function (l) {
-      if (l.x !== null && l.y !== null) out.push({ x: l.x, y: l.y, label: l.name, kind: 'lead' });
-    });
-    return out;
   }
 
   /** "5 min", "2.5 min", or "none" for a solo march. */

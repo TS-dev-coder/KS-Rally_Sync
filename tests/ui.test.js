@@ -26,7 +26,7 @@ const SCRIPTS = [
   'js/dom.js', 'js/icons.js', 'js/zones.js', 'js/calculations.js',
   'js/roster-import.js', 'js/share.js', 'js/alarm.js',
   'js/storage.js', 'js/state.js', 'js/guide.js',
-  'js/mappicker.js', 'js/focus.js', 'js/dragorder.js',
+  'js/focus.js', 'js/dragorder.js',
   'js/views/roster.js', 'js/views/targets.js', 'js/views/calculate.js',
   'js/views/calibrate.js', 'js/views/settings.js', 'js/app.js'
 ];

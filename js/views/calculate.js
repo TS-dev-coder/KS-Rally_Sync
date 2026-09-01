@@ -799,13 +799,26 @@
       if (row.distance > range.maxDistance * 1.25 || row.distance < range.minDistance * 0.5) beyond++;
     });
 
-    if (!haveRange) return null;
+    // The diagonal warning stands on its own, even where no zone records a range.
+    var haveDiagonal = rows.some(function (row) {
+      return row.errors.length === 0 && row.diagonality > 0.6;
+    });
+    if (!haveRange && !haveDiagonal) return null;
     var range = { speedPercents: [25] };
     var offSpeed = Object.keys(speeds).filter(function (value) {
       return range.speedPercents.indexOf(Number(value)) === -1;
     }).length;
 
+    var diagonal = rows.filter(function (row) {
+      return row.errors.length === 0 && row.diagonality > 0.6;
+    }).length;
+
     var notes = [];
+    if (diagonal > 0) {
+      notes.push(diagonal + (diagonal === 1 ? ' march runs' : ' marches run') +
+        ' close to 45 degrees, and the one such march measured took about 30% ' +
+        'longer than its straight-line distance implies');
+    }
     if (offSpeed > 0) {
       notes.push(offSpeed + (offSpeed === 1 ? ' lead marches' : ' leads march') +
         ' at a speed the model has never been measured at (it was fitted only at +' +

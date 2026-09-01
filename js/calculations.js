@@ -23,6 +23,20 @@
     return Math.sqrt(dx * dx + dy * dy);
   }
 
+  /**
+   * How diagonal a route is: 0 is straight along an axis, 1 is exactly 45
+   * degrees. It matters because the one strongly diagonal march measured so far
+   * took far longer than its straight-line distance implies — its time matches
+   * the grid path instead. See RESEARCH-NOTES.md.
+   */
+  function diagonality(from, to) {
+    var dx = Math.abs(Number(to.x) - Number(from.x));
+    var dy = Math.abs(Number(to.y) - Number(from.y));
+    var longer = Math.max(dx, dy);
+    if (longer === 0) return 0;
+    return Math.min(dx, dy) / longer;
+  }
+
   /** A March Speed Up of 45% means troops move 1.45x as fast. */
   function speedMultiplier(percent) {
     return 1 + Number(percent) / 100;
@@ -481,6 +495,7 @@
         order: index,
         slot: slot,
         distance: resolved.distance,
+        diagonality: diagonality(lead, target),
         marchSeconds: resolved.seconds,
         tier: resolved.tier,
         zoneKeyUsed: resolved.zoneKeyUsed,
@@ -625,6 +640,7 @@
     buildMultiPlan: buildMultiPlan,
     landingFromStart: landingFromStart,
     distanceTiles: distanceTiles,
+    diagonality: diagonality,
     speedMultiplier: speedMultiplier,
     segmentLengthInsideCircle: segmentLengthInsideCircle,
     affineMarchSeconds: affineMarchSeconds,

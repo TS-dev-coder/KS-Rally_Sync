@@ -558,3 +558,51 @@ test('an untouched zone migrates to a better default, a calibrated one does not'
   assert.strictEqual(untouched(calibrated), false,
     'a zone fitted from real samples must never be overwritten by a new default');
 });
+
+// ================================================ the diagonal-route anomaly
+
+test('diagonality separates the five marches that fit from the one that does not', () => {
+  // Every march whose route runs close to an axis matched the straight-line
+  // model to within half a second. The single strongly diagonal one took about
+  // 30% longer, and its time matches the grid path instead.
+  const from = { x: 536, y: 740 };
+  const cases = [
+    { to: { x: 508, y: 730 }, fits: true },
+    { to: { x: 548, y: 708 }, fits: true },
+    { to: { x: 504, y: 1143 }, fits: true },
+    { to: { x: 154, y: 592 }, fits: true },
+    { to: { x: 497, y: 63 }, fits: true },
+    { to: { x: 999, y: 142 }, fits: false }   // the outlier
+  ];
+
+  cases.forEach((c) => {
+    const d = calc.diagonality(from, c.to);
+    if (c.fits) {
+      assert.ok(d < 0.4, 'a march that fits should be axis-aligned, got ' + d.toFixed(3));
+    } else {
+      assert.ok(d > 0.6, 'the outlier should be strongly diagonal, got ' + d.toFixed(3));
+    }
+  });
+});
+
+test('diagonality is 0 along an axis and 1 at exactly 45 degrees', () => {
+  assert.strictEqual(calc.diagonality({ x: 0, y: 0 }, { x: 100, y: 0 }), 0);
+  assert.strictEqual(calc.diagonality({ x: 0, y: 0 }, { x: 0, y: 100 }), 0);
+  assert.strictEqual(calc.diagonality({ x: 0, y: 0 }, { x: 100, y: 100 }), 1);
+  assert.strictEqual(calc.diagonality({ x: 5, y: 5 }, { x: 5, y: 5 }), 0, 'no distance, no angle');
+});
+
+test('the outlier time matches the grid path, not the straight line', () => {
+  const from = { x: 536, y: 740 }, to = { x: 999, y: 142 };
+  const euclidean = calc.distanceTiles(from, to);
+  const manhattan = Math.abs(to.x - from.x) + Math.abs(to.y - from.y);
+
+  // Back out the path length the observed 1378s implies, using the HQ zone.
+  const zone = zones.findZone(zones.defaultZoneFormulas(), 'hq');
+  const implied = (1378 - zone.constants.offset) * 1.25 / zone.constants.secPerTile;
+
+  assert.ok(Math.abs(implied - manhattan) / manhattan < 0.05,
+    'implied path ' + implied.toFixed(0) + ' should be near the grid path ' + manhattan);
+  assert.ok(Math.abs(implied - euclidean) / euclidean > 0.3,
+    'and nowhere near the straight line ' + euclidean.toFixed(0));
+});

@@ -373,6 +373,59 @@ The `power` formula type stays implemented and tested, but is marked refuted in 
 
 A 30 tile HQ march taking about four and a half minutes would confirm the overhead outright.
 
+### Sixth measurement — a diagonal route does not follow the straight line
+
+**2026-09-02.** A fourth HQ march, 756 tiles, took **22m 58s** against a predicted 17m 42s.
+Out by 316 seconds, where the previous five all landed within half a second.
+
+Seconds per tile across the four HQ marches is **not monotonic in distance**:
+
+| distance | 404.3 | 409.7 | 678.1 | 756.3 |
+|---|---|---|---|---|
+| s/tile | 1.680 | 1.670 | **1.441** | **1.822** |
+
+The 678-tile march is the fastest per tile and the 756-tile the slowest, so no function of
+distance alone can produce this. Same target type, same +25% speed, nothing else reported as
+different. Swapping the distance metric does not rescue it either: Euclidean fits the first
+three to 0.4 s then misses this one by 316 s, while Manhattan gets within 31 s of this one
+but fits the others 62 s out.
+
+**What separates it is the shape of the route.** Backing the implied path length out of each
+observed time:
+
+| march | diagonality | straight line | grid path | implied by the time | matches |
+|---|---|---|---|---|---|
+| Terror | 0.357 | 30 | 38 | 30 | straight line |
+| base | 0.375 | 34 | 44 | 34 | straight line |
+| HQ 404t | 0.079 | 404 | 435 | 405 | straight line |
+| HQ 410t | 0.387 | 410 | 530 | 409 | straight line |
+| HQ 678t | 0.058 | 678 | 716 | 678 | straight line |
+| **HQ 756t** | **0.774** | 756 | **1061** | **1046** | **grid path** |
+
+(diagonality = shorter axis / longer axis; 0 is straight along an axis, 1 is exactly 45
+degrees.)
+
+Every march below 0.4 follows the straight line. The single march at 0.774 follows the grid
+path, to within 1.4%. If that holds generally, a 45-degree march costs up to sqrt(2) = 1.41x
+its straight-line distance.
+
+**This is one data point and is NOT modelled.** Bending the formula around a single
+observation is how the previous two wrong models happened. Instead the app now computes the
+diagonality of every route and flags any above 0.6, saying plainly that the one such march
+measured ran about 30% long.
+
+**The confirming test: a second strongly diagonal march**, dx and dy roughly equal.
+
+| march | if straight line | if grid path |
+|---|---|---|
+| dx=dy=200 (283 tiles) to an HQ | 546 s | 674 s |
+| dx=dy=400 (566 tiles) to an HQ | 854 s | 1110 s |
+
+**A caution on comparing old predictions.** Six predictions were made by six different
+versions of this model, so their ratios to the observed times (2.01, 2.03, 1.33, 1.01, 1.16,
+0.77) describe the revision history, not the game. Only the current model against all six
+observations means anything, and there five fit within half a second.
+
 **Still untested:** every sample so far was at +25%, so the speed multiplier is assumed, not
 measured — and it matters more now, because it is unknown whether the 238 s overhead scales
 with speed or sits outside it. Two marches to the same target at different speeds would
@@ -403,9 +456,12 @@ zone; log one and see.
       per target type, and the per-tile rate is roughly universal.
 - [ ] **A short march (~30 tiles) to an alliance HQ.** Confirms the overhead outright: it
       should take about 4m 31s, against 53 s or 34 s under the refuted models.
+- [ ] **A second strongly diagonal march** (dx and dy roughly equal). Would confirm or kill
+      the grid-path reading of the 756 tile anomaly, which is currently flagged but not
+      modelled.
 - [ ] **Two marches to the same target at different speeds.** Settles whether the overhead
       scales with March Speed Up or sits outside it, and tests the speed multiplier at the
-      same time. This is now the most valuable measurement available.
+      same time. Every measurement so far has been at +25%.
 - [ ] A march at a **clearly different speed** (not +25%). The speed multiplier is assumed
       throughout and has never been measured.
 - [ ] Any march at all on a Castle or the Ruins, neither of which has ever been measured.

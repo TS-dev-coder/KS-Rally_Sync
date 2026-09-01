@@ -23,6 +23,7 @@
   var SH = root.RallySync.share;
   var F = root.RallySync.focus;
   var DO = root.RallySync.dragOrder;
+  var TP = root.RallySync.timePicker;
   var el = d.el;
   var icon = I.icon;
 
@@ -31,7 +32,6 @@
   var resultsHost = null;
   var nextGoNode = null;
   var controlsOpen = false;
-  var exactTimeOpen = false;
   var savingPreset = false;
   var presetName = '';
 
@@ -306,8 +306,8 @@
         el('span.anchor-label', { text: 'BASE TIME' }),
         el('button.anchor-value', {
           type: 'button',
-          'aria-expanded': exactTimeOpen ? 'true' : 'false',
-          onclick: function () { exactTimeOpen = !exactTimeOpen; root.RallySync.app.refresh(); }
+          title: 'Set the base time',
+          onclick: openBasePicker
         }, [
           el('span.anchor-time', { text: d.utcClock(S.baseMs()) }),
           el('span.anchor-zone', { text: 'UTC' })
@@ -327,22 +327,6 @@
       children.push(el('p.group-note', {
         text: 'No base set, so the current time is being used. Set one to the moment your alliance agreed on and the times below stop moving.'
       }));
-    }
-
-    if (exactTimeOpen) {
-      children.push(el('label.field', {}, [
-        el('span.field-label', { text: 'Exact base time (UTC)' }),
-        el('input.input.input-time', {
-          type: 'datetime-local', step: '1', value: d.toUtcDateTimeLocal(S.baseMs()),
-          onchange: function (e) {
-            var ms = d.parseUtcDateTimeLocal(e.target.value);
-            if (isFinite(ms)) { S.updateSettings({ baseMs: ms }); root.RallySync.app.refresh(); }
-          }
-        }),
-        el('span.field-help', {
-          text: 'Type the UTC time the game shows. Your browser may display it in local format, but the value is read as UTC.'
-        })
-      ]));
     }
 
     // 2. How long after the base the marches land.
@@ -385,6 +369,18 @@
       }));
     }
     return group('Landing time', children, 'UTC');
+  }
+
+  function openBasePicker() {
+    TP.open({
+      title: 'Set base time',
+      valueMs: S.baseMs(),
+      nowMs: S.now,
+      onPick: function (ms) {
+        S.updateSettings({ baseMs: ms });
+        root.RallySync.app.refresh();
+      }
+    });
   }
 
   function offsetSeconds() {

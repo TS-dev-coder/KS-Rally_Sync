@@ -1430,3 +1430,142 @@ body.is-solo .app { padding-bottom: 30px; }
 .lands-value { font-family: var(--mono); font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--accent); }
 .lands-zone { font-family: var(--mono); font-size: 11px; color: var(--text-3); }
 .lands-local { font-family: var(--mono); font-size: 11.5px; color: var(--text-3); margin-left: auto; }
+
+/* ============================================================== time picker
+   HH : MM : SS as large typable segments with hold-to-repeat steppers. The
+   native datetime-local input was replaced because it renders differently in
+   every browser and shows a locale format under a label saying UTC.
+   ========================================================================= */
+
+.tp-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 220;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px;
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.tp-dialog {
+  width: 100%;
+  max-width: 420px;
+  max-height: 94vh;
+  overflow-y: auto;
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  box-shadow: 0 24px 60px var(--shadow);
+}
+
+.tp-head { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 16px; }
+.tp-head-main { flex: 1; min-width: 0; }
+.tp-title { margin: 0; font-size: 16px; font-weight: 700; }
+.tp-sub { margin: 3px 0 0; font-size: 11.5px; color: var(--text-3); line-height: 1.45; }
+
+.tp-clockrow { display: flex; align-items: flex-start; justify-content: center; gap: 4px; }
+.tp-seg { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+
+.tp-input {
+  width: 74px;
+  padding: 6px 0;
+  font-family: var(--mono);
+  font-size: 34px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  color: var(--text);
+  background: var(--sunk);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  transition: border-color 0.14s ease, box-shadow 0.14s ease;
+}
+.tp-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+
+.tp-step {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 74px;
+  height: 30px;
+  color: var(--text-3);
+  background: var(--sunk);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  cursor: pointer;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.14s ease, border-color 0.14s ease;
+}
+.tp-step:hover { color: var(--accent); border-color: var(--accent-line); }
+.tp-step:active { background: var(--accent-soft); color: var(--accent); }
+
+.tp-seg-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: var(--text-3);
+}
+
+.tp-colon {
+  font-family: var(--mono);
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--text-3);
+  padding-top: 36px;
+}
+
+.tp-quick { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+
+.tp-daterow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 16px;
+  padding: 9px 10px;
+  background: var(--sunk);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+}
+.tp-date-main { flex: 1; min-width: 0; text-align: center; }
+.tp-date-label {
+  display: block;
+  font-family: var(--mono);
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: var(--text-3);
+}
+.tp-date-value {
+  display: block;
+  margin-top: 2px;
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+.tp-echo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+.tp-echo-utc { font-family: var(--mono); font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--accent); }
+.tp-echo-local { font-family: var(--mono); font-size: 12px; color: var(--text-3); }
+.tp-relative { margin-left: auto; font-size: 11.5px; color: var(--text-3); }
+
+.tp-actions { display: flex; gap: 9px; margin-top: 16px; }
+.tp-actions .btn { flex: 1; padding: 12px; }

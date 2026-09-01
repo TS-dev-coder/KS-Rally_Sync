@@ -278,3 +278,48 @@ test('one bad lead marks the plan not-ok but keeps the good rows', () => {
   assert.strictEqual(plan.rows.length, 2);
   assert.ok(plan.rows.some((r) => r.rallyOpenMs !== null));
 });
+
+// ============================================================== time picker
+
+require('../js/dom.js');
+require('../js/icons.js');
+require('../js/timepicker.js');
+const { timePicker } = globalThis.RallySync;
+
+test('nextBoundary rounds up to the next round clock mark', () => {
+  const at = (iso) => Date.parse(iso);
+
+  // 17:47:49 -> next half hour is 18:00
+  assert.strictEqual(
+    timePicker.nextBoundary(at('2026-09-01T17:47:49Z'), 1800),
+    at('2026-09-01T18:00:00Z')
+  );
+  // ...and the next quarter is 18:00 too, since 17:45 has passed
+  assert.strictEqual(
+    timePicker.nextBoundary(at('2026-09-01T17:47:49Z'), 900),
+    at('2026-09-01T18:00:00Z')
+  );
+  // 17:12 -> next quarter is 17:15
+  assert.strictEqual(
+    timePicker.nextBoundary(at('2026-09-01T17:12:00Z'), 900),
+    at('2026-09-01T17:15:00Z')
+  );
+  // the top of the hour
+  assert.strictEqual(
+    timePicker.nextBoundary(at('2026-09-01T17:47:49Z'), 3600),
+    at('2026-09-01T18:00:00Z')
+  );
+});
+
+test('nextBoundary always moves forward, never returns the current instant', () => {
+  const exact = Date.parse('2026-09-01T18:00:00Z');
+  assert.ok(timePicker.nextBoundary(exact, 1800) > exact,
+    'sitting exactly on a boundary must advance to the next one');
+});
+
+test('nextBoundary rolls past midnight correctly', () => {
+  assert.strictEqual(
+    timePicker.nextBoundary(Date.parse('2026-09-01T23:47:00Z'), 1800),
+    Date.parse('2026-09-02T00:00:00Z')
+  );
+});

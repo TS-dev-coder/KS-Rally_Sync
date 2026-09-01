@@ -30,6 +30,7 @@
     container.appendChild(themeSection());
     container.appendChild(clockSection());
     container.appendChild(alarmSection());
+    container.appendChild(backgroundSection());
     container.appendChild(bufferSection());
     container.appendChild(backupSection());
     container.appendChild(aboutSection());
@@ -226,6 +227,60 @@
             if (root.RallySync.alarm.prime()) root.RallySync.alarm.go();
           }
         }, ['Test launch alarm'])
+      ]));
+    }
+
+    return section;
+  }
+
+  // -------------------------------------------------------------- background
+
+  function backgroundSection() {
+    var settings = S.data.settings;
+    var on = settings.keepAwake !== false;
+    var status = root.RallySync.keepAlive.status();
+
+    var section = el('section.panel');
+    section.appendChild(el('div.panel-head', {}, [
+      el('h2.panel-title', { text: 'Keep running in the background' })
+    ]));
+    section.appendChild(el('p.panel-note', {
+      text: 'Browsers slow hidden tabs down to save power — after a few minutes Chrome runs their timers only once a minute, and may discard the tab entirely.'
+    }));
+
+    section.appendChild(el('label.toggle-row', {}, [
+      el('input', {
+        type: 'checkbox', checked: on,
+        onchange: function (e) {
+          S.updateSettings({ keepAwake: e.target.checked });
+          if (!e.target.checked) root.RallySync.keepAlive.stop();
+          root.RallySync.app.refresh();
+        }
+      }),
+      el('span', {}, [
+        el('span.toggle-label', { text: 'Hold the tab awake while a launch is pending' }),
+        el('span.toggle-help', {
+          text: 'Plays a silent track so the tab counts as active, and keeps the screen on while you are looking at it. Only while something is still to launch, and it does use extra battery.'
+        })
+      ])
+    ]));
+
+    section.appendChild(el('p.panel-note.muted', {
+      text: 'Either way, the alarm tones are booked on the audio clock up to ' +
+        'two minutes ahead, and that clock is never throttled — so they still ' +
+        'sound on time even if the tab is frozen. Spoken callouts cannot be ' +
+        'booked ahead and may be missed while hidden.'
+    }));
+
+    if (on) {
+      section.appendChild(el('div.fit-quality', {}, [
+        el('span', { text: status.running ? 'active now' : 'idle — no launch pending' }),
+        el('span.dot', { text: '·' }),
+        el('span', {
+          text: status.wakeLockSupported
+            ? (status.wakeLock ? 'screen held on' : 'screen lock available')
+            : 'screen lock not supported here'
+        })
       ]));
     }
 

@@ -13,7 +13,8 @@
 
   var ctx = null;
   var primed = false;
-  var fired = {};   // key -> true, so each warning sounds once per plan
+  var fired = {};       // key -> true, so each warning sounds once per plan
+  var scheduled = [];   // oscillators booked on the audio clock, so they can be cancelled
 
   function supported() {
     return !!(root.AudioContext || root.webkitAudioContext);
@@ -88,7 +89,21 @@
       env.connect(out.gain);
       osc.start(start);
       osc.stop(start + seconds + 0.03);
+
+      // Booked on the audio clock, which keeps running when JS is throttled.
+      scheduled.push(osc);
+      osc.onended = function () {
+        var at = scheduled.indexOf(osc);
+        if (at !== -1) scheduled.splice(at, 1);
+      };
     } catch (err) { /* audio is a nicety, never fatal */ }
+  }
+
+  /** Silences anything already booked, for when the plan changes underneath it. */
+  function cancelScheduled() {
+    scheduled.splice(0).forEach(function (osc) {
+      try { osc.onended = null; osc.stop(); osc.disconnect(); } catch (err) { /* already done */ }
+    });
   }
 
   /** Kept for callers that just want a short confirmation blip. */
@@ -102,25 +117,44 @@
     } catch (err) { /* ignore */ }
   }
 
+  // Each phrase takes an offset so it can be booked ahead on the audio clock.
+
   /** Heads-up, well before the launch. Two clear pips. */
-  function warn() {
-    tone(1200, 0.14, 0.55, 0);
-    tone(1200, 0.14, 0.55, 0.22);
-    vibrate([160, 90, 160]);
+  function warnAt(at) {
+    tone(1200, 0.14, 0.55, at);
+    tone(1200, 0.14, 0.55, at + 0.22);
   }
 
   /** One tick per second through the final countdown. */
-  function pip() {
-    tone(1000, 0.11, 0.5, 0);
-    vibrate(90);
-  }
+  function pipAt(at) { tone(1000, 0.11, 0.5, at); }
 
   /** The launch moment. Deliberately longer and louder than anything else. */
-  function go() {
-    tone(1400, 0.18, 0.85, 0);
-    tone(1400, 0.18, 0.85, 0.22);
-    tone(1900, 0.55, 0.9, 0.44);
-    vibrate([250, 100, 250, 100, 600]);
+  function goAt(at) {
+    tone(1400, 0.18, 0.85, at);
+    tone(1400, 0.18, 0.85, at + 0.22);
+    tone(1900, 0.55, 0.9, at + 0.44);
+  }
+
+  function warn() { warnAt(0); vibrate([160, 90, 160]); }
+  function pip() { pipAt(0); vibrate(90); }
+  function go() { goAt(0); vibrate([250, 100, 250, 100, 600]); }
+
+  /**
+   * Books a phrase once, `delaySeconds` from now, on the audio clock.
+   *
+   * This is what makes the alarm survive a backgrounded tab: Chrome throttles
+   * setInterval to once a minute after a few minutes hidden, but the audio
+   * thread is never throttled, so a tone booked in advance still fires on time.
+   * Vibration cannot be booked ahead and is skipped for scheduled phrases.
+   */
+  function scheduleOnce(key, kind, delaySeconds) {
+    if (fired[key]) return false;
+    if (!(delaySeconds >= 0)) return false;
+    fired[key] = true;
+    if (kind === 'go') goAt(delaySeconds);
+    else if (kind === 'pip') pipAt(delaySeconds);
+    else warnAt(delaySeconds);
+    return true;
   }
 
   // ------------------------------------------------------------------ speech
@@ -178,7 +212,7 @@
     return true;
   }
 
-  function reset() { fired = {}; cancelSpeech(); }
+  function reset() { fired = {}; cancelScheduled(); cancelSpeech(); }
 
   root.RallySync = root.RallySync || {};
   root.RallySync.alarm = {
@@ -199,6 +233,9 @@
     sayOnce: sayOnce,
     cancelSpeech: cancelSpeech,
     fireOnce: fireOnce,
+    scheduleOnce: scheduleOnce,
+    cancelScheduled: cancelScheduled,
+    scheduledCount: function () { return scheduled.length; },
     reset: reset
   };
 })(typeof globalThis !== 'undefined' ? globalThis : this);

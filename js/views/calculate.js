@@ -24,6 +24,7 @@
   var F = root.RallySync.focus;
   var DO = root.RallySync.dragOrder;
   var TP = root.RallySync.timePicker;
+  var KA = root.RallySync.keepAlive;
   var SS = root.RallySync.searchSelect;
   var el = d.el;
   var icon = I.icon;
@@ -720,6 +721,19 @@
     ]));
 
     tick(S.now());
+    updateKeepAlive();
+  }
+
+  /**
+   * Hold the tab open only while there is genuinely something still to launch,
+   * so the silent keep-alive track and the screen lock are not burning battery
+   * once the operation is over.
+   */
+  function updateKeepAlive() {
+    var wanted = S.data.settings.keepAwake !== false && live.some(function (item) {
+      return item.rallyOpenMs > S.now();
+    });
+    if (wanted) KA.start(); else KA.stop();
   }
 
   /**
@@ -992,14 +1006,7 @@
       item.node.classList.toggle('is-late', seconds < -10);
       item.node.classList.toggle('is-next', seconds > 0 && seconds <= 60);
 
-      if (alarmOn && A.isPrimed()) {
-        // Heads-up, then a tick every second for the last five, then the launch.
-        if (seconds <= leadSeconds && seconds > 0) A.fireOnce(item.leadId + ':warn', 'warn');
-        if (seconds <= 5 && seconds > 0) {
-          A.fireOnce(item.leadId + ':pip:' + Math.ceil(seconds), 'pip');
-        }
-        if (seconds <= 0 && seconds > -3) A.fireOnce(item.leadId + ':go', 'go');
-      }
+      if (alarmOn && A.isPrimed()) bookAlarms(item, seconds, leadSeconds);
 
       if (speakOn) announce(item, seconds);
 
@@ -1011,6 +1018,24 @@
       else if (soonest === null) nextGoNode.textContent = 'all launched';
       else nextGoNode.textContent = 'first go in ' + d.countdown(soonest);
     }
+  }
+
+  /**
+   * Everything inside this many seconds is booked on the audio clock now, so a
+   * throttled or frozen tab still sounds on time. Ticks top the booking up, and
+   * the horizon comfortably exceeds Chrome's once-per-minute background rate.
+   */
+  var BOOK_HORIZON_SECONDS = 150;
+
+  function bookAlarms(item, seconds, leadSeconds) {
+    if (seconds > BOOK_HORIZON_SECONDS) return;
+
+    // Heads-up, a tick every second for the last five, then the launch itself.
+    A.scheduleOnce(item.leadId + ':warn', 'warn', seconds - leadSeconds);
+    for (var p = 5; p >= 1; p--) {
+      A.scheduleOnce(item.leadId + ':pip:' + p, 'pip', seconds - p);
+    }
+    A.scheduleOnce(item.leadId + ':go', 'go', seconds);
   }
 
   /** Spoken callouts by name, so you can keep your eyes on the game. */
@@ -1120,5 +1145,7 @@
   }
 
   root.RallySync.views = root.RallySync.views || {};
-  root.RallySync.views.calculate = { render: render, tick: tick, recompute: recompute };
+  root.RallySync.views.calculate = {
+    render: render, tick: tick, recompute: recompute, updateKeepAlive: updateKeepAlive
+  };
 })(typeof globalThis !== 'undefined' ? globalThis : this);

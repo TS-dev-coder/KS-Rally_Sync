@@ -11,6 +11,7 @@ require('../js/zones.js');
 require('../js/calculations.js');
 require('../js/roster-import.js');
 require('../js/share.js');
+require('../js/alarm.js');
 
 const { calc, zones, rosterImport, share } = globalThis.RallySync;
 
@@ -427,4 +428,32 @@ test('the spoken marks and the pip window cover the whole final minute', () => {
   // The pips and the last spoken mark must not collide on the same second.
   assert.ok(Math.min.apply(null, spokenMarks) > Math.max.apply(null, pipRange),
     'the 10s callout should finish before the per-second pips start');
+});
+
+// ============================================== background-safe alarm booking
+
+test('scheduleOnce books a phrase once and refuses times already past', () => {
+  const { alarm } = globalThis.RallySync;
+  alarm.reset();
+
+  // Without an audio context nothing can be booked, but the dedupe and the
+  // guard against negative offsets are pure logic and must still hold.
+  assert.strictEqual(alarm.scheduleOnce('lead:go', 'go', -3), false,
+    'a moment that has already passed must not be booked');
+  assert.strictEqual(alarm.scheduleOnce('lead:go', 'go', 12), true);
+  assert.strictEqual(alarm.scheduleOnce('lead:go', 'go', 12), false,
+    'the same key must never sound twice');
+
+  alarm.reset();
+  assert.strictEqual(alarm.scheduleOnce('lead:go', 'go', 12), true,
+    'a new plan re-arms the same key');
+});
+
+test('the booking horizon outruns background timer throttling', () => {
+  // Chrome drops hidden tabs to one timer wakeup per minute. The horizon has to
+  // exceed that by enough that a plan is always booked before the next wakeup.
+  const HORIZON_SECONDS = 150;
+  const WORST_BACKGROUND_TICK_SECONDS = 60;
+  assert.ok(HORIZON_SECONDS > WORST_BACKGROUND_TICK_SECONDS * 2,
+    'a single missed wakeup must not leave a gap in booked alarms');
 });

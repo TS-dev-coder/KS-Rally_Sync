@@ -32,7 +32,8 @@
     alarmEnabled: true,
     alarmLeadSeconds: 10,
     alarmVolume: 0.8,
-    speechEnabled: true,     // warning pips this long before a launch
+    speechEnabled: true,
+    keepAwake: true,     // warning pips this long before a launch
 
     theme: 'system',          // system | light | dark
 

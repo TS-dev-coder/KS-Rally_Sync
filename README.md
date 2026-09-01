@@ -56,6 +56,28 @@ the in-game steps.
 - **Drag to reorder** — sequence order by drag handle or arrow keys.
 - **Light and dark** — follows your system by default.
 
+## Running in the background
+
+Browsers deliberately starve hidden tabs: Chrome throttles their timers to once a
+minute after a few minutes, and Memory Saver may discard the tab outright. iOS Safari
+suspends a backgrounded tab entirely. No web page can opt out of that.
+
+So the alarm does not depend on a timer being awake at the right moment. Every tone
+within the next two and a half minutes is **booked ahead on the Web Audio clock**, which
+runs on the audio thread and is never throttled — a booked tone still sounds on time even
+if JavaScript is frozen solid. Ticks simply top the booking up, and the horizon is well
+over twice Chrome's worst background wakeup interval, so a missed wakeup cannot leave a
+gap.
+
+On top of that, while a launch is still pending the app holds the tab open with a silent
+looping track (a tab playing media is not discarded and not intensively throttled) and
+takes a screen Wake Lock so a phone on the desk does not sleep. Both stop the moment the
+last launch has passed. Turn it off under **More → Keep running in the background** if you
+would rather have the battery.
+
+Two honest limits: spoken callouts cannot be booked ahead, so they may be missed while the
+tab is hidden; and nothing here survives the operating system killing the browser.
+
 ## Accuracy
 
 The developer publishes no march-time formula. The community models that exist disagree by

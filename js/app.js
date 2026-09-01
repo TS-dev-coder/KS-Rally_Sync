@@ -12,6 +12,7 @@
   var I = root.RallySync.icons;
   var SH = root.RallySync.share;
   var A = root.RallySync.alarm;
+  var KA = root.RallySync.keepAlive;
   var F = root.RallySync.focus;
   var el = d.el;
 
@@ -127,6 +128,9 @@
     if (main && main.dataset.tab === 'calculate' && root.RallySync.views.calculate.tick) {
       root.RallySync.views.calculate.tick(now);
     }
+    if (root.RallySync.views.calculate.updateKeepAlive) {
+      root.RallySync.views.calculate.updateKeepAlive();
+    }
   }
 
   /**
@@ -138,6 +142,9 @@
   function armAudioOnFirstGesture() {
     function once() {
       if (S.data.settings.alarmEnabled !== false) A.prime();
+      // Autoplay was very likely blocked on load; now that there is a gesture,
+      // the silent keep-alive track can actually start.
+      if (KA.isRunning()) KA.start();
       root.document.removeEventListener('pointerdown', once, true);
       root.document.removeEventListener('keydown', once, true);
     }

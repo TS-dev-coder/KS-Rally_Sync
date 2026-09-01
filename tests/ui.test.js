@@ -22,14 +22,17 @@ try {
 }
 
 const ROOT = path.join(__dirname, '..');
-const SCRIPTS = [
-  'js/dom.js', 'js/icons.js', 'js/zones.js', 'js/calculations.js',
-  'js/roster-import.js', 'js/share.js', 'js/alarm.js',
-  'js/storage.js', 'js/state.js', 'js/guide.js',
-  'js/focus.js', 'js/dragorder.js',
-  'js/views/roster.js', 'js/views/targets.js', 'js/views/calculate.js',
-  'js/views/calibrate.js', 'js/views/settings.js', 'js/app.js'
-];
+/**
+ * Read the script list straight out of index.html rather than repeating it.
+ * A hand-maintained copy silently drifts, and a module missing from the
+ * harness fails as an undefined namespace far from the real cause.
+ */
+const SCRIPTS = (() => {
+  const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  const found = [...html.matchAll(/<script src="([^"]+)"><\/script>/g)].map((m) => m[1]);
+  assert.ok(found.length > 0, 'no scripts found in index.html');
+  return found;
+})();
 
 /**
  * Boots index.html with every script evaluated in order, as the browser does.
@@ -493,9 +496,10 @@ function labelled(ctx, text) {
   return ctx.window.document.querySelectorAll('.card-body .field, .card-body .grid-2 .field');
 }
 
-/** Finds the input whose .field-label matches, inside the open card body. */
+/** Finds the input whose .field-label matches. Label-based, never positional,
+ *  so inserting a section above cannot silently retarget a test. */
 function fieldInput(ctx, labelText) {
-  const fields = ctx.window.document.querySelectorAll('.card-body .field');
+  const fields = ctx.window.document.querySelectorAll('.field');
   for (const f of fields) {
     const label = f.querySelector('.field-label');
     if (label && label.textContent.trim().toLowerCase() === labelText.toLowerCase()) {
@@ -613,18 +617,25 @@ maybe('settings fields persist', async () => {
     const { state } = ctx.RS;
     ctx.RS.app.go('settings');
 
-    const inputs = ctx.window.document.querySelectorAll('.panel .input');
-    const clock = inputs[0];
+    const clock = fieldInput(ctx, 'My clock is ahead by (seconds)');
     clock.value = '-1.5';
     fire(ctx, clock, 'change');
     assert.strictEqual(state.data.settings.clockOffsetSeconds, -1.5);
 
     ctx.RS.app.go('settings');
-    const buffer = ctx.window.document.querySelectorAll('.panel .input')[1];
+    const lead = fieldInput(ctx, 'Warn this many seconds before');
+    lead.value = '20';
+    fire(ctx, lead, 'change');
+    assert.strictEqual(state.data.settings.alarmLeadSeconds, 20);
+
+    ctx.RS.app.go('settings');
+    const buffer = fieldInput(ctx, 'Recommended buffer (seconds)');
     buffer.value = '4';
     fire(ctx, buffer, 'change');
+
     assert.strictEqual(state.data.settings.safetyBufferSeconds, 4);
     assert.strictEqual(state.data.settings.clockOffsetSeconds, -1.5, 'clock offset must survive');
+    assert.strictEqual(state.data.settings.alarmLeadSeconds, 20, 'alarm lead must survive');
   } finally { teardown(ctx); }
 });
 
@@ -696,5 +707,41 @@ maybe('targets saved before types existed get one inferred on load', async () =>
 
     // And the inference is persisted, not recomputed every load.
     assert.match(storage.read('targets', '') && JSON.stringify(storage.read('targets', [])), /"type":"turret"/);
+  } finally { teardown(ctx); }
+});
+
+maybe('the launch alarm is on by default and can be turned off', async () => {
+  const ctx = await boot();
+  try {
+    const { state } = ctx.RS;
+    assert.strictEqual(state.data.settings.alarmEnabled, true,
+      'a rally lead should not have to discover the alarm to benefit from it');
+
+    state.updateSettings({ alarmEnabled: false });
+    state.load();
+    assert.strictEqual(state.data.settings.alarmEnabled, false, 'and the choice sticks');
+  } finally { teardown(ctx); }
+});
+
+maybe('audio arms itself on the first interaction rather than needing a special tap', async () => {
+  const ctx = await boot();
+  try {
+    const { alarm } = ctx.RS;
+    let primed = 0;
+    const realPrime = alarm.prime;
+    alarm.prime = function () { primed++; return realPrime.apply(null, arguments); };
+
+    // Any tap anywhere counts, not just the alarm button.
+    ctx.window.document.body.dispatchEvent(
+      new ctx.window.Event('pointerdown', { bubbles: true })
+    );
+    assert.strictEqual(primed, 1, 'the first gesture should arm the audio context');
+
+    // ...and only the first one, so it is not re-primed on every click.
+    ctx.window.document.body.dispatchEvent(
+      new ctx.window.Event('pointerdown', { bubbles: true })
+    );
+    assert.strictEqual(primed, 1);
+    alarm.prime = realPrime;
   } finally { teardown(ctx); }
 });

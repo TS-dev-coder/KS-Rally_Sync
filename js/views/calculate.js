@@ -24,6 +24,7 @@
   var F = root.RallySync.focus;
   var DO = root.RallySync.dragOrder;
   var TP = root.RallySync.timePicker;
+  var SS = root.RallySync.searchSelect;
   var el = d.el;
   var icon = I.icon;
 
@@ -185,25 +186,61 @@
 
   function targetGroup(target) {
     var settings = S.data.settings;
+
     if (S.data.targets.length === 0) {
-      return group('Target', [el('p.muted', { text: 'No targets yet — add one on the Targets tab.' })]);
+      return group('Target', [
+        el('div.empty.empty-inline', {}, [
+          icon('pin', 26),
+          el('h3', { text: 'No targets yet' }),
+          el('p', { text: 'Add the Castle, a turret, a Sanctuary — whatever you are hitting.' }),
+          el('button.btn.btn-primary', {
+            type: 'button', onclick: function () { root.RallySync.app.go('targets'); }
+          }, ['Add a target'])
+        ])
+      ]);
     }
 
-    var chips = el('div.chips');
-    S.data.targets.forEach(function (t) {
-      var selected = target && t.id === target.id;
-      var incomplete = t.x === null || t.y === null;
-      chips.appendChild(el('button.chip' + (selected ? ' is-selected' : '') + (incomplete ? ' is-incomplete' : ''), {
-        type: 'button',
-        title: Z.targetTypeLabel(t.type) + (incomplete ? ' · no coordinates set' : ' · X:' + t.x + ' Y:' + t.y),
-        onclick: function () {
-          S.updateSettings({ selectedTargetId: t.id });
-          root.RallySync.app.refresh();
-        }
-      }, [t.name || 'Unnamed', incomplete ? icon('alert', 13) : null]));
+    var needsCoords = S.data.targets.filter(function (t) {
+      return t.x === null || t.y === null;
+    }).length;
+
+    var picker = SS.create({
+      value: target ? target.id : null,
+      placeholder: 'Choose a target',
+      searchPlaceholder: 'Search your targets…',
+      emptyText: 'No target matches that.',
+      options: S.data.targets.map(function (t) {
+        var incomplete = t.x === null || t.y === null;
+        var typeLabel = Z.targetTypeLabel(t.type);
+        var name = t.name || 'Unnamed';
+        return {
+          id: t.id,
+          label: name,
+          // Don't repeat the type when the name already is it.
+          badge: name.toLowerCase() === typeLabel.toLowerCase() ? null : typeLabel,
+          sub: incomplete ? 'no coordinates set' : 'X:' + t.x + ' Y:' + t.y +
+            ' · rally ' + C.formatDuration(t.gatherSeconds),
+          warn: incomplete ? 'set X/Y' : null
+        };
+      }),
+      footer: needsCoords > 0
+        ? el('div.ss-footer', {}, [
+            icon('alert', 14),
+            el('span', {
+              text: needsCoords + ' of these still need coordinates.'
+            }),
+            el('button.btn.btn-link', {
+              type: 'button', onclick: function () { root.RallySync.app.go('targets'); }
+            }, ['Fix'])
+          ])
+        : null,
+      onSelect: function (id) {
+        S.updateSettings({ selectedTargetId: id });
+        root.RallySync.app.refresh();
+      }
     });
 
-    var children = [chips];
+    var children = [picker];
 
     if (target) {
       if (target.x === null || target.y === null) {
@@ -213,7 +250,6 @@
         ]));
       } else {
         children.push(el('p.group-note', {}, [
-          el('span.tag.tag-squad', { text: Z.targetTypeLabel(target.type) }),
           el('span.tag.tag-zone', { text: Z.zoneLabel(target.zoneKey) }),
           el('span.mono', { text: ' X:' + target.x + ' Y:' + target.y }),
           el('span.dot', { text: '·' }),
@@ -238,7 +274,7 @@
       ])
     ]));
 
-    return group('Target', children);
+    return group('Target', children, String(S.data.targets.length));
   }
 
   // -------------------------------------------------------------------- mode
@@ -778,17 +814,19 @@
     var late = plan.rows.filter(function (r) { return r.tooLate; }).length;
     var totals = totalsFor(plan.rows);
 
-    var alarmBtn = el('button.btn.btn-secondary.btn-copy' + (A.isPrimed() ? ' is-armed' : ''), {
+    var alarmOn = settings.alarmEnabled !== false;
+    var alarmBtn = el('button.btn.btn-secondary.btn-copy' + (alarmOn ? ' is-armed' : ''), {
       type: 'button',
-      title: 'Sound and vibrate before each launch',
-      onclick: function (e) {
-        var ok = A.prime();
-        e.currentTarget.classList.toggle('is-armed', ok);
-        e.currentTarget.querySelector('span').textContent = ok ? 'Alarm on' : 'No audio';
-        S.updateSettings({ alarmEnabled: ok });
-        if (ok) A.beep(880, 0.07);
+      title: alarmOn
+        ? 'Sound and vibration before each launch — tap to turn off'
+        : 'Turn on sound and vibration before each launch',
+      onclick: function () {
+        var next = !alarmOn;
+        S.updateSettings({ alarmEnabled: next });
+        if (next && A.prime()) A.beep(880, 0.07);
+        root.RallySync.app.refresh();
       }
-    }, [icon('bell', 15), el('span', { text: A.isPrimed() ? 'Alarm on' : 'Alarm' })]);
+    }, [icon('bell', 15), el('span', { text: alarmOn ? 'Alarm on' : 'Alarm off' })]);
 
     return el('div.results-head', {}, [
       el('div.results-head-main', {}, [
@@ -941,6 +979,7 @@
   function tick(nowMs) {
     var soonest = null;
     var leadSeconds = Number(S.data.settings.alarmLeadSeconds) || 10;
+    var alarmOn = S.data.settings.alarmEnabled !== false;
 
     for (var i = 0; i < live.length; i++) {
       var item = live[i];
@@ -952,7 +991,7 @@
       item.node.classList.toggle('is-late', seconds < -10);
       item.node.classList.toggle('is-next', seconds > 0 && seconds <= 60);
 
-      if (A.isPrimed()) {
+      if (alarmOn && A.isPrimed()) {
         if (seconds <= leadSeconds && seconds > 0) A.fireOnce(item.leadId + ':warn', 'warn');
         if (seconds <= 0 && seconds > -3) A.fireOnce(item.leadId + ':go', 'go');
       }

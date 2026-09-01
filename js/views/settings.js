@@ -29,6 +29,7 @@
 
     container.appendChild(themeSection());
     container.appendChild(clockSection());
+    container.appendChild(alarmSection());
     container.appendChild(bufferSection());
     container.appendChild(backupSection());
     container.appendChild(aboutSection());
@@ -124,6 +125,62 @@
     var next = Math.round(((Number(S.data.settings.clockOffsetSeconds) || 0) + delta) * 10) / 10;
     S.updateSettings({ clockOffsetSeconds: next });
     root.RallySync.app.refresh();
+  }
+
+  // ------------------------------------------------------------------ alarm
+
+  function alarmSection() {
+    var settings = S.data.settings;
+    var on = settings.alarmEnabled !== false;
+
+    var section = el('section.panel');
+    section.appendChild(el('div.panel-head', {}, [
+      el('h2.panel-title', { text: 'Launch alarm' })
+    ]));
+    section.appendChild(el('p.panel-note', {
+      text: 'On by default. Sounds and vibrates shortly before your launch, then again at the moment itself, so a locked screen does not cost you the hit.'
+    }));
+
+    section.appendChild(el('label.toggle-row', {}, [
+      el('input', {
+        type: 'checkbox', checked: on,
+        onchange: function (e) {
+          S.updateSettings({ alarmEnabled: e.target.checked });
+          if (e.target.checked) root.RallySync.alarm.prime();
+          root.RallySync.app.refresh();
+        }
+      }),
+      el('span', {}, [
+        el('span.toggle-label', { text: 'Sound and vibrate before a launch' }),
+        el('span.toggle-help', {
+          text: root.RallySync.alarm.supported()
+            ? 'Browsers only allow audio after you have tapped the page once, so the alarm arms itself on your first tap.'
+            : 'This browser does not support the audio API, so only vibration will be used.'
+        })
+      ])
+    ]));
+
+    if (on) {
+      section.appendChild(el('label.field', {}, [
+        el('span.field-label', { text: 'Warn this many seconds before' }),
+        el('input.input', {
+          type: 'number', min: '0', max: '120', step: '1', inputmode: 'numeric',
+          value: String(settings.alarmLeadSeconds),
+          onchange: function (e) {
+            var n = Number(e.target.value);
+            S.updateSettings({ alarmLeadSeconds: isFinite(n) ? Math.max(0, Math.min(120, n)) : 10 });
+          }
+        })
+      ]));
+      section.appendChild(el('button.btn.btn-secondary', {
+        type: 'button',
+        onclick: function () {
+          if (root.RallySync.alarm.prime()) root.RallySync.alarm.warn();
+        }
+      }, ['Test the alarm']));
+    }
+
+    return section;
   }
 
   // ------------------------------------------------------------ safety buffer

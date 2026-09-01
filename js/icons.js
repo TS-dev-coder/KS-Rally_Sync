@@ -60,7 +60,8 @@
     ],
     share: ['M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8', 'M16 6l-4-4-4 4', 'M12 2v14'],
     flag: ['M4 22V4', 'M4 5h13l-2 4 2 4H4'],
-    x: ['M18 6L6 18', 'M6 6l12 12']
+    x: ['M18 6L6 18', 'M6 6l12 12'],
+    search: ['M19 11a8 8 0 1 1-16 0 8 8 0 0 1 16 0', 'M21 21l-4.35-4.35']
   };
 
   /** Builds an <svg> that inherits colour and font size from its parent. */

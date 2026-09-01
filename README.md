@@ -20,7 +20,8 @@ non-use, and installed web apps are exempt from that.
 
 1. **Leads** — add each player who opens rallies: name, city X/Y, March Speed Up %. Paste a
    whole roster at once instead of adding people one at a time.
-2. **Targets** — add as many as you hit, of any type, with your own names. Pick a type
+2. **Targets** — nothing is preloaded; the list is exactly what you add. As many as you hit,
+   of any type, with your own names, and searchable on the Calculate screen. Pick a type
    (Castle, Turret, Sanctuary, Fortress, Outpost, Ruins) and it seeds the zone model and
    rally window; both stay editable. Three Sanctuaries with your own names is normal.
 3. **Calculate** — say when rallies open and pick who is going. The slowest lead taps at that
@@ -44,7 +45,9 @@ the in-game steps.
   results by alliance, squad or target with committed power per group.
 - **Rally capacity and power** — optional, and never part of the timing math.
 - **Event setups** — save a named target/roster/mode combination and reload it next event.
-- **Alarm** — sound and vibration before your launch, plus a full-screen GO countdown.
+- **Alarm, on by default** — sound and vibration before your launch and again at the moment
+  itself, plus a full-screen GO countdown. Arms itself on your first tap, because browsers
+  refuse audio before that.
 - **Per-person share links** — the whole plan rides in the URL fragment, so nothing is
   uploaded anywhere and the recipient needs no setup.
 - **Drag to reorder** — sequence order by drag handle or arrow keys.

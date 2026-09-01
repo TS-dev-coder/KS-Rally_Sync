@@ -1537,3 +1537,92 @@ body.is-solo .app { padding-bottom: 30px; }
   color: var(--text-3);
 }
 .offset-row .anchor-hint, .lands-row .anchor-hint { flex-basis: 100%; margin-top: 6px; }
+
+/* ========================================================== search select
+   A button showing the current choice; opens a filter box over the list.
+   Replaces a chip wall that became unusable past a handful of targets.
+   ======================================================================= */
+
+.ss { position: relative; }
+
+.ss-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 11px 12px;
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 650;
+  text-align: left;
+  color: var(--text);
+  background: var(--sunk);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: border-color 0.14s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.ss-trigger:hover { border-color: var(--accent); }
+.ss-trigger:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.ss.is-open .ss-trigger { border-color: var(--accent); }
+
+.ss-label { flex: 1; min-width: 0; display: flex; align-items: center; gap: 7px; }
+.ss-label-main { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ss-placeholder { color: var(--text-3); font-weight: 600; }
+.ss-chevron { display: flex; color: var(--text-3); flex: none; }
+.ss.is-open .ss-chevron { transform: rotate(180deg); color: var(--accent); }
+
+.ss-panel {
+  position: absolute;
+  z-index: 40;
+  top: calc(100% + 6px);
+  left: 0; right: 0;
+  padding: 8px;
+  background: var(--surface);
+  border: 1px solid var(--accent-line);
+  border-radius: var(--radius);
+  box-shadow: 0 16px 40px var(--shadow);
+}
+
+.ss-search-wrap { position: relative; display: flex; align-items: center; }
+.ss-search-wrap .icon { position: absolute; left: 10px; color: var(--text-3); pointer-events: none; }
+.ss-search { padding-left: 32px; font-size: 14px; }
+
+.ss-list { max-height: 260px; overflow-y: auto; margin-top: 6px; }
+
+.ss-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 9px 10px;
+  font-family: var(--sans);
+  text-align: left;
+  color: var(--text);
+  background: none;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.ss-option.is-active { background: var(--sunk); }
+.ss-option.is-selected { color: var(--accent); }
+.ss-option.is-selected .icon { color: var(--accent); }
+.ss-option-main { flex: 1; min-width: 0; }
+.ss-option-label { display: block; font-size: 13.5px; font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ss-option-sub { display: block; margin-top: 1px; font-family: var(--mono); font-size: 11px; color: var(--text-3); }
+
+.ss-empty { margin: 10px; font-size: 12.5px; color: var(--text-3); text-align: center; }
+
+.ss-footer {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 6px;
+  padding: 8px 10px;
+  font-size: 11.5px;
+  color: var(--amber);
+  background: var(--amber-soft);
+  border-radius: 8px;
+}
+.ss-footer .btn-link { margin-left: auto; }

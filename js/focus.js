@@ -62,15 +62,18 @@
 
     var big = el('div.focus-count', { text: '—' });
     var state = el('div.focus-state', { text: 'waiting' });
-    var alarmBtn = el('button.btn.btn-secondary.focus-alarm', {
+    // Alarms default to on; this only exists to silence them, or to re-arm if
+    // the browser has not yet allowed audio on this page.
+    var alarmOn = true;
+    var alarmBtn = el('button.btn.btn-secondary.focus-alarm.is-armed', {
       type: 'button',
       onclick: function () {
-        var ok = A.prime();
-        alarmBtn.classList.toggle('is-armed', ok);
-        alarmBtn.querySelector('span').textContent = ok ? 'Alarm armed' : 'Alarm unavailable';
-        if (ok) A.beep(880, 0.07);
+        alarmOn = !alarmOn;
+        if (alarmOn && A.prime()) A.beep(880, 0.07);
+        alarmBtn.classList.toggle('is-armed', alarmOn);
+        alarmBtn.querySelector('span').textContent = alarmOn ? 'Alarm on' : 'Alarm off';
       }
-    }, [icon('bell', 16), el('span', { text: 'Arm alarm' })]);
+    }, [icon('bell', 16), el('span', { text: 'Alarm on' })]);
 
     var node = el('div.focus', {}, [
       el('div.focus-head', {}, [
@@ -121,7 +124,7 @@
       else if (seconds > -15) state.textContent = 'GO NOW';
       else state.textContent = 'launch window passed';
 
-      if (A.isPrimed()) {
+      if (alarmOn && A.isPrimed()) {
         if (seconds <= 10 && seconds > 0 && !fired.warn) { fired.warn = true; A.warn(); }
         if (seconds <= 0 && seconds > -3 && !fired.go) { fired.go = true; A.go(); }
       }

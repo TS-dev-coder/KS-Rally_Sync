@@ -11,6 +11,7 @@
   var S = root.RallySync.state;
   var I = root.RallySync.icons;
   var SH = root.RallySync.share;
+  var A = root.RallySync.alarm;
   var F = root.RallySync.focus;
   var el = d.el;
 
@@ -48,6 +49,8 @@
       root.setInterval(tick, 250);
       return;
     }
+
+    armAudioOnFirstGesture();
 
     current = S.data.settings.tab || 'calculate';
     if (!tabByKey(current)) current = 'calculate';
@@ -122,6 +125,22 @@
     if (main && main.dataset.tab === 'calculate' && root.RallySync.views.calculate.tick) {
       root.RallySync.views.calculate.tick(now);
     }
+  }
+
+  /**
+   * Alarms are on by default, but browsers refuse to play audio until the user
+   * has interacted with the page. Arm the context on the very first tap or key
+   * press so the alarm is ready long before a countdown matters, without
+   * anyone having to know that rule exists.
+   */
+  function armAudioOnFirstGesture() {
+    function once() {
+      if (S.data.settings.alarmEnabled !== false) A.prime();
+      root.document.removeEventListener('pointerdown', once, true);
+      root.document.removeEventListener('keydown', once, true);
+    }
+    root.document.addEventListener('pointerdown', once, true);
+    root.document.addEventListener('keydown', once, true);
   }
 
   /** 'system' removes the attribute so prefers-color-scheme takes over. */

@@ -29,7 +29,7 @@
 
     groupBy: 'none',          // none | alliance | squad | target
 
-    alarmEnabled: false,
+    alarmEnabled: true,
     alarmLeadSeconds: 10,     // warning pips this long before a launch
 
     theme: 'system',          // system | light | dark
@@ -41,26 +41,6 @@
 
   /** A start older than this is assumed to be left over from a past event. */
   var START_STALE_MS = 2 * 3600 * 1000;
-
-  /**
-   * Preloaded targets. Coordinates stay blank until the user fills in their
-   * kingdom's. Outposts, Sanctuaries and Fortresses sit outside the Castle
-   * Forbidden Zone, so they use the free-form open-map model — see
-   * RESEARCH-NOTES.md Section 5.
-   */
-  function seedTargets() {
-    var seeds = [
-      ['King’s Castle', 'castle'],
-      ['North Turret', 'turret'],
-      ['South Turret', 'turret'],
-      ['East Turret', 'turret'],
-      ['West Turret', 'turret'],
-      ['Ruins', 'ruins']
-    ];
-    return seeds.map(function (seed) {
-      return newTargetOfType(seed[1], seed[0]);
-    });
-  }
 
   /** A blank target of a given type, with that type's defaults filled in. */
   function newTargetOfType(typeKey, name) {
@@ -113,18 +93,15 @@
     state.measurements = storage.read('measurements', {});
     state.presets = storage.read('presets', []);
 
-    var storedTargets = storage.read('targets', null);
-    state.targets = storedTargets === null ? seedTargets() : storedTargets;
-    if (storedTargets === null) {
-      storage.write('targets', state.targets);
-    } else {
-      // Targets saved before types existed get one inferred from their name.
-      var migrated = false;
-      state.targets.forEach(function (t) {
-        if (!t.type) { t.type = zonesLib.inferTargetType(t); migrated = true; }
-      });
-      if (migrated) storage.write('targets', state.targets);
-    }
+    // Targets are only ever the ones you added — nothing is preloaded.
+    state.targets = storage.read('targets', []);
+
+    // Targets saved before types existed get one inferred from their name.
+    var migrated = false;
+    state.targets.forEach(function (t) {
+      if (!t.type) { t.type = zonesLib.inferTargetType(t); migrated = true; }
+    });
+    if (migrated) storage.write('targets', state.targets);
 
     var storedZones = storage.read('zones', null);
     state.zones = storedZones === null

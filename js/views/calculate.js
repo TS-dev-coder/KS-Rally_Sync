@@ -694,6 +694,8 @@
       resultsHost.appendChild(list);
     });
 
+    resultsHost.appendChild(G.helpBlock('timingChain'));
+
     resultsHost.appendChild(el('p.disclaimer', {}, [
       el('strong', { text: 'Estimates, not guarantees. ' }),
       'Rows marked ', el('span.badge.badge-measured', { text: 'measured' }),

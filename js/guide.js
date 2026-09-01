@@ -64,10 +64,21 @@
       title: 'Base time and wait — what are they?',
       steps: [
         'BASE TIME is the moment you are counting from. Tap Now, or set the time your alliance agreed on.',
-        'WAIT THIS LONG is how far after the base the marches should land.',
-        'TROOPS LAND AT is the result: base plus wait. Everything else works backwards from it.'
+        'WAIT THIS LONG is how far after the base the troops should land.',
+        'TROOPS LAND AT is the result: base plus wait.',
+        'RallySync then works backwards per person to tell each of them when to tap.'
       ],
-      note: 'Example: base 20:00, wait 5m, so troops land 20:05. RallySync then subtracts each march and the rally window to tell every person when to tap.'
+      note: 'Wait is NOT the rally window. The rally window is a separate 5 minutes set on the target, and it is one of the things subtracted at the end — along with each person’s own march time — to work out when they personally tap. Two players with different march times get different tap times from the same wait.'
+    },
+    timingChain: {
+      title: 'How your tap time is worked out',
+      steps: [
+        'Start at TROOPS LAND AT — the moment everyone hits.',
+        'Subtract that player’s march time to get when their troops leave the city (DEPARTS).',
+        'Subtract the target’s rally window to get when they tap the rally button.',
+        'Slower players therefore tap earlier, so everyone still lands together.'
+      ],
+      note: 'Example — lands 18:44:00, march 5m 14s, rally window 5m: departs 18:38:46, taps 18:33:46.'
     },
     bulkPaste: {
       title: 'Pasting a roster',

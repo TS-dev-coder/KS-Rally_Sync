@@ -32,6 +32,11 @@
       key: 'ruins',
       label: 'Ruins',
       blurb: 'The Ruins chokepoint. Penalty is a placeholder — no source quantifies it.'
+    },
+    {
+      key: 'hq',
+      label: 'Alliance HQ',
+      blurb: 'Marches on an alliance headquarters measured roughly 1.6x slower per tile than open map. One sample, at long range.'
     }
   ];
 
@@ -47,6 +52,7 @@
     { key: 'sanctuary', label: 'Sanctuary', zoneKey: 'general', gatherSeconds: 300 },
     { key: 'fortress', label: 'Fortress', zoneKey: 'general', gatherSeconds: 300 },
     { key: 'outpost', label: 'Outpost', zoneKey: 'general', gatherSeconds: 300 },
+    { key: 'hq', label: 'Alliance HQ', zoneKey: 'hq', gatherSeconds: 300 },
     { key: 'ruins', label: 'Ruins', zoneKey: 'ruins', gatherSeconds: 300 },
     { key: 'other', label: 'Other', zoneKey: 'general', gatherSeconds: 300 }
   ];
@@ -71,6 +77,7 @@
     if (target && target.zoneKey === 'castle_relic') return 'castle';
     if (target && target.zoneKey === 'turret') return 'turret';
     if (target && target.zoneKey === 'ruins') return 'ruins';
+    if (target && target.zoneKey === 'hq') return 'hq';
     return 'other';
   }
 
@@ -95,25 +102,34 @@
     measured: {
       id: 'measured',
       label: 'Field-measured',
-      note: 'Power curve fitted to three real marches spanning 30 to 404 tiles, matching all three within 0.8s. Open map is measured; Castle and Ruins are still only inferred.',
-      formulaType: 'power',
+      note: 'Each zone fitted from real marches on that kind of target. Open map from two marches at ~30 tiles; HQ from one at 404 tiles. Castle and Ruins are still only inferred.',
+      formulaType: 'affine',
+      rates: {
+        // Terror at 29.7 tiles took 34.5 s; a player base at 34.2 tiles took
+        // 39 s. Both at +25%, and they agree to within half a percent.
+        general: { secPerTile: 1.313, offset: 3.2 },
+        turret: { secPerTile: 1.313, offset: 3.2 },
+
+        // An alliance HQ at 404.3 tiles took 679 s at +25% — 1.59x slower per
+        // tile than open map. One sample.
+        hq: { secPerTile: 2.090, offset: 3.2 },
+
+        // The community's own claim that the Forbidden Zone runs 1.95x slower,
+        // applied to the measured open-map rate. Untested.
+        castle_relic: { secPerTile: 1.313 * (0.360 / 0.185), offset: 3.2 },
+        ruins: { secPerTile: 1.313 * (0.360 / 0.185), offset: 3.2 }
+      },
       /**
-       * What the curve was fitted against. Everything outside this is
-       * extrapolation, and the app says so rather than quietly guessing.
+       * What each zone was actually measured over. Anything outside is
+       * extrapolation and the app says so — which matters most here, because
+       * open map has only ever been measured at about 30 tiles.
        */
       fittedFrom: {
-        sampleCount: 3,
-        minDistance: 29.7,
-        maxDistance: 404.3,
-        speedPercents: [25]
-      },
-      rates: {
-        general: { coefficient: 0.86137, exponent: 1.14826 },
-        turret: { coefficient: 0.86137, exponent: 1.14826 },
-        // The community's own claim that the Forbidden Zone runs 1.95x slower,
-        // applied to the measured curve. Untested.
-        castle_relic: { coefficient: 0.86137 * (0.360 / 0.185), exponent: 1.14826 },
-        ruins: { coefficient: 0.86137 * (0.360 / 0.185), exponent: 1.14826 }
+        general: { sampleCount: 2, minDistance: 29.7, maxDistance: 34.2, speedPercents: [25] },
+        turret: null,
+        hq: { sampleCount: 1, minDistance: 404.3, maxDistance: 404.3, speedPercents: [25] },
+        castle_relic: null,
+        ruins: null
       }
     },
     coefficient: {
@@ -124,7 +140,8 @@
         general: { secPerTile: 1 / 0.360, offset: 3.2 },
         castle_relic: { secPerTile: 1 / 0.185, offset: 3.2 },
         turret: { secPerTile: 1 / 0.360, offset: 3.2 },
-        ruins: { secPerTile: 1 / 0.185, offset: 3.2 }
+        ruins: { secPerTile: 1 / 0.185, offset: 3.2 },
+        hq: { secPerTile: 1 / 0.360, offset: 3.2 }
       }
     },
     sixSecond: {
@@ -135,7 +152,8 @@
         general: { secPerTile: 6, offset: 0 },
         castle_relic: { secPerTile: 6 * (0.360 / 0.185), offset: 0 },
         turret: { secPerTile: 6, offset: 0 },
-        ruins: { secPerTile: 6 * (0.360 / 0.185), offset: 0 }
+        ruins: { secPerTile: 6 * (0.360 / 0.185), offset: 0 },
+        hq: { secPerTile: 6, offset: 0 }
       }
     }
   };
@@ -152,7 +170,8 @@
     general: 'unverified',
     castle_relic: 'unverified',
     turret: 'unverified',
-    ruins: 'guess'
+    ruins: 'guess',
+    hq: 'unverified'
   };
 
   /** Default parameters for the optional geometric Relic model. All tunable. */
@@ -190,7 +209,7 @@
         formulaType: formulaType,
         constants: constants,
         segmented: defaultSegmentedConstants(segmentedSource),
-        fittedFrom: preset.fittedFrom || null,
+        fittedFrom: (preset.fittedFrom && preset.fittedFrom[def.key]) || null,
         presetId: preset.id,
         trust: DEFAULT_TRUST[def.key] || 'unverified',
         lastFitISO: null

@@ -80,6 +80,16 @@
       ],
       note: 'The rally window is the gather countdown set on the target — 5 minutes for a Castle. It is separate from the march, and both are already included in the tap time.'
     },
+    zoneAccuracy: {
+      title: 'Why some zones are trusted more than others',
+      steps: [
+        'Open map is fitted from two real marches, but both were about 30 tiles.',
+        'Alliance HQ is fitted from one march, and that one was 404 tiles.',
+        'Castle and Ruins have never been measured at all.',
+        'Anything far outside what a zone was measured over is flagged on the results.'
+      ],
+      note: 'Whether a long march to a base behaves like open map or like the HQ is genuinely unknown, because the only long march so far was to an HQ. One long march on a base or Terror would settle it \u2014 log it and the app stops guessing.'
+    },
     bulkPaste: {
       title: 'Pasting a roster',
       steps: [

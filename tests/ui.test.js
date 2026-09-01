@@ -592,27 +592,28 @@ maybe('zone constants persist and a cleared field does not become zero', async (
     ctx.RS.app.go('calibrate');
     ctx.window.document.querySelectorAll('.card-summary')[0].click();
 
-    // The default zone runs on the power curve, so it exposes those constants.
-    const coefficient = fieldInput(ctx, 'Coefficient');
-    coefficient.value = '1.5';
-    fire(ctx, coefficient, 'change');
-    assert.strictEqual(state.findZone('general').constants.coefficient, 1.5);
+    const perTile = fieldInput(ctx, 'Seconds per tile');
+    perTile.value = '4.5';
+    fire(ctx, perTile, 'change');
+    assert.strictEqual(state.findZone('general').constants.secPerTile, 4.5);
 
-    const exponent = fieldInput(ctx, 'Exponent');
-    exponent.value = '1.2';
-    fire(ctx, exponent, 'change');
+    const offset = fieldInput(ctx, 'Fixed offset (s)');
+    offset.value = '2.5';
+    fire(ctx, offset, 'change');
 
     const zone = state.findZone('general');
-    assert.strictEqual(zone.constants.exponent, 1.2);
-    assert.strictEqual(zone.constants.coefficient, 1.5,
+    assert.strictEqual(zone.constants.offset, 2.5);
+    assert.strictEqual(zone.constants.secPerTile, 4.5,
       'editing one constant must not reset the other');
+    assert.strictEqual(zone.trust, 'manual',
+      'a hand edit must mark the zone as the user\u2019s, or the default migration eats it');
 
     // Clearing a field must not silently mean zero, which would make every
     // march instant while still looking like a valid calibration.
-    const cleared = fieldInput(ctx, 'Coefficient');
+    const cleared = fieldInput(ctx, 'Seconds per tile');
     cleared.value = '';
     fire(ctx, cleared, 'change');
-    assert.strictEqual(state.findZone('general').constants.coefficient, 1.5,
+    assert.strictEqual(state.findZone('general').constants.secPerTile, 4.5,
       'an empty field must be ignored, not stored as zero');
   } finally { teardown(ctx); }
 });
@@ -961,5 +962,44 @@ maybe('the app admits when it is extrapolating past its own measurements', async
     const text = ctx.window.document.querySelector('#main').textContent;
     assert.match(text, /Extrapolating/);
     assert.match(text, /never been measured at/);
+  } finally { teardown(ctx); }
+});
+
+maybe('an install carrying old constants is migrated on load', async () => {
+  const ctx = await boot();
+  try {
+    const { state, storage } = ctx.RS;
+
+    // An install from before the constants were corrected: the community rate,
+    // never fitted, never hand-edited.
+    storage.write('zones', [{
+      zoneKey: 'general', label: 'Open map', formulaType: 'affine',
+      constants: { secPerTile: 2.7777, offset: 3.2 },
+      segmented: {}, presetId: 'measured', trust: 'unverified', lastFitISO: null
+    }]);
+    state.load();
+
+    const migrated = state.findZone('general');
+    assert.ok(migrated.constants.secPerTile < 2,
+      'an untouched zone must take the current default, got ' + migrated.constants.secPerTile);
+  } finally { teardown(ctx); }
+});
+
+maybe('a zone the user actually calibrated survives a new default', async () => {
+  const ctx = await boot();
+  try {
+    const { state, storage } = ctx.RS;
+
+    storage.write('zones', [{
+      zoneKey: 'general', label: 'Open map', formulaType: 'affine',
+      constants: { secPerTile: 9.99, offset: 1 },
+      segmented: {}, presetId: 'coefficient', trust: 'calibrated',
+      lastFitISO: new Date().toISOString(),
+      fitQuality: { n: 3, rmse: 0.4, maxErrorSeconds: 0.6 }
+    }]);
+    state.load();
+
+    assert.strictEqual(state.findZone('general').constants.secPerTile, 9.99,
+      'the user\u2019s own fit is their data and must never be overwritten');
   } finally { teardown(ctx); }
 });

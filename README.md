@@ -134,10 +134,11 @@ tab is hidden; and nothing here survives the operating system killing the browse
 
 ## Accuracy
 
-The developer publishes no march-time formula. Real marches show time rising *faster* than
-distance — a 404-tile march ran 30% slower per tile than a 30-tile one — so the model is a
-power curve fitted to actual marches, matching every one of them within a second. The
-community models that exist disagree by
+The developer publishes no march-time formula. Each zone here is fitted from real marches on
+that kind of target: open map from marches on a Terror and a player base, alliance HQ from a
+much longer march that ran 30% slower per tile. Castle and Ruins have never been measured at
+all. Where a march falls far outside what its zone was measured over, the app says so rather
+than presenting a confident number. The community models that exist disagree by
 roughly **2× on seconds per tile** with each other — and measured against real marches, both
 are too slow, by 2× and 4× respectively. The open-map rate now shipped is fitted from actual
 marches recorded in play, which agreed within half a percent. The Castle and Ruins rates are

@@ -247,48 +247,52 @@ relative claim — the Forbidden Zone running 0.360/0.185 = 1.95x slower — app
 measured base. Their ratio may survive even though their absolute scale did not, but nothing
 tests it yet. Calibrate before trusting a Castle march.
 
-### Third measurement — the model is not a straight line
+### Third measurement, and a confound
 
-**2026-09-02.** A long march, thirteen times further than the first two.
+**2026-09-02.** A long march, and crucially a different kind of target.
 
 | | march 1 | march 2 | march 3 |
 |---|---|---|---|
+| Target | **Terror** | **player base** | **alliance HQ** |
 | Distance | 29.73 | 34.18 | **404.27** tiles |
 | Speed | +25% | +25% | +25% |
 | Observed | 34-35 s | 39 s | **679 s** (11m 19s) |
 | Effective speed | 0.862 | 0.876 | **0.595** tiles/sec |
 
-**March time rises faster than distance.** The long march is 30% slower per tile than the
-short ones. Forcing a straight line through all three drives the intercept to **-18.4 s**,
-which would have any march under 8.5 tiles finish before it started — the affine model is
-simply the wrong shape.
+The third march is 30% slower per tile. But it is also the *only* long march **and** the
+only HQ, so **distance and target type are perfectly confounded**. Two quite different
+models fit all three points to within a second:
 
-A power curve fits all three to **within 0.8 seconds** across the whole range:
+- **A — time curves with distance.** `0.86137 * d^1.14826 / speedMultiplier`, exponent above
+  one, fits all three within 0.8 s.
+- **B — the relationship is linear, but an HQ is its own slower zone.** Open map at
+  1.313 s/tile from marches 1 and 2, HQ at 2.090 s/tile from march 3. Also fits within 1 s.
 
-```
-march seconds = 0.86137 * distance^1.14826 / (1 + speedUp%/100)
-```
+**B is shipped**, for one reason that is not a matter of taste: the
+[August 2026 patch notes](https://kingshotmastery.com/blog/kingshot-august-2026-update-patch-notes)
+show the game *already* varies march speed by target type, having buffed Beast Hunting and
+Rally Terrors. There is documented precedent for a per-target-type rate and none whatsoever
+for a super-linear distance law. B also keeps a physically sane positive offset, where
+pooling the data into one line forces the intercept to **-18.4 s** — a march under 8.5 tiles
+finishing before it starts, which is the classic signature of mixing two populations.
 
-That is now the shipped default, and a `power` formula type sits alongside `affine` and
-`segmented`. Calibration fits whichever curve a zone is on, falling back to the straight
-line when there are fewer than two samples at different distances, since one point cannot
-describe a curve.
+The `power` formula type remains implemented and tested, so if the deciding march below
+favours A the switch is a one-line change.
 
-**This corrected a dangerous regression.** The previous default, fitted from the two short
-marches alone, predicted **7m 11s for a march that took 11m 19s** — 37% fast. Under-stating
-a march is the harmful direction: it launches you late and lands you late, with nothing to
-recover. Over-stating merely wastes a little waiting.
+**The deciding measurement: a LONG march (300-400 tiles) to a player base or a Terror.**
 
-**What three points still cannot tell us:**
+| | predicts a 400-tile base march |
+|---|---|
+| A, distance curve | **11.2 min** |
+| B, per-type rate (shipped) | **7.1 min** |
 
-- **Speed is completely untested.** All three marches were at +25%, so whether the multiplier
-  divides time (assumed) or acts inside the power is unknown, and every lead at another
-  speed is extrapolation. The app now says so on the results screen rather than presenting a
-  confident number.
-- **The exponent rests on one long march.** Two clusters — three points near 30 tiles and one
-  at 404 — pin a curve, but a march at 100-200 tiles would confirm the shape between them.
-- Whether the curve reflects genuine game mechanics or a route crossing slower terrain is
-  unknown. Empirically it holds; the cause does not.
+Four minutes apart — impossible to confuse. Until that march exists, open map is only ever
+measured at about 30 tiles, and the app flags any march far outside what its zone was
+actually measured over.
+
+**Also still untested:** every sample was at +25%, so the speed multiplier is assumed, not
+measured. A march at a clearly different speed is the single most valuable remaining
+measurement.
 
 ### Beast and Terror march speed was buffed
 
@@ -311,9 +315,12 @@ zone; log one and see.
       is roughly 1.32 s/tile, not 2.778 or 6.
 - [x] Second open-map march recorded — see Section 6a. Default changed to 1.31 s/tile.
 - [x] Third march recorded at 404 tiles — the relationship is a curve, not a line.
-- [ ] A march at a **clearly different speed** (not +25%). This is now the largest untested
-      assumption in the whole model.
-- [ ] A march at 100-200 tiles, to confirm the curve between the two measured clusters.
+- [ ] **A long march (300-400 tiles) to a player base or Terror.** Settles whether march time
+      curves with distance or whether an HQ is simply its own slower zone. The two models
+      differ by four minutes on that march.
+- [ ] A march at a **clearly different speed** (not +25%). The speed multiplier is assumed
+      throughout and has never been measured.
+- [ ] Any march at all on a Castle or the Ruins, neither of which has ever been measured.
 - [ ] Test whether confirmed Beast/Terror targets march faster than open map after the
       August 2026 buff, which would justify a zone of their own.
 - [ ] Confirm the distance metric with a near-axis vs near-diagonal pair (Section 6a).

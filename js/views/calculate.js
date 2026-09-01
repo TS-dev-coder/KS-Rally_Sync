@@ -721,6 +721,7 @@
     });
 
     resultsHost.appendChild(G.helpBlock('timingChain'));
+    resultsHost.appendChild(G.helpBlock('zoneAccuracy'));
 
     var caveat = modelCaveat(plan.rows);
     if (caveat) {
@@ -778,22 +779,28 @@
    * use than a confident wrong number.
    */
   function modelCaveat(rows) {
-    var zone = S.findZone(S.data.settings.selectedTargetId
-      ? (S.findTarget(S.data.settings.selectedTargetId) || {}).zoneKey
-      : 'general');
-    if (!zone || !zone.fittedFrom || zone.trust === 'calibrated') return null;
-
-    var range = zone.fittedFrom;
     var speeds = {};
     var beyond = 0;
+    var haveRange = false;
 
     rows.forEach(function (row) {
       if (row.errors.length > 0) return;
+      var zone = S.findZone(row.zoneKeyUsed);
+      if (!zone || zone.trust === 'calibrated') return;
+
       var lead = S.findLead(row.leadId);
       if (lead && lead.marchSpeedUpPercent !== null) speeds[lead.marchSpeedUpPercent] = true;
+
+      // Each zone knows the distances it was actually measured over, which
+      // differ sharply: open map only near, HQ only far.
+      var range = zone.fittedFrom;
+      if (!range) return;
+      haveRange = true;
       if (row.distance > range.maxDistance * 1.25 || row.distance < range.minDistance * 0.5) beyond++;
     });
 
+    if (!haveRange) return null;
+    var range = { speedPercents: [25] };
     var offSpeed = Object.keys(speeds).filter(function (value) {
       return range.speedPercents.indexOf(Number(value)) === -1;
     }).length;
@@ -806,8 +813,7 @@
     }
     if (beyond > 0) {
       notes.push(beyond + (beyond === 1 ? ' march is' : ' marches are') +
-        ' outside the ' + Math.round(range.minDistance) + '–' +
-        Math.round(range.maxDistance) + ' tile range it was fitted over');
+        ' well outside the distance its zone was measured over');
     }
     if (notes.length === 0) return null;
 

@@ -132,9 +132,14 @@
       }
       if (!found) return def;
 
+      // Untouched means the user has never fitted or hand-edited this zone, so
+      // whatever it holds is a default they never chose. Always hand them the
+      // current one. Keying this off a stored presetId was too fragile: an
+      // install whose presetId happened to match kept constants that later
+      // turned out to be twice the real value.
       var untouched = !found.lastFitISO && !found.fitQuality &&
         found.trust !== 'calibrated' && found.trust !== 'manual';
-      if (untouched && found.presetId !== def.presetId) return def;
+      if (untouched) return def;
 
       return Object.assign({}, def, found, {
         constants: Object.assign({}, def.constants, found.constants),
@@ -384,14 +389,23 @@
     if (changes.constants) assignNumeric(zone.constants, changes.constants);
     if (changes.segmented) assignNumeric(zone.segmented, changes.segmented);
     if (changes.trust) zone.trust = changes.trust;
-    // Hand-edited constants are no longer the fitted ones.
+    // A hand edit makes this the user's own data, whatever it was before.
+    // Leaving it marked 'unverified' let the default migration overwrite it.
     if (changes.constants || changes.segmented) {
-      if (zone.trust === 'calibrated') zone.trust = 'manual';
+      zone.trust = 'manual';
       zone.fitQuality = null;
     }
     persist('zones');
     notify();
     return zone;
+  }
+
+  /** Escape hatch: put every zone back on the shipped defaults. */
+  function resetAllZones() {
+    state.zones = zonesLib.defaultZoneFormulas(state.settings.presetId);
+    persist('zones');
+    notify();
+    return state.zones;
   }
 
   function resetZone(zoneKey) {
@@ -574,6 +588,7 @@
     recalibrateZone: recalibrateZone,
     updateZone: updateZone,
     resetZone: resetZone,
+    resetAllZones: resetAllZones,
     applyPreset: applyPreset,
     updateSettings: updateSettings,
     startMs: startMs,

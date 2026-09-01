@@ -463,24 +463,28 @@ test('the booking horizon outruns background timer throttling', () => {
 test('the shipped default reproduces every recorded field march', () => {
   // Three real marches at +25%, spanning a thirteen-fold range of distance.
   // Asked through the public API so this survives a change of model shape.
-  const zone = zones.findZone(zones.defaultZoneFormulas(), 'general');
-  const predict = (dx, dy) =>
-    calc.marchSecondsForZone(zone, { x: 0, y: 0 }, { x: dx, y: dy }, 25).seconds;
+  // Each march is checked against the zone for the kind of target it was on.
+  // Distance and target type were confounded in the field data — the only long
+  // march was also the only HQ — so they must not be pooled.
+  const all = zones.defaultZoneFormulas();
+  const predict = (zoneKey, dx, dy) => calc.marchSecondsForZone(
+    zones.findZone(all, zoneKey), { x: 0, y: 0 }, { x: dx, y: dy }, 25
+  ).seconds;
 
   const marches = [
-    { dx: 28, dy: 10, actual: 34.5, what: 'Terror, 29.7 tiles' },
-    { dx: 12, dy: 32, actual: 39, what: 'near base, 34.2 tiles' },
-    { dx: 32, dy: 403, actual: 679, what: 'far base, 404.3 tiles' }
+    { zone: 'general', dx: 28, dy: 10, actual: 34.5, what: 'Terror, 29.7 tiles' },
+    { zone: 'general', dx: 12, dy: 32, actual: 39, what: 'player base, 34.2 tiles' },
+    { zone: 'hq', dx: 32, dy: 403, actual: 679, what: 'alliance HQ, 404.3 tiles' }
   ];
 
   marches.forEach((m) => {
-    const got = predict(m.dx, m.dy);
+    const got = predict(m.zone, m.dx, m.dy);
     assert.ok(Math.abs(got - m.actual) < 2,
       m.what + ': predicted ' + got.toFixed(1) + 's against an actual ' + m.actual + 's');
   });
 });
 
-test('a straight line cannot fit the field data, which is why the model curves', () => {
+test('pooling the field marches across target types would distort the fit', () => {
   // The short marches ran ~0.87 tiles/sec and the long one ~0.60. Forcing a
   // line through all three drives the intercept negative, which would have a
   // short march finishing before it began.
@@ -490,15 +494,19 @@ test('a straight line cannot fit the field data, which is why the model curves',
     { distance: Math.hypot(32, 403), speedPercent: 25, observedTimeSeconds: 679 }
   ];
 
+  // Pooled, a straight line through all three needs a negative intercept —
+  // a march under ~8 tiles finishing before it starts. That is the signature of
+  // mixing two populations, and is why HQ has its own zone.
   const line = calc.fitAffine(samples, { secPerTile: 1.31, offset: 3.2 });
   assert.ok(line.offset < 0 || line.maxErrorSeconds > 10,
-    'a line either goes negative or misses badly; got offset ' +
+    'pooled, a line either goes negative or misses badly; got offset ' +
     line.offset.toFixed(1) + ' and worst error ' + line.maxErrorSeconds.toFixed(1) + 's');
 
+  // A power curve also fits the pooled data, which is exactly the problem:
+  // two very different models are indistinguishable on this data.
   const curve = calc.fitPower(samples);
-  assert.ok(curve.exponent > 1, 'time rises faster than distance');
   assert.ok(curve.maxErrorSeconds < 2,
-    'the curve should fit all three within a couple of seconds, got ' +
+    'the curve fits the pooled data too, so it cannot settle the question; got ' +
     curve.maxErrorSeconds.toFixed(2) + 's');
 });
 

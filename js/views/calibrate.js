@@ -183,6 +183,20 @@
     }));
 
     S.data.zones.forEach(function (zone) { section.appendChild(zoneCard(zone)); });
+
+    section.appendChild(el('div.card-actions', {}, [
+      el('button.btn.btn-ghost.btn-danger', {
+        type: 'button',
+        title: 'Discard every fit and hand edit, and reload the shipped constants',
+        onclick: function () {
+          if (root.confirm('Put every zone back on the shipped defaults? Fitted and hand-edited constants are discarded. Your logged marches and samples are kept, so you can refit.')) {
+            S.resetAllZones();
+            message = { kind: 'ok', text: 'All zones reset to the shipped defaults.' };
+            root.RallySync.app.refresh();
+          }
+        }
+      }, ['Reset all zones'])
+    ]));
     return section;
   }
 

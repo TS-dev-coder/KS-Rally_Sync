@@ -1,10 +1,11 @@
 {
   "name": "rallysync",
   "version": "1.0.0",
-  "description": "Kingshot rally timing calculator. The app itself has zero dependencies and no build step — open index.html. This package.json exists only to run the test suite.",
+  "description": "Kingshot rally timing calculator. The app itself has zero dependencies and no build step \u2014 open index.html. This package.json exists only to run the test suite.",
   "private": true,
   "scripts": {
-    "test": "node --test tests/"
+    "test": "node --test tests/",
+    "stamp": "node tools/stamp.js"
   },
   "devDependencies": {
     "jsdom": "^26.0.0"

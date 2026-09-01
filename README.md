@@ -26,8 +26,22 @@ GitHub Pages and Cloudflare Pages is the moment that deploy went out.
 is live it says so and offers a reload that bypasses the browser cache. A minute of slack is
 allowed, since a deploy touches its files a few seconds apart.
 
-Bump `VERSION` in `js/version.js` when cutting a release; the published timestamp needs no
-maintenance.
+### Cutting a release
+
+Bump `VERSION` in `js/version.js`, then:
+
+```
+npm run stamp
+```
+
+That rewrites every `<script src>` and `<link href>` in `index.html` to `?v=<VERSION>`, and
+it is not cosmetic. A host caches each file on its own, so without it a browser can hold a
+fresh `calculate.js` beside a stale `dom.js` and the app dies on something like
+`d.km is not a function` — code that is correct in every file, broken only in combination.
+Stamping moves all the URLs at once, so a browser can never mix two releases.
+
+`npm test` fails if the stamp is stale, so a forgotten bump cannot ship. The published
+timestamp needs no maintenance.
 
 ### Deploying to Cloudflare Pages (recommended)
 

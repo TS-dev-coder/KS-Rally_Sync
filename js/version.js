@@ -11,7 +11,7 @@
 ;(function (root) {
   'use strict';
 
-  var VERSION = '2.0';
+  var VERSION = '2.1';
 
   /** When the page this tab is running was published. */
   function buildMs() {
@@ -26,6 +26,10 @@
     return d.utcDate(ms) + ' ' + d.utcClock(ms) + ' UTC';
   }
 
+  function unavailable(reason) {
+    return { ok: false, stale: false, latestMs: null, reason: reason };
+  }
+
   /**
    * Fetches index.html past every cache and reads its Last-Modified.
    *
@@ -36,10 +40,13 @@
     var url = String(root.location.href).split('#')[0].split('?')[0];
 
     if (root.location.protocol === 'file:') {
-      return Promise.resolve({
-        ok: false, stale: false, latestMs: null,
-        reason: 'Opened from a file, so there is no server to ask.'
-      });
+      return Promise.resolve(unavailable('Opened from a file, so there is no server to ask.'));
+    }
+    // Calling a missing fetch throws synchronously, before any promise exists,
+    // so the .catch() below would never see it and this would break its own
+    // contract of always resolving to a result.
+    if (typeof root.fetch !== 'function') {
+      return Promise.resolve(unavailable('This browser cannot check for updates on its own.'));
     }
 
     return root.fetch(url + '?_v=' + Date.now(), { cache: 'no-store' })

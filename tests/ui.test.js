@@ -29,7 +29,9 @@ const ROOT = path.join(__dirname, '..');
  */
 const SCRIPTS = (() => {
   const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
-  const found = [...html.matchAll(/<script src="([^"]+)"><\/script>/g)].map((m) => m[1]);
+  // Strip the cache-busting ?v= stamp: it belongs in the URL, not the path.
+  const found = [...html.matchAll(/<script src="([^"]+)"><\/script>/g)]
+    .map((m) => m[1].split('?')[0]);
   assert.ok(found.length > 0, 'no scripts found in index.html');
   return found;
 })();

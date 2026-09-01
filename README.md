@@ -16,6 +16,19 @@ It also hosts anywhere static (GitHub Pages, Netlify, Cloudflare Pages) — just
 folder. On a phone, use **Add to Home Screen**: iOS wipes website storage after 7 days of
 non-use, and installed web apps are exempt from that.
 
+### Which build am I looking at?
+
+The release number sits next to the title in the header, and **More → Version** shows when
+the copy you are running was published — the `Last-Modified` of `index.html`, which on both
+GitHub Pages and Cloudflare Pages is the moment that deploy went out.
+
+**Check for updates** re-fetches that file past every cache and compares. If a newer deploy
+is live it says so and offers a reload that bypasses the browser cache. A minute of slack is
+allowed, since a deploy touches its files a few seconds apart.
+
+Bump `VERSION` in `js/version.js` when cutting a release; the published timestamp needs no
+maintenance.
+
 ### Deploying to Cloudflare Pages (recommended)
 
 Connect this repository once and every push to `main` is live in roughly 10–30 seconds,

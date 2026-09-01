@@ -1657,3 +1657,18 @@ body.is-solo .app { padding-bottom: 30px; }
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* Quiet build marker in the header — enough to read at a glance, not enough to
+   compete with the clock. */
+.brand-version {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--text-3);
+  padding: 1px 5px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  white-space: nowrap;
+}
+.clock-value-small { font-size: 12px; line-height: 1.5; }

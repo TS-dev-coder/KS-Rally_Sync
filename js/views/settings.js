@@ -8,7 +8,9 @@
   var d = root.RallySync.dom;
   var S = root.RallySync.state;
   var storage = root.RallySync.storage;
+  var I = root.RallySync.icons;
   var el = d.el;
+  var icon = I.icon;
 
   var message = null;
 
@@ -27,6 +29,7 @@
       message = null;
     }
 
+    container.appendChild(versionSection());
     container.appendChild(themeSection());
     container.appendChild(clockSection());
     container.appendChild(alarmSection());
@@ -34,6 +37,75 @@
     container.appendChild(bufferSection());
     container.appendChild(backupSection());
     container.appendChild(aboutSection());
+  }
+
+  // ----------------------------------------------------------------- version
+
+  var updateState = null;   // null | 'checking' | result object
+
+  function versionSection() {
+    var V = root.RallySync.version;
+    var section = el('section.panel');
+
+    section.appendChild(el('div.panel-head', {}, [
+      el('h2.panel-title', { text: 'Version' }),
+      el('span.panel-hint', { text: 'v' + V.VERSION })
+    ]));
+
+    section.appendChild(el('div.clock-compare', {}, [
+      el('div.clock-block', {}, [
+        el('span.clock-label', { text: 'Release' }),
+        el('span.clock-value.clock-value-primary', { text: 'v' + V.VERSION })
+      ]),
+      el('div.clock-block', {}, [
+        el('span.clock-label', { text: 'Published' }),
+        el('span.clock-value.clock-value-small', { text: V.buildText() })
+      ])
+    ]));
+
+    section.appendChild(el('p.panel-note', {
+      text: 'Published is when the copy you are looking at went live. Compare it against your last deploy to tell a slow build apart from a stale browser cache.'
+    }));
+
+    if (updateState && updateState !== 'checking') {
+      if (!updateState.ok) {
+        section.appendChild(el('div.banner.banner-warn', {}, [
+          icon('alert', 16), el('span', { text: updateState.reason })
+        ]));
+      } else if (updateState.stale) {
+        section.appendChild(el('div.banner.banner-warn', {}, [
+          icon('alert', 16),
+          el('span', {}, [
+            el('strong', { text: 'A newer version is live. ' }),
+            'Published ' + d.utcDate(updateState.latestMs) + ' ' +
+              d.utcClock(updateState.latestMs) + ' UTC.'
+          ])
+        ]));
+        section.appendChild(el('button.btn.btn-primary.btn-wide', {
+          type: 'button', onclick: function () { V.reloadFresh(); }
+        }, ['Reload to update']));
+        return section;
+      } else {
+        section.appendChild(el('div.banner.banner-ok', {}, [
+          icon('check', 16), el('span', { text: 'This is the latest published version.' })
+        ]));
+      }
+    }
+
+    section.appendChild(el('button.btn.btn-secondary.btn-wide', {
+      type: 'button',
+      disabled: updateState === 'checking',
+      onclick: function () {
+        updateState = 'checking';
+        root.RallySync.app.refresh();
+        V.checkForUpdate().then(function (result) {
+          updateState = result;
+          root.RallySync.app.refresh();
+        });
+      }
+    }, [updateState === 'checking' ? 'Checking…' : 'Check for updates']));
+
+    return section;
   }
 
   // ------------------------------------------------------------------- theme

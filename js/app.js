@@ -39,6 +39,12 @@
 
     main = d.$('#main');
     nav = d.$('#nav');
+    var versionNode = d.$('#brand-version');
+    if (versionNode) {
+      versionNode.textContent = 'v' + root.RallySync.version.VERSION;
+      versionNode.title = 'Published ' + root.RallySync.version.buildText();
+    }
+
     clockNode = d.$('#clock-utc');
     localNode = d.$('#clock-local');
     offsetNode = d.$('#clock-offset');

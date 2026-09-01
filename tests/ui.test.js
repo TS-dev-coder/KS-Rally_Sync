@@ -891,3 +891,40 @@ maybe('the chosen target shows its detail on the closed selector', async () => {
     );
   } finally { teardown(ctx); }
 });
+
+maybe('the build marker is shown and the update check reads Last-Modified', async () => {
+  const ctx = await boot();
+  try {
+    const V = ctx.RS.version;
+
+    // The release number is visible without opening anything.
+    assert.strictEqual(
+      ctx.window.document.querySelector('#brand-version').textContent,
+      'v' + V.VERSION
+    );
+    assert.match(V.buildText(), /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} UTC$|^unknown$/);
+
+    // A newer Last-Modified than this page's own build reads as stale.
+    const mine = V.buildMs();
+    ctx.window.fetch = () => Promise.resolve({
+      ok: true,
+      headers: { get: () => new Date(mine + 10 * 60000).toUTCString() }
+    });
+    const stale = await V.checkForUpdate();
+    assert.strictEqual(stale.ok, true);
+    assert.strictEqual(stale.stale, true, 'a deploy ten minutes newer must register');
+
+    // The same timestamp is not an update.
+    ctx.window.fetch = () => Promise.resolve({
+      ok: true,
+      headers: { get: () => new Date(mine).toUTCString() }
+    });
+    assert.strictEqual((await V.checkForUpdate()).stale, false);
+
+    // Offline says so rather than claiming you are up to date.
+    ctx.window.fetch = () => Promise.reject(new Error('offline'));
+    const failed = await V.checkForUpdate();
+    assert.strictEqual(failed.ok, false);
+    assert.match(failed.reason, /offline|reach/i);
+  } finally { teardown(ctx); }
+});

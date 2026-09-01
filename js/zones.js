@@ -110,9 +110,10 @@
         general: { secPerTile: 1.313, offset: 3.2 },
         turret: { secPerTile: 1.313, offset: 3.2 },
 
-        // An alliance HQ at 404.3 tiles took 679 s at +25% — 1.59x slower per
-        // tile than open map. One sample.
-        hq: { secPerTile: 2.090, offset: 3.2 },
+        // Two alliance HQ marches at +25%: 404.3 tiles in 679 s and 409.7 in
+        // 684 s, implying 2.0896 and 2.0773 s/tile — agreement within 0.6%,
+        // and about 1.59x slower per tile than open map.
+        hq: { secPerTile: 2.083, offset: 3.2 },
 
         // The community's own claim that the Forbidden Zone runs 1.95x slower,
         // applied to the measured open-map rate. Untested.
@@ -127,7 +128,9 @@
       fittedFrom: {
         general: { sampleCount: 2, minDistance: 29.7, maxDistance: 34.2, speedPercents: [25] },
         turret: null,
-        hq: { sampleCount: 1, minDistance: 404.3, maxDistance: 404.3, speedPercents: [25] },
+        // Both HQ marches sit in a narrow band around 405 tiles, so a short HQ
+        // march is entirely unmeasured — and would settle the open question.
+        hq: { sampleCount: 2, minDistance: 404.3, maxDistance: 409.7, speedPercents: [25] },
         castle_relic: null,
         ruins: null
       }

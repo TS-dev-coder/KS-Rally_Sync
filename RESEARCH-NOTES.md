@@ -290,9 +290,37 @@ Four minutes apart — impossible to confuse. Until that march exists, open map 
 measured at about 30 tiles, and the app flags any march far outside what its zone was
 actually measured over.
 
-**Also still untested:** every sample was at +25%, so the speed multiplier is assumed, not
-measured. A march at a clearly different speed is the single most valuable remaining
-measurement.
+### Fourth measurement — the HQ rate replicates
+
+**2026-09-02.** A second alliance HQ march, at almost the same range as the first.
+
+| | HQ march 1 | HQ march 2 |
+|---|---|---|
+| Distance | 404.27 tiles | 409.70 tiles |
+| Observed | 679 s | 684 s (11m 24s) |
+| Implied rate | 2.0896 s/tile | 2.0773 s/tile |
+
+**Agreement within 0.6%.** The HQ rate is now the best-replicated number in the model, and
+is refined to **2.083 s/tile**. The shipped zone predicted 688 s against an actual 684 s.
+
+It does **not** settle the distance-versus-type question. Both candidate models were fitted
+through a ~404 tile point, so both predict ~688 s here and agree with each other. Two marches
+five tiles apart cannot separate them.
+
+It also leaves HQ measured only in a narrow band around 405 tiles. That turns out to be
+useful, because it creates a **second** way to settle the question:
+
+| deciding march | per-type model (shipped) | distance-curve model |
+|---|---|---|
+| ~400 tiles to a **base or Terror** | 434 s | 689 s |
+| ~30 tiles to an **HQ** | 53 s | 34 s |
+
+Either one is decisive, and a nearby allied HQ may be far easier to find than a 400-tile
+friendly base.
+
+**Also still untested:** every sample so far was at +25%, so the speed multiplier is assumed,
+not measured. A march at a clearly different speed remains the single most valuable
+measurement after the two above.
 
 ### Beast and Terror march speed was buffed
 
@@ -315,9 +343,9 @@ zone; log one and see.
       is roughly 1.32 s/tile, not 2.778 or 6.
 - [x] Second open-map march recorded — see Section 6a. Default changed to 1.31 s/tile.
 - [x] Third march recorded at 404 tiles — the relationship is a curve, not a line.
-- [ ] **A long march (300-400 tiles) to a player base or Terror.** Settles whether march time
-      curves with distance or whether an HQ is simply its own slower zone. The two models
-      differ by four minutes on that march.
+- [ ] **Settle distance-versus-type**, by either of two marches:
+      a long one (300-400 tiles) to a player base or Terror — models differ by four minutes;
+      or a short one (~30 tiles) to an alliance HQ — models differ by about twenty seconds.
 - [ ] A march at a **clearly different speed** (not +25%). The speed multiplier is assumed
       throughout and has never been measured.
 - [ ] Any march at all on a Castle or the Ruins, neither of which has ever been measured.

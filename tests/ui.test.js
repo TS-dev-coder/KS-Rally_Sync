@@ -423,3 +423,52 @@ maybe('a share link renders only that person and hides the nav', async () => {
     assert.strictEqual(doc.querySelectorAll('#nav .nav-btn').length, 0, 'nav must not render');
   } finally { dom.window.close(); }
 });
+
+maybe('editing X then Y keeps both — sequential field edits must not clobber each other', async () => {
+  const ctx = await boot();
+  try {
+    const { state } = ctx.RS;
+    const lead = state.upsertLead({ name: 'Cabo' });
+
+    ctx.RS.app.go('roster');
+    ctx.window.document.querySelector('.card-summary').click();
+
+    const inputs = ctx.window.document.querySelectorAll('.card-body .grid-2 .input');
+    const [xInput, yInput] = inputs;
+
+    // Two separate commits, as a person filling in a form produces.
+    xInput.value = '536';
+    xInput.dispatchEvent(new ctx.window.Event('change', { bubbles: true }));
+
+    yInput.value = '740';
+    yInput.dispatchEvent(new ctx.window.Event('change', { bubbles: true }));
+
+    const saved = state.findLead(lead.id);
+    assert.strictEqual(saved.x, 536, 'X was lost when Y was edited afterwards');
+    assert.strictEqual(saved.y, 740);
+    assert.strictEqual(saved.name, 'Cabo', 'the name must survive coordinate edits');
+  } finally { teardown(ctx); }
+});
+
+maybe('editing a target field does not clobber its other fields', async () => {
+  const ctx = await boot();
+  try {
+    const { state } = ctx.RS;
+    const target = state.upsertTarget({ name: 'Outpost', zoneKey: 'general' });
+
+    ctx.RS.app.go('targets');
+    const cards = ctx.window.document.querySelectorAll('.card-summary');
+    cards[cards.length - 1].click();
+
+    const inputs = ctx.window.document.querySelectorAll('.card-body .grid-2 .input');
+    inputs[0].value = '612';
+    inputs[0].dispatchEvent(new ctx.window.Event('change', { bubbles: true }));
+    inputs[1].value = '455';
+    inputs[1].dispatchEvent(new ctx.window.Event('change', { bubbles: true }));
+
+    const saved = state.findTarget(target.id);
+    assert.strictEqual(saved.x, 612, 'X was lost when Y was edited afterwards');
+    assert.strictEqual(saved.y, 455);
+    assert.strictEqual(saved.name, 'Outpost');
+  } finally { teardown(ctx); }
+});

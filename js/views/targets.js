@@ -163,7 +163,11 @@
     ]);
   }
 
-  function patch(target, changes) { S.upsertTarget(Object.assign({}, target, changes)); }
+  /** Merges into the current record — see the note on roster.js patch(). */
+  function patch(target, changes) {
+    var current = S.findTarget(target.id) || target;
+    S.upsertTarget(Object.assign({}, current, changes));
+  }
   function valueOf(v) { return v === null || v === undefined ? '' : String(v); }
 
   root.RallySync.views = root.RallySync.views || {};

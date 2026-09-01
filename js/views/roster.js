@@ -378,7 +378,16 @@
     ]);
   }
 
-  function patch(lead, changes) { S.upsertLead(Object.assign({}, lead, changes)); }
+  /**
+   * Merges into the CURRENT record, not the one captured when the card was
+   * rendered. upsertLead replaces the object in state, so a stale closure copy
+   * would write back the values as they were before the previous edit — filling
+   * in X then Y would silently drop X.
+   */
+  function patch(lead, changes) {
+    var current = S.findLead(lead.id) || lead;
+    S.upsertLead(Object.assign({}, current, changes));
+  }
 
   function isComplete(lead) {
     return !!String(lead.name || '').trim() &&

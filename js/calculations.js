@@ -94,16 +94,16 @@
   /**
    * t = coefficient * distance^exponent / speedMultiplier
    *
-   * Field marches show time rising faster than distance: three real marches at
-   * +25% ran 0.862, 0.876 and 0.595 tiles per second at 29.7, 34.2 and 404.3
-   * tiles. An affine model can only bend that far by using a negative offset,
-   * which would have short marches finishing before they start. A power curve
-   * fits all three to within 0.8 s across a thirteen-fold range of distance.
+   * REFUTED for Kingshot, and retained only as a modelling option.
    *
-   * Speed is applied to the whole result rather than inside the power, on the
-   * reading that a March Speed Up percentage scales time. Every sample so far
-   * is at +25%, so that half of the model is NOT yet tested — see
-   * RESEARCH-NOTES.md.
+   * It was introduced when three marches appeared to show time rising faster
+   * than distance. A fourth and fifth march showed the opposite: per-tile rates
+   * of 2.090, 2.077 and 1.795 at 404, 410 and 678 tiles - falling, not rising.
+   * That is the signature of a large fixed overhead, not a curve. This model
+   * predicted 1228 s for the 678 tile march against an actual 977 s.
+   *
+   * The apparent curve came from pooling two target types with very different
+   * overheads. See RESEARCH-NOTES.md.
    */
   function powerMarchSeconds(distance, multiplier, constants) {
     var coefficient = Number(constants.coefficient);

@@ -318,9 +318,65 @@ useful, because it creates a **second** way to settle the question:
 Either one is decisive, and a nearby allied HQ may be far easier to find than a 400-tile
 friendly base.
 
-**Also still untested:** every sample so far was at +25%, so the speed multiplier is assumed,
-not measured. A march at a clearly different speed remains the single most valuable
-measurement after the two above.
+### Fifth measurement — it was never a curve, it is a fixed overhead
+
+**2026-09-02.** A third HQ march, at 678 tiles: far beyond the previous cluster near 405.
+
+| HQ march | distance | observed | implied rate at offset 3.2 |
+|---|---|---|---|
+| 1 | 404.27 | 679 s | 2.0896 s/tile |
+| 2 | 409.70 | 684 s | 2.0773 s/tile |
+| 3 | **678.10** | **977 s** (16m 17s) | **1.7950 s/tile** |
+
+**The per-tile rate falls as distance grows** — the exact opposite of the power curve, which
+predicted **1228 s against an actual 977 s**. A rate that falls with distance is the
+signature of a large constant being divided back out, not of a curve.
+
+Fitting the three HQ marches as a straight line with a free offset:
+
+```
+1.3622 s/tile on a 238.0 s fixed overhead   —   fits all three within 0.45 s
+```
+
+**So an HQ march is not slower per tile. It carries a roughly four-minute fixed overhead.**
+Measured only near 405 tiles that overhead is indistinguishable from a steeper rate, which is
+exactly the trap the earlier readings fell into.
+
+The revealing part is what the rate becomes once the overhead is accounted for:
+
+| zone | per-tile rate | overhead |
+|---|---|---|
+| Open map | 1.313 | 3.2 s |
+| Alliance HQ | **1.362** | **238.0 s** |
+
+**Within 4% of each other.** The evidence now points to the per-tile rate being roughly
+universal, with the target type setting an overhead rather than a speed. Open map cannot be
+hiding a large overhead: a 29.7 tile march took 34.5 s, and a 238 s overhead would have made
+that impossible.
+
+**Both earlier models are now refuted.** Not "unconfirmed" — refuted:
+
+- The **power curve** predicted 1228 s for this march. Wrong by 251 s. The apparent curvature
+  came from pooling two target types with very different overheads.
+- The **higher-rate reading of HQ** predicted 1133 s. Wrong by 156 s. It fitted only because
+  every HQ sample sat in a narrow band near 405 tiles.
+
+The `power` formula type stays implemented and tested, but is marked refuted in the code.
+
+**The deciding test for the overhead model: a SHORT march to an alliance HQ (~30 tiles).**
+
+| model | predicts a 30-tile HQ march |
+|---|---|
+| Overhead (shipped) | **271 s** (~4m 31s) |
+| Higher-rate reading | 53 s |
+| Power curve | 34 s |
+
+A 30 tile HQ march taking about four and a half minutes would confirm the overhead outright.
+
+**Still untested:** every sample so far was at +25%, so the speed multiplier is assumed, not
+measured — and it matters more now, because it is unknown whether the 238 s overhead scales
+with speed or sits outside it. Two marches to the same target at different speeds would
+settle both at once.
 
 ### Beast and Terror march speed was buffed
 
@@ -343,9 +399,13 @@ zone; log one and see.
       is roughly 1.32 s/tile, not 2.778 or 6.
 - [x] Second open-map march recorded — see Section 6a. Default changed to 1.31 s/tile.
 - [x] Third march recorded at 404 tiles — the relationship is a curve, not a line.
-- [ ] **Settle distance-versus-type**, by either of two marches:
-      a long one (300-400 tiles) to a player base or Terror — models differ by four minutes;
-      or a short one (~30 tiles) to an alliance HQ — models differ by about twenty seconds.
+- [x] Distance-versus-type settled by the 678 tile HQ march: neither. It is a fixed overhead
+      per target type, and the per-tile rate is roughly universal.
+- [ ] **A short march (~30 tiles) to an alliance HQ.** Confirms the overhead outright: it
+      should take about 4m 31s, against 53 s or 34 s under the refuted models.
+- [ ] **Two marches to the same target at different speeds.** Settles whether the overhead
+      scales with March Speed Up or sits outside it, and tests the speed multiplier at the
+      same time. This is now the most valuable measurement available.
 - [ ] A march at a **clearly different speed** (not +25%). The speed multiplier is assumed
       throughout and has never been measured.
 - [ ] Any march at all on a Castle or the Ruins, neither of which has ever been measured.

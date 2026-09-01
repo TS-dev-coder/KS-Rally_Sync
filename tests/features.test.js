@@ -475,7 +475,8 @@ test('the shipped default reproduces every recorded field march', () => {
     { zone: 'general', dx: 28, dy: 10, actual: 34.5, what: 'Terror, 29.7 tiles' },
     { zone: 'general', dx: 12, dy: 32, actual: 39, what: 'player base, 34.2 tiles' },
     { zone: 'hq', dx: 32, dy: 403, actual: 679, what: 'alliance HQ, 404.3 tiles' },
-    { zone: 'hq', dx: 382, dy: 148, actual: 684, what: 'alliance HQ, 409.7 tiles' }
+    { zone: 'hq', dx: 382, dy: 148, actual: 684, what: 'alliance HQ, 409.7 tiles' },
+    { zone: 'hq', dx: 39, dy: 677, actual: 977, what: 'alliance HQ, 678.1 tiles' }
   ];
 
   marches.forEach((m) => {

@@ -102,7 +102,7 @@
     measured: {
       id: 'measured',
       label: 'Field-measured',
-      note: 'Each zone fitted from real marches on that kind of target. Open map from two marches at ~30 tiles; HQ from one at 404 tiles. Castle and Ruins are still only inferred.',
+      note: 'Each zone fitted from real marches on that kind of target. Open map from two marches near 30 tiles; HQ from three spanning 404 to 678 tiles. Castle and Ruins are still only inferred.',
       formulaType: 'affine',
       rates: {
         // Terror at 29.7 tiles took 34.5 s; a player base at 34.2 tiles took
@@ -110,10 +110,18 @@
         general: { secPerTile: 1.313, offset: 3.2 },
         turret: { secPerTile: 1.313, offset: 3.2 },
 
-        // Two alliance HQ marches at +25%: 404.3 tiles in 679 s and 409.7 in
-        // 684 s, implying 2.0896 and 2.0773 s/tile — agreement within 0.6%,
-        // and about 1.59x slower per tile than open map.
-        hq: { secPerTile: 2.083, offset: 3.2 },
+        /**
+         * Three HQ marches at +25%, spanning 404 to 678 tiles, fit a straight
+         * line to within half a second: 1.3622 s/tile on a 238 s fixed
+         * overhead.
+         *
+         * The overhead is the whole story. Measured only near 405 tiles it
+         * looked like a higher per-tile rate; the 678 tile march showed the
+         * rate falling with distance, which is what a large constant does when
+         * you divide it back out. Note how close 1.362 is to the 1.313 of open
+         * map - the target type appears to change the overhead, not the speed.
+         */
+        hq: { secPerTile: 1.3622, offset: 238.0 },
 
         // The community's own claim that the Forbidden Zone runs 1.95x slower,
         // applied to the measured open-map rate. Untested.
@@ -128,9 +136,7 @@
       fittedFrom: {
         general: { sampleCount: 2, minDistance: 29.7, maxDistance: 34.2, speedPercents: [25] },
         turret: null,
-        // Both HQ marches sit in a narrow band around 405 tiles, so a short HQ
-        // march is entirely unmeasured — and would settle the open question.
-        hq: { sampleCount: 2, minDistance: 404.3, maxDistance: 409.7, speedPercents: [25] },
+        hq: { sampleCount: 3, minDistance: 404.3, maxDistance: 678.1, speedPercents: [25] },
         castle_relic: null,
         ruins: null
       }

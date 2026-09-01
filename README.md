@@ -135,8 +135,10 @@ tab is hidden; and nothing here survives the operating system killing the browse
 ## Accuracy
 
 The developer publishes no march-time formula. Each zone here is fitted from real marches on
-that kind of target: open map from marches on a Terror and a player base, alliance HQ from a
-much longer march that ran 30% slower per tile. Castle and Ruins have never been measured at
+that kind of target. Five of them so far, and they show something the community sources
+never mention: the target type sets a fixed **overhead**, not a speed. An alliance HQ march
+carries about four minutes of it, an open-map march about three seconds, while the per-tile
+rate is nearly the same for both. Castle and Ruins have never been measured at
 all. Where a march falls far outside what its zone was measured over, the app says so rather
 than presenting a confident number. The community models that exist disagree by
 roughly **2× on seconds per tile** with each other — and measured against real marches, both

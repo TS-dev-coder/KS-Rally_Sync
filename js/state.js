@@ -34,14 +34,13 @@
 
     theme: 'system',          // system | light | dark
 
-    // Landing time is anchored to an explicit base rather than drifting with
-    // the clock: alliances agree a reference time and work forward from it.
-    baseMs: null,             // null or stale means "use now"
-    landingOffsetSeconds: 300
+    // When rallies open. The landing time is derived from it, not set: the
+    // slowest lead taps at this moment and everyone else follows.
+    startMs: null             // null or stale means "use now"
   };
 
-  /** A base older than this is assumed to be left over from a past event. */
-  var BASE_STALE_MS = 2 * 3600 * 1000;
+  /** A start older than this is assumed to be left over from a past event. */
+  var START_STALE_MS = 2 * 3600 * 1000;
 
   /**
    * Preloaded targets. Coordinates stay blank until the user fills in their
@@ -505,26 +504,21 @@
   }
 
   /**
-   * The anchor every landing time is measured from. Falls back to the current
-   * time when unset, or when it is left over from an event hours ago — a stale
-   * base would silently produce launch times in the past.
+   * The moment the first rally opens. Falls back to the current time when unset,
+   * or when it is left over from an event hours ago — a stale start would
+   * silently produce launch times in the past.
    */
-  function baseMs() {
-    var stored = Number(state.settings.baseMs);
+  function startMs() {
+    var stored = Number(state.settings.startMs);
     var current = now();
     if (!isFinite(stored) || stored <= 0) return current;
-    if (current - stored > BASE_STALE_MS) return current;
+    if (current - stored > START_STALE_MS) return current;
     return stored;
   }
 
-  function baseIsExplicit() {
-    var stored = Number(state.settings.baseMs);
-    return isFinite(stored) && stored > 0 && (now() - stored) <= BASE_STALE_MS;
-  }
-
-  /** base + offset. The single definition of when troops land. */
-  function landingMs() {
-    return baseMs() + (Number(state.settings.landingOffsetSeconds) || 0) * 1000;
+  function startIsExplicit() {
+    var stored = Number(state.settings.startMs);
+    return isFinite(stored) && stored > 0 && (now() - stored) <= START_STALE_MS;
   }
 
   // ---------------------------------------------------------------- utilities
@@ -567,9 +561,8 @@
     resetZone: resetZone,
     applyPreset: applyPreset,
     updateSettings: updateSettings,
-    baseMs: baseMs,
-    baseIsExplicit: baseIsExplicit,
-    landingMs: landingMs,
+    startMs: startMs,
+    startIsExplicit: startIsExplicit,
     savePreset: savePreset,
     applyPresetSetup: applyPresetSetup,
     deletePreset: deletePreset,

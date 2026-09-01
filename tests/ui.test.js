@@ -104,7 +104,7 @@ maybe('every tab renders without throwing', async () => {
   } finally { teardown(ctx); }
 });
 
-maybe('sync mode renders a launch time computed from the zone formula', async () => {
+maybe('the only lead taps exactly at the start, and the landing follows from them', async () => {
   const ctx = await boot();
   try {
     const { state } = ctx.RS;
@@ -114,13 +114,12 @@ maybe('sync mode renders a launch time computed from the zone formula', async ()
     });
     const lead = state.upsertLead({ name: 'TS', x: 0, y: 0, marchSpeedUpPercent: 0 });
 
-    const landing = Date.now() + 2 * 3600 * 1000;
+    const start = Date.now() + 3600 * 1000;
     state.updateSettings({
       selectedTargetId: target.id,
       selectedLeadIds: [lead.id],
       mode: 'sync',
-      baseMs: landing,
-      landingOffsetSeconds: 0
+      startMs: start
     });
 
     ctx.RS.app.go('roster');
@@ -129,11 +128,49 @@ maybe('sync mode renders a launch time computed from the zone formula', async ()
     const rows = ctx.window.document.querySelectorAll('.result');
     assert.strictEqual(rows.length, 1);
 
-    // 100 tiles at +0%: 100 / 0.36 + 3.2 = 280.978s march, plus the 300s window.
-    const expected = utc(landing - (100 / 0.36 + 3.2) * 1000 - 300000);
-    assert.strictEqual(rows[0].querySelector('.result-time-value').textContent, expected);
+    // The slowest lead — here the only one — taps at the start moment itself.
+    assert.strictEqual(rows[0].querySelector('.result-time-value').textContent, utc(start));
+
+    // And the landing is that start plus their rally window and march:
+    // 100 tiles at +0% is 100 / 0.36 + 3.2 seconds, plus the 300s window.
+    const expectedLanding = start + (300 + 100 / 0.36 + 3.2) * 1000;
+    const facts = rows[0].textContent;
+    assert.ok(facts.indexOf(utc(expectedLanding)) !== -1,
+      'the row should land at ' + utc(expectedLanding) + ', got: ' + facts);
     assert.match(rows[0].querySelector('.badge').textContent, /estimated/);
     assert.strictEqual(ctx.errors.length, 0, ctx.errors.join('; '));
+  } finally { teardown(ctx); }
+});
+
+maybe('adding a slower lead pushes the landing later on its own', async () => {
+  const ctx = await boot();
+  try {
+    const { state } = ctx.RS;
+    const target = state.upsertTarget({
+      name: 'T', x: 100, y: 0, zoneKey: 'general', gatherSeconds: 0
+    });
+    const fast = state.upsertLead({ name: 'Ash', x: 0, y: 0, marchSpeedUpPercent: 100 });
+    const start = Date.now() + 3600 * 1000;
+
+    state.updateSettings({
+      selectedTargetId: target.id, selectedLeadIds: [fast.id], mode: 'sync', startMs: start
+    });
+    ctx.RS.app.go('roster');
+    ctx.RS.app.go('calculate');
+    const soloLanding = ctx.window.document.querySelector('.results-sub').textContent;
+
+    const slow = state.upsertLead({ name: 'Beast', x: 0, y: 0, marchSpeedUpPercent: 0 });
+    state.updateSettings({ selectedLeadIds: [fast.id, slow.id] });
+    ctx.RS.app.refresh();
+
+    const pairLanding = ctx.window.document.querySelector('.results-sub').textContent;
+    assert.notStrictEqual(pairLanding, soloLanding,
+      'a slower lead must move the landing time later');
+
+    // The slow lead now taps at the start; the fast one waits.
+    const rows = ctx.window.document.querySelectorAll('.result');
+    assert.strictEqual(rows[0].querySelector('.result-name').textContent, 'Beast');
+    assert.strictEqual(rows[0].querySelector('.result-time-value').textContent, utc(start));
   } finally { teardown(ctx); }
 });
 
@@ -151,8 +188,7 @@ maybe('the slower lead is listed first and the faster lead launches later', asyn
       selectedTargetId: target.id,
       selectedLeadIds: [fast.id, slow.id], // deliberately out of launch order
       mode: 'sync',
-      baseMs: Date.now() + 2 * 3600 * 1000,
-      landingOffsetSeconds: 0
+      startMs: Date.now() + 3600 * 1000
     });
     ctx.RS.app.go('roster');
     ctx.RS.app.go('calculate');
@@ -181,8 +217,7 @@ maybe('a logged march turns that lead exact and refits its zone', async () => {
       selectedTargetId: target.id,
       selectedLeadIds: [lead.id],
       mode: 'sync',
-      baseMs: Date.now() + 2 * 3600 * 1000,
-      landingOffsetSeconds: 0
+      startMs: Date.now() + 3600 * 1000
     });
     ctx.RS.app.go('roster');
     ctx.RS.app.go('calculate');
@@ -206,8 +241,7 @@ maybe('a lead with no speed set is blocked inline instead of getting a wrong tim
       selectedTargetId: target.id,
       selectedLeadIds: [broken.id],
       mode: 'sync',
-      baseMs: Date.now() + 2 * 3600 * 1000,
-      landingOffsetSeconds: 0
+      startMs: Date.now() + 3600 * 1000
     });
     ctx.RS.app.go('roster');
     ctx.RS.app.go('calculate');
@@ -235,8 +269,7 @@ maybe('sequence mode staggers the displayed landing times by the gap', async () 
       selectedLeadIds: [a.id, b.id],
       mode: 'sequence',
       gapSeconds: 5,
-      baseMs: landing,
-      landingOffsetSeconds: 0
+      startMs: landing - 3600000
     });
     ctx.RS.app.go('roster');
     ctx.RS.app.go('calculate');
@@ -336,35 +369,6 @@ maybe('import rejects a file that is not a RallySync backup', async () => {
     const result = ctx.RS.storage.importAll({ app: 'SomethingElse', data: {} });
     assert.strictEqual(result.ok, false);
     assert.match(result.error, /different app/i);
-  } finally { teardown(ctx); }
-});
-
-maybe('the landing time is anchored to an explicit base, not the moving clock', async () => {
-  const ctx = await boot();
-  try {
-    const { state } = ctx.RS;
-    const base = Date.now() + 3 * 3600 * 1000;
-    state.updateSettings({ baseMs: base, landingOffsetSeconds: 300 });
-
-    // Landing is base + offset, and stays put as real time passes.
-    assert.strictEqual(state.landingMs(), base + 300000);
-    assert.strictEqual(state.baseIsExplicit(), true);
-    assert.strictEqual(state.baseMs(), base);
-
-    state.updateSettings({ landingOffsetSeconds: 600 });
-    assert.strictEqual(state.landingMs(), base + 600000);
-  } finally { teardown(ctx); }
-});
-
-maybe('a base left over from a past event falls back to now', async () => {
-  const ctx = await boot();
-  try {
-    const { state } = ctx.RS;
-    state.updateSettings({ baseMs: Date.now() - 5 * 3600 * 1000, landingOffsetSeconds: 0 });
-
-    // A stale base would silently produce launch times in the past.
-    assert.strictEqual(state.baseIsExplicit(), false);
-    assert.ok(Math.abs(state.baseMs() - state.now()) < 2000);
   } finally { teardown(ctx); }
 });
 

@@ -76,7 +76,7 @@
         ]),
         el('span.mission-chip', {}, [
           icon('clock', 15),
-          el('span.mission-chip-text.is-mono', { text: d.utcClock(landingMs()) })
+          el('span.mission-chip-text.is-mono', { text: d.utcClock(S.startMs()) })
         ])
       ]),
       el('div.mission-row.mission-sub', {}, [
@@ -101,7 +101,7 @@
     panel.appendChild(presetGroup());
     panel.appendChild(targetGroup(target));
     panel.appendChild(modeGroup());
-    panel.appendChild(landingGroup(target));
+    panel.appendChild(startGroup(target));
     panel.appendChild(leadGroup());
     return panel;
   }
@@ -297,119 +297,97 @@
 
   // ------------------------------------------------------------ landing time
 
-  function landingGroup(target) {
-    var settings = S.data.settings;
+  function startGroup(target) {
     var children = [];
 
     children.push(el('p.group-note', {
-      text: 'Marches land a set time after a base you choose. Point the base at whatever moment your alliance is counting from.'
+      text: 'Set when rallies open. The slowest lead taps then, everyone else follows, and the app works out when it all lands.'
     }));
 
-    // 1. The anchor everything is measured from.
     children.push(el('div.anchor-row', {}, [
       el('div.anchor-main', {}, [
-        el('span.anchor-label', {}, [
-          el('span.anchor-op', { text: '' }),
-          el('span', { text: 'BASE TIME' })
-        ]),
+        el('span.anchor-label', {}, [el('span', { text: 'START RALLIES AT' })]),
         el('button.anchor-value', {
           type: 'button',
-          title: 'Set the base time',
-          onclick: openBasePicker
+          title: 'Set when rallies open',
+          onclick: openStartPicker
         }, [
-          el('span.anchor-time', { text: d.utcClock(S.baseMs()) }),
+          el('span.anchor-time', { text: d.utcClock(S.startMs()) }),
           el('span.anchor-zone', { text: 'UTC' })
         ]),
-        el('span.anchor-hint', { text: 'the moment you are counting from' })
+        el('span.anchor-hint', { text: 'when the first person taps their rally button' })
       ]),
       el('button.btn.btn-ghost.btn-sm', {
         type: 'button',
-        title: 'Anchor to the current time',
+        title: 'Open rallies right now',
         onclick: function () {
-          S.updateSettings({ baseMs: S.now() });
+          S.updateSettings({ startMs: S.now() });
           root.RallySync.app.refresh();
         }
       }, ['Now'])
     ]));
 
-    if (!S.baseIsExplicit()) {
+    children.push(el('div.quick-row', {}, [1, 5, 10, 15, 30].map(function (mins) {
+      return el('button.btn.btn-quick', {
+        type: 'button',
+        onclick: function () {
+          S.updateSettings({ startMs: S.now() + mins * 60000 });
+          root.RallySync.app.refresh();
+        }
+      }, ['in ' + mins + 'm']);
+    })));
+
+    if (!S.startIsExplicit()) {
       children.push(el('p.group-note', {
-        text: 'No base set, so the current time is being used. Set one to the moment your alliance agreed on and the times below stop moving.'
+        text: 'No start set, so rallies are treated as opening now.'
       }));
     }
 
-    // 2. How long after the base the marches land.
-    children.push(el('div.offset-row', {}, [
-      el('span.anchor-label', {}, [
-        el('span.anchor-op', { text: '+' }),
-        el('span', { text: 'WAIT THIS LONG' })
-      ]),
-      el('div.time-set', {}, [
-        el('button.btn.btn-nudge', { type: 'button', onclick: function () { nudge(-60); } }, ['−1m']),
-        el('button.btn.btn-nudge', { type: 'button', onclick: function () { nudge(-10); } }, ['−10s']),
-        el('span.offset-display', { text: C.formatDuration(offsetSeconds()) }),
-        el('button.btn.btn-nudge', { type: 'button', onclick: function () { nudge(10); } }, ['+10s']),
-        el('button.btn.btn-nudge', { type: 'button', onclick: function () { nudge(60); } }, ['+1m'])
-      ]),
-      el('span.anchor-hint', { text: 'how long after the base the marches touch down' })
-    ]));
-
-    children.push(el('div.quick-row', {}, [0, 5, 10, 15, 30].map(function (mins) {
-      var active = offsetSeconds() === mins * 60;
-      return el('button.btn.btn-quick' + (active ? ' is-selected' : ''), {
-        type: 'button',
-        onclick: function () {
-          S.updateSettings({ landingOffsetSeconds: mins * 60 });
-          root.RallySync.app.refresh();
-        }
-      }, [mins === 0 ? 'at base' : '+' + mins + 'm']);
-    })));
-
-    // 3. The resulting landing time, stated plainly.
+    // The landing time is a result, not an input.
+    var landing = lastPlan && lastPlan.plan ? lastPlan.plan.landingMs : null;
     children.push(el('div.lands-row', {}, [
       el('span.anchor-label', {}, [
         el('span.anchor-op', { text: '=' }),
         el('span', { text: 'TROOPS LAND AT' })
       ]),
-      el('span.lands-value', { text: d.utcClock(landingMs()) }),
+      landing
+        ? el('span.lands-value', { text: d.utcClock(landing) })
+        : el('span.lands-value.is-empty', { text: '--:--:--' }),
       el('span.lands-zone', { text: 'UTC' }),
-      el('span.lands-local', {
-        text: d.localClock(landingMs()) + ' ' + d.localZoneName() + ' · ' + d.utcDate(landingMs())
+      landing
+        ? el('span.lands-local', {
+            text: d.localClock(landing) + ' ' + d.localZoneName() + ' · ' + d.utcDate(landing)
+          })
+        : el('span.lands-local', { text: 'pick a target and some leads' }),
+      el('span.anchor-hint', {
+        text: landing
+          ? 'as early as the slowest lead can make it'
+          : 'worked out from the slowest march once a plan exists'
       })
     ]));
 
     if (target && Number(target.gatherSeconds) > 0) {
       children.push(el('p.group-note.group-note-accent', {
         text: 'The ' + C.formatDuration(target.gatherSeconds) +
-          ' rally window is already subtracted — times below are when to TAP the rally button.'
+          ' rally window is already included — times below are when to TAP the rally button.'
       }));
     }
-    children.push(G.helpBlock('baseTime'));
-    return group('Landing time', children, 'UTC');
+
+    children.push(G.helpBlock('startTime'));
+    return group('Timing', children, 'UTC');
   }
 
-  function openBasePicker() {
+  function openStartPicker() {
     TP.open({
-      title: 'Set base time',
-      valueMs: S.baseMs(),
+      title: 'Start rallies at',
+      valueMs: S.startMs(),
       nowMs: S.now,
       onPick: function (ms) {
-        S.updateSettings({ baseMs: ms });
+        S.updateSettings({ startMs: ms });
         root.RallySync.app.refresh();
       }
     });
   }
-
-  function offsetSeconds() {
-    return Math.max(0, Number(S.data.settings.landingOffsetSeconds) || 0);
-  }
-
-  function nudge(seconds) {
-    S.updateSettings({ landingOffsetSeconds: Math.max(0, offsetSeconds() + seconds) });
-    root.RallySync.app.refresh();
-  }
-
-  function landingMs() { return S.landingMs(); }
 
   // ------------------------------------------------------------------- leads
 
@@ -669,7 +647,7 @@
       measurements: S.data.measurements,
       mode: settings.mode,
       gapSeconds: settings.gapSeconds,
-      landingMs: landingMs(),
+      startMs: S.startMs(),
       nowMs: S.now()
     });
     lastPlan = { plan: plan, primary: primary };
@@ -683,6 +661,7 @@
       return;
     }
 
+    refreshLandingReadout(plan.landingMs);
     resultsHost.appendChild(resultsHeader(plan));
 
     groupRows(plan.rows).forEach(function (section) {
@@ -705,6 +684,25 @@
     ]));
 
     tick(S.now());
+  }
+
+  /**
+   * The landing time is a result of the plan, but its readout lives up in the
+   * controls, which render first. Patch it in place rather than re-rendering
+   * the whole screen and looping.
+   */
+  function refreshLandingReadout(landingMs) {
+    var host = root.document.querySelector('.lands-row');
+    if (!host || !landingMs) return;
+    var value = host.querySelector('.lands-value');
+    var local = host.querySelector('.lands-local');
+    var hint = host.querySelector('.anchor-hint');
+    if (value) { value.textContent = d.utcClock(landingMs); value.classList.remove('is-empty'); }
+    if (local) {
+      local.textContent = d.localClock(landingMs) + ' ' + d.localZoneName() +
+        ' · ' + d.utcDate(landingMs);
+    }
+    if (hint) hint.textContent = 'as early as the slowest lead can make it';
   }
 
   // ------------------------------------------------------------- row grouping
@@ -775,7 +773,7 @@
 
   function resultsHeader(plan) {
     var settings = S.data.settings;
-    var landing = landingMs();
+    var landing = plan.landingMs;
     var problems = plan.rows.filter(function (r) { return r.errors.length > 0; }).length;
     var late = plan.rows.filter(function (r) { return r.tooLate; }).length;
     var totals = totalsFor(plan.rows);
@@ -979,9 +977,10 @@
 
     var lines = [];
     lines.push('**RallySync — ' + (multi ? 'multi-target' : (lastPlan.primary.name || 'Target')) + '**');
+    lines.push('Rallies open ' + d.utcClock(S.startMs()) + ' UTC');
     lines.push(settings.mode === 'sync'
-      ? 'Sync: everyone lands ' + d.utcClock(landingMs()) + ' UTC'
-      : 'Sequence: ' + settings.gapSeconds + 's apart from ' + d.utcClock(landingMs()) + ' UTC');
+      ? 'Sync: everyone lands ' + d.utcClock(plan.landingMs) + ' UTC'
+      : 'Sequence: ' + settings.gapSeconds + 's apart from ' + d.utcClock(plan.landingMs) + ' UTC');
     lines.push('');
     lines.push('```');
     lines.push(padRight('TAP AT', 11) + padRight('NAME', 16) +

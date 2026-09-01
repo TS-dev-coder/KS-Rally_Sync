@@ -323,3 +323,88 @@ test('nextBoundary rolls past midnight correctly', () => {
     Date.parse('2026-09-02T00:00:00Z')
   );
 });
+
+// ==================================================== start-anchored planning
+
+test('landingFromStart is the start plus the slowest chain', () => {
+  const start = Date.parse('2026-09-01T20:00:00Z');
+  const target = { id: 't', name: 'T', x: 100, y: 0, zoneKey: 'general', gatherSeconds: 300 };
+  const slow = { id: 'slow', name: 'Beast', x: 0, y: 0, marchSpeedUpPercent: 0 };
+  const fast = { id: 'fast', name: 'Ash', x: 0, y: 0, marchSpeedUpPercent: 100 };
+
+  const landing = calc.landingFromStart([{ target, leads: [fast, slow] }], {
+    zones: testZones(), measurements: {}, mode: 'sync', gapSeconds: 0, startMs: start
+  });
+
+  // The slow lead sets the pace: 300s window + 100/0.36 + 3.2 seconds of march.
+  near(landing, start + (300 + 100 / 0.36 + 3.2) * 1000, 1e-6);
+});
+
+test('the slowest lead taps exactly at the start moment', () => {
+  const start = Date.parse('2026-09-01T20:00:00Z');
+  const target = { id: 't', name: 'T', x: 100, y: 0, zoneKey: 'general', gatherSeconds: 300 };
+  const leads = [
+    { id: 'fast', name: 'Ash', x: 0, y: 0, marchSpeedUpPercent: 100 },
+    { id: 'slow', name: 'Beast', x: 0, y: 0, marchSpeedUpPercent: 0 }
+  ];
+
+  const plan = calc.buildMultiPlan({
+    groups: [{ target, leads }], zones: testZones(), measurements: {},
+    mode: 'sync', gapSeconds: 0, startMs: start, nowMs: start - 60000
+  });
+
+  const earliest = Math.min.apply(null, plan.rows.map((r) => r.rallyOpenMs));
+  near(earliest, start, 1e-6);
+  assert.strictEqual(plan.rows[0].leadId, 'slow', 'the slowest lead goes first');
+  plan.rows.forEach((r) => assert.ok(r.rallyOpenMs >= start - 1,
+    'nobody may be asked to tap before the start'));
+});
+
+test('an impossible plan cannot happen — nobody is ever too late', () => {
+  const start = Date.parse('2026-09-01T20:00:00Z');
+  const target = { id: 't', name: 'T', x: 900, y: 900, zoneKey: 'castle_relic', gatherSeconds: 300 };
+  const leads = [{ id: 'a', name: 'TS', x: 0, y: 0, marchSpeedUpPercent: 0 }];
+
+  // Even a punishing march plans cleanly, because the landing is derived.
+  const plan = calc.buildMultiPlan({
+    groups: [{ target, leads }], zones: testZones(), measurements: {},
+    mode: 'sync', gapSeconds: 0, startMs: start, nowMs: start
+  });
+  assert.strictEqual(plan.ok, true);
+  assert.strictEqual(plan.rows[0].tooLate, false);
+  near(plan.rows[0].rallyOpenMs, start, 1e-6);
+});
+
+test('in sequence mode the first person still taps at the start', () => {
+  const start = Date.parse('2026-09-01T20:00:00Z');
+  const target = { id: 't', name: 'T', x: 100, y: 0, zoneKey: 'general', gatherSeconds: 0 };
+  const leads = [
+    { id: 'a', name: 'Ash', x: 0, y: 0, marchSpeedUpPercent: 0 },
+    { id: 'b', name: 'Beast', x: 0, y: 0, marchSpeedUpPercent: 0 }
+  ];
+
+  const plan = calc.buildMultiPlan({
+    groups: [{ target, leads }], zones: testZones(), measurements: {},
+    mode: 'sequence', gapSeconds: 10, startMs: start, nowMs: start - 60000
+  });
+
+  const earliest = Math.min.apply(null, plan.rows.map((r) => r.rallyOpenMs));
+  near(earliest, start, 1e-6);
+  // Identical leads, so the stagger is the only difference between landings.
+  const landings = plan.rows.map((r) => r.landingMs).sort((x, y) => x - y);
+  near(landings[1] - landings[0], 10000, 1e-6);
+});
+
+test('rows still explain themselves when no lead can be resolved', () => {
+  const start = Date.parse('2026-09-01T20:00:00Z');
+  const target = { id: 't', name: 'T', x: 100, y: 0, zoneKey: 'general', gatherSeconds: 300 };
+  const plan = calc.buildMultiPlan({
+    groups: [{ target, leads: [{ id: 'x', name: 'Cabo', x: 0, y: 0 }] }],
+    zones: testZones(), measurements: {}, mode: 'sync', gapSeconds: 0,
+    startMs: start, nowMs: start
+  });
+
+  assert.strictEqual(plan.ok, false);
+  assert.strictEqual(plan.rows.length, 1, 'the broken lead must still be listed');
+  assert.ok(plan.rows[0].errors.length > 0, 'and must say what it is missing');
+});

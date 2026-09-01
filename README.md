@@ -23,8 +23,8 @@ non-use, and installed web apps are exempt from that.
 2. **Targets** — add as many as you hit, of any type, with your own names. Pick a type
    (Castle, Turret, Sanctuary, Fortress, Outpost, Ruins) and it seeds the zone model and
    rally window; both stay editable. Three Sanctuaries with your own names is normal.
-3. **Calculate** — set a base time, choose how long after it marches should land, pick who is
-   going. Launch times appear immediately, sorted by who acts first, each with a countdown.
+3. **Calculate** — say when rallies open and pick who is going. The slowest lead taps at that
+   moment, everyone else is staggered behind them, and the landing time falls out on its own.
 4. **Share** — copy a table for Discord, or send each person a link that shows only their own
    countdown.
 
@@ -33,8 +33,8 @@ the in-game steps.
 
 ## Features
 
-- **Base time, not "now"** — anchor the plan to the moment your alliance agreed on, and the
-  times stop drifting with the clock.
+- **One time to set** — "start rallies at". The landing time is derived from whoever is
+  slowest, so a plan can never ask for something impossible.
 - **Sync or Sequence** — land together, or stagger by a set gap (Sanctuary and Fortress
   pushes usually want 10–15s).
 - **Multiple targets in one run** — part of the roster on the Castle, the rest on a turret.
@@ -75,14 +75,24 @@ be hand-tuned or reset to its research default.
 
 ## Timing chain
 
+You set one thing: when rallies open. Everything else is derived.
+
 ```
-base time  +  offset      = landing time
-landing time
-  − march time          (measured, or from the zone formula)
-  = departure time
-  − rally window        (Castle rallies march at exactly 5:00, filled or not)
-  = when to TAP the rally button
+start                                    ← the only input
+  + the slowest lead's rally window
+  + the slowest lead's march time
+  = landing time            everyone lands here
+
+then per person, backwards from the landing:
+  landing
+    − their march time      (measured, or from the zone formula)
+    = departure time
+    − the target's rally window   (Castle rallies march at 5:00, filled or not)
+    = when they tap the rally button
 ```
+
+The slowest lead taps at the start moment; faster leads wait. Add a slower player and the
+whole plan shifts later by itself.
 
 All internal math is UTC epoch milliseconds at full precision; rounding happens only at the
 display step. Times show in UTC (what the game runs on) and in your browser's local zone.

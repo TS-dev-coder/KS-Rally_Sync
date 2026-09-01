@@ -60,15 +60,15 @@
       ],
       note: 'RallySync subtracts this automatically, so the time it gives you is when to TAP the rally button — not when troops leave.'
     },
-    baseTime: {
-      title: 'Base time and wait — what are they?',
+    startTime: {
+      title: 'How the timing works',
       steps: [
-        'BASE TIME is the moment you are counting from. Tap Now, or set the time your alliance agreed on.',
-        'WAIT THIS LONG is how far after the base the troops should land.',
-        'TROOPS LAND AT is the result: base plus wait.',
-        'RallySync then works backwards per person to tell each of them when to tap.'
+        'Set START RALLIES AT — the moment the first person taps.',
+        'The slowest lead taps right then, because they need the most time.',
+        'Everyone faster taps later, so all the marches arrive together.',
+        'TROOPS LAND AT is the result: as early as the slowest lead can manage.'
       ],
-      note: 'Wait is NOT the rally window. The rally window is a separate 5 minutes set on the target, and it is one of the things subtracted at the end — along with each person’s own march time — to work out when they personally tap. Two players with different march times get different tap times from the same wait.'
+      note: 'You never pick the landing time — it falls out of who is marching and how far they are. Add a slower player and the whole plan shifts later on its own.'
     },
     timingChain: {
       title: 'How your tap time is worked out',
@@ -78,7 +78,7 @@
         'Subtract the target’s rally window to get when they tap the rally button.',
         'Slower players therefore tap earlier, so everyone still lands together.'
       ],
-      note: 'Example — lands 18:44:00, march 5m 14s, rally window 5m: departs 18:38:46, taps 18:33:46.'
+      note: 'The rally window is the gather countdown set on the target — 5 minutes for a Castle. It is separate from the march, and both are already included in the tap time.'
     },
     bulkPaste: {
       title: 'Pasting a roster',

@@ -425,6 +425,43 @@
   }
 
   /**
+   * Earliest landing time achievable if the first rally opens at `startMs`.
+   *
+   * Each lead's chain is their rally window plus their march. The lead with the
+   * longest chain sets the pace: they tap at the start moment, and everyone
+   * else taps later so that all the marches converge. In sequence mode a lead
+   * landing in slot k gets k gaps of slack, so their chain is discounted by it.
+   *
+   * @returns {number|null} epoch ms, or null if nothing could be resolved
+   */
+  function landingFromStart(groups, input) {
+    var gap = Number(input.gapSeconds) || 0;
+    var sequence = input.mode === 'sequence';
+    var measurements = input.measurements || {};
+    var longest = null;
+
+    groups.forEach(function (groupItem) {
+      var gather = Number(groupItem.target.gatherSeconds) || 0;
+      groupItem.leads.forEach(function (lead, index) {
+        var resolved = resolveMarchSeconds({
+          lead: lead,
+          target: groupItem.target,
+          zones: input.zones,
+          measurement: measurements[measurementKey(lead.id, groupItem.target.id)]
+        });
+        if (resolved.seconds === null || resolved.errors.length > 0) return;
+
+        var slot = sequence ? index : 0;
+        var chain = gather + resolved.seconds - slot * gap;
+        if (longest === null || chain > longest) longest = chain;
+      });
+    });
+
+    if (longest === null) return null;
+    return Number(input.startMs) + longest * 1000;
+  }
+
+  /**
    * Runs several targets in one plan — e.g. part of the roster on the Castle
    * while the rest take a turret.
    *
@@ -441,7 +478,18 @@
     });
 
     if (groups.length === 0) {
-      return { rows: [], ok: false, blockers: ['No rally leads selected.'] };
+      return { rows: [], ok: false, blockers: ['No rally leads selected.'], landingMs: null };
+    }
+
+    // Anchored to when rallies open: the landing time is whatever the slowest
+    // lead can actually achieve from that moment, so a plan is never impossible.
+    var landingMs = Number(input.landingMs);
+    if (input.startMs !== undefined && input.startMs !== null) {
+      var solved = landingFromStart(groups, input);
+      // If nobody can be resolved there is no landing to derive, but the rows
+      // are still worth building: each one names what it is missing, which is
+      // more use than a single generic banner.
+      landingMs = solved === null ? Number(input.startMs) : solved;
     }
 
     var rows = [];
@@ -457,7 +505,7 @@
         mode: input.mode,
         gapSeconds: input.gapSeconds,
         gatherSeconds: Number(groupItem.target.gatherSeconds) || 0,
-        landingMs: input.landingMs,
+        landingMs: landingMs,
         nowMs: input.nowMs
       });
 
@@ -477,13 +525,14 @@
       return a.rallyOpenMs - b.rallyOpenMs;
     });
 
-    return { rows: rows, ok: ok, blockers: blockers };
+    return { rows: rows, ok: ok, blockers: blockers, landingMs: landingMs };
   }
 
   root.RallySync = root.RallySync || {};
   root.RallySync.calc = {
     TIER: TIER,
     buildMultiPlan: buildMultiPlan,
+    landingFromStart: landingFromStart,
     distanceTiles: distanceTiles,
     speedMultiplier: speedMultiplier,
     segmentLengthInsideCircle: segmentLengthInsideCircle,

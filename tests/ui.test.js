@@ -134,11 +134,11 @@ maybe('the only lead taps exactly at the start, and the landing follows from the
     // The slowest lead — here the only one — taps at the start moment itself.
     assert.strictEqual(rows[0].querySelector('.result-time-value').textContent, utc(start));
 
-    // And the landing is that start plus their rally window and march. The
-    // rate comes from the shipped default rather than being restated here, so
-    // this stays true when the default is refitted from new field data.
-    const zone = state.findZone('general');
-    const march = zone.constants.secPerTile * 100 / 1 + zone.constants.offset;
+    // Asked through the public API rather than restating a formula, so this
+    // survives both a refit and a change of model shape.
+    const march = ctx.RS.calc.marchSecondsForZone(
+      state.findZone('general'), { x: 0, y: 0 }, { x: 100, y: 0 }, 0
+    ).seconds;
     const expectedLanding = start + (300 + march) * 1000;
     const facts = rows[0].textContent;
     assert.ok(facts.indexOf(utc(expectedLanding)) !== -1,
@@ -592,25 +592,28 @@ maybe('zone constants persist and a cleared field does not become zero', async (
     ctx.RS.app.go('calibrate');
     ctx.window.document.querySelectorAll('.card-summary')[0].click();
 
-    const perTile = fieldInput(ctx, 'Seconds per tile');
-    perTile.value = '4.5';
-    fire(ctx, perTile, 'change');
-    assert.strictEqual(state.findZone('general').constants.secPerTile, 4.5);
+    // The default zone runs on the power curve, so it exposes those constants.
+    const coefficient = fieldInput(ctx, 'Coefficient');
+    coefficient.value = '1.5';
+    fire(ctx, coefficient, 'change');
+    assert.strictEqual(state.findZone('general').constants.coefficient, 1.5);
 
-    const offset = fieldInput(ctx, 'Fixed offset (s)');
-    offset.value = '2.5';
-    fire(ctx, offset, 'change');
+    const exponent = fieldInput(ctx, 'Exponent');
+    exponent.value = '1.2';
+    fire(ctx, exponent, 'change');
 
-    let zone = state.findZone('general');
-    assert.strictEqual(zone.constants.offset, 2.5);
-    assert.strictEqual(zone.constants.secPerTile, 4.5, 'editing the offset must not reset the rate');
+    const zone = state.findZone('general');
+    assert.strictEqual(zone.constants.exponent, 1.2);
+    assert.strictEqual(zone.constants.coefficient, 1.5,
+      'editing one constant must not reset the other');
 
-    // Clearing the field must not silently mean "zero seconds per tile".
-    const cleared = fieldInput(ctx, 'Seconds per tile');
+    // Clearing a field must not silently mean zero, which would make every
+    // march instant while still looking like a valid calibration.
+    const cleared = fieldInput(ctx, 'Coefficient');
     cleared.value = '';
     fire(ctx, cleared, 'change');
-    assert.strictEqual(state.findZone('general').constants.secPerTile, 4.5,
-      'an empty rate field must be ignored, not stored as zero — zero makes every march instant');
+    assert.strictEqual(state.findZone('general').constants.coefficient, 1.5,
+      'an empty field must be ignored, not stored as zero');
   } finally { teardown(ctx); }
 });
 
@@ -761,23 +764,23 @@ maybe('logging a march reports how far the shipped default was out', async () =>
     });
     const lead = state.upsertLead({ name: 'TS', x: 536, y: 740, marchSpeedUpPercent: 25 });
 
-    // The shipped default now predicts this march closely, so logging it should
-    // barely move the rate — the point of the test is that a measurement lands
-    // where the model already sits, not that it always causes a big correction.
-    const before = state.findZone('general').constants.secPerTile;
-    const predicted = ctx.RS.calc.marchSecondsForZone(
+    // The shipped default is fitted to this very march, so logging it should
+    // land where the model already sits rather than swinging it.
+    const predictedBefore = ctx.RS.calc.marchSecondsForZone(
       state.findZone('general'), state.findLead(lead.id), state.findTarget(target.id), 25
     ).seconds;
-    assert.ok(Math.abs(predicted - 35) < 2,
-      'the shipped default should already be within a couple of seconds, got ' + predicted);
+    assert.ok(Math.abs(predictedBefore - 35) < 2,
+      'the shipped default should already be within a couple of seconds, got ' + predictedBefore);
 
     state.recordMeasurement(lead.id, target.id, 35);
     const fit = state.recalibrateZone('general');
-
     assert.strictEqual(fit.ok, true);
-    const after = state.findZone('general').constants.secPerTile;
-    assert.ok(Math.abs(after - before) / before < 0.1,
-      'a march matching the model must not swing the rate, got ' + after + ' from ' + before);
+
+    const predictedAfter = ctx.RS.calc.marchSecondsForZone(
+      state.findZone('general'), state.findLead(lead.id), state.findTarget(target.id), 25
+    ).seconds;
+    assert.ok(Math.abs(predictedAfter - 35) < 2,
+      'and it should still predict the march it was just given, got ' + predictedAfter);
 
     // And the pair itself is now exact rather than fitted.
     const plan = ctx.RS.calc.buildMultiPlan({
@@ -926,5 +929,37 @@ maybe('the build marker is shown and the update check reads Last-Modified', asyn
     const failed = await V.checkForUpdate();
     assert.strictEqual(failed.ok, false);
     assert.match(failed.reason, /offline|reach/i);
+  } finally { teardown(ctx); }
+});
+
+maybe('the app admits when it is extrapolating past its own measurements', async () => {
+  const ctx = await boot();
+  try {
+    const { state } = ctx.RS;
+    const target = state.upsertTarget({
+      name: 'Base', x: 508, y: 730, zoneKey: 'general', gatherSeconds: 300
+    });
+
+    // +25% is the only speed the shipped curve was ever fitted at.
+    const onModel = state.upsertLead({ name: 'TS', x: 536, y: 740, marchSpeedUpPercent: 25 });
+    state.updateSettings({
+      selectedTargetId: target.id, selectedLeadIds: [onModel.id],
+      mode: 'sync', startMs: Date.now() + 600000
+    });
+    ctx.RS.app.go('roster');
+    ctx.RS.app.go('calculate');
+    assert.ok(
+      !/Extrapolating/.test(ctx.window.document.querySelector('#main').textContent),
+      'a march inside the fitted range should not be flagged'
+    );
+
+    // A lead at a speed never measured must be called out.
+    const offModel = state.upsertLead({ name: 'Beast', x: 536, y: 740, marchSpeedUpPercent: 105 });
+    state.updateSettings({ selectedLeadIds: [onModel.id, offModel.id] });
+    ctx.RS.app.refresh();
+
+    const text = ctx.window.document.querySelector('#main').textContent;
+    assert.match(text, /Extrapolating/);
+    assert.match(text, /never been measured at/);
   } finally { teardown(ctx); }
 });

@@ -153,11 +153,11 @@
     }
 
     if (result.ok) {
-      parts.push(Z.zoneLabel(zoneKey) + ' refitted to ' +
-        result.fit.secPerTile.toFixed(3) + ' s/tile from ' + result.fit.n +
-        ' sample' + (result.fit.n === 1 ? '' : 's') + '.');
-      if (!result.fit.fittedOffset) {
-        parts.push('Log one more at a clearly different distance and the fixed offset can be fitted too, which sharpens everything else.');
+      var refitted = S.findZone(zoneKey);
+      parts.push(Z.zoneLabel(zoneKey) + ' refitted to ' + summarise(refitted) +
+        ' from ' + result.fit.n + ' sample' + (result.fit.n === 1 ? '' : 's') + '.');
+      if (result.fit.n < 2) {
+        parts.push('One sample can only fit a straight line. Log a second at a clearly different distance and the curve itself can be fitted.');
       }
     } else {
       parts.push(Z.zoneLabel(zoneKey) + ' not refitted: ' + result.reason);
@@ -205,9 +205,7 @@
           trustBadge(zone.trust)
         ]),
         el('div.card-meta', {}, [
-          el('span', { text: zone.constants.secPerTile.toFixed(3) + ' s/tile' }),
-          el('span.dot', { text: '·' }),
-          el('span', { text: (zone.constants.offset >= 0 ? '+' : '') + Number(zone.constants.offset).toFixed(2) + 's' }),
+          el('span', { text: summarise(zone) }),
           el('span.dot', { text: '·' }),
           el('span', { text: samples.length + ' sample' + (samples.length === 1 ? '' : 's') })
         ])
@@ -227,29 +225,22 @@
       }));
     }
 
-    body.appendChild(el('div.grid-2', {}, [
-      field('Seconds per tile', el('input.input', {
-        type: 'number', step: '0.001', inputmode: 'decimal',
-        value: String(zone.constants.secPerTile),
-        onchange: function (e) {
-          S.updateZone(zone.zoneKey, { constants: { secPerTile: e.target.value } });
-          root.RallySync.app.refresh();
-        }
-      })),
-      field('Fixed offset (s)', el('input.input', {
-        type: 'number', step: '0.1', inputmode: 'decimal',
-        value: String(zone.constants.offset),
-        onchange: function (e) {
-          S.updateZone(zone.zoneKey, { constants: { offset: e.target.value } });
-          root.RallySync.app.refresh();
-        }
-      }))
-    ]));
+    if (zone.formulaType === 'power') {
+      body.appendChild(el('div.grid-2', {}, [
+        field('Coefficient', constantInput(zone, 'coefficient', '0.00001')),
+        field('Exponent', constantInput(zone, 'exponent', '0.0001'))
+      ]));
+      body.appendChild(el('p.field-help', {
+        text: 'Real marches show time rising faster than distance, which a straight line cannot describe without going negative. An exponent above 1 bends the curve upward.'
+      }));
+    } else {
+      body.appendChild(el('div.grid-2', {}, [
+        field('Seconds per tile', constantInput(zone, 'secPerTile', '0.001')),
+        field('Fixed offset (s)', constantInput(zone, 'offset', '0.1'))
+      ]));
+    }
 
-    body.appendChild(el('p.formula-preview', {
-      text: 'time = ' + zone.constants.secPerTile.toFixed(3) + ' × distance ÷ (1 + speed%/100) ' +
-        (zone.constants.offset >= 0 ? '+ ' : '− ') + Math.abs(zone.constants.offset).toFixed(2) + 's'
-    }));
+    body.appendChild(el('p.formula-preview', { text: formulaText(zone) }));
 
     if (zone.fitQuality) {
       body.appendChild(el('div.fit-quality', {}, [
@@ -321,6 +312,41 @@
 
     card.appendChild(body);
     return card;
+  }
+
+  function constantInput(zone, key, step) {
+    return el('input.input', {
+      type: 'number', step: step, inputmode: 'decimal',
+      value: String(zone.constants[key]),
+      onchange: function (e) {
+        var changes = {};
+        changes[key] = e.target.value;
+        S.updateZone(zone.zoneKey, { constants: changes });
+        root.RallySync.app.refresh();
+      }
+    });
+  }
+
+  /** One line describing a zone, whichever model it runs on. */
+  function summarise(zone) {
+    if (zone.formulaType === 'power') {
+      return Number(zone.constants.coefficient).toFixed(3) + ' × dist^' +
+        Number(zone.constants.exponent).toFixed(3);
+    }
+    return Number(zone.constants.secPerTile).toFixed(3) + ' s/tile · ' +
+      (zone.constants.offset >= 0 ? '+' : '') + Number(zone.constants.offset).toFixed(2) + 's';
+  }
+
+  function formulaText(zone) {
+    if (zone.formulaType === 'power') {
+      return 'time = ' + Number(zone.constants.coefficient).toFixed(5) +
+        ' × distance^' + Number(zone.constants.exponent).toFixed(5) +
+        ' ÷ (1 + speed%/100)';
+    }
+    return 'time = ' + Number(zone.constants.secPerTile).toFixed(3) +
+      ' × distance ÷ (1 + speed%/100) ' +
+      (zone.constants.offset >= 0 ? '+ ' : '− ') +
+      Math.abs(Number(zone.constants.offset)).toFixed(2) + 's';
   }
 
   function segField(zone, key, label, step) {

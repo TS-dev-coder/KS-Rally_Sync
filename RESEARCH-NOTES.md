@@ -247,6 +247,49 @@ relative claim — the Forbidden Zone running 0.360/0.185 = 1.95x slower — app
 measured base. Their ratio may survive even though their absolute scale did not, but nothing
 tests it yet. Calibrate before trusting a Castle march.
 
+### Third measurement — the model is not a straight line
+
+**2026-09-02.** A long march, thirteen times further than the first two.
+
+| | march 1 | march 2 | march 3 |
+|---|---|---|---|
+| Distance | 29.73 | 34.18 | **404.27** tiles |
+| Speed | +25% | +25% | +25% |
+| Observed | 34-35 s | 39 s | **679 s** (11m 19s) |
+| Effective speed | 0.862 | 0.876 | **0.595** tiles/sec |
+
+**March time rises faster than distance.** The long march is 30% slower per tile than the
+short ones. Forcing a straight line through all three drives the intercept to **-18.4 s**,
+which would have any march under 8.5 tiles finish before it started — the affine model is
+simply the wrong shape.
+
+A power curve fits all three to **within 0.8 seconds** across the whole range:
+
+```
+march seconds = 0.86137 * distance^1.14826 / (1 + speedUp%/100)
+```
+
+That is now the shipped default, and a `power` formula type sits alongside `affine` and
+`segmented`. Calibration fits whichever curve a zone is on, falling back to the straight
+line when there are fewer than two samples at different distances, since one point cannot
+describe a curve.
+
+**This corrected a dangerous regression.** The previous default, fitted from the two short
+marches alone, predicted **7m 11s for a march that took 11m 19s** — 37% fast. Under-stating
+a march is the harmful direction: it launches you late and lands you late, with nothing to
+recover. Over-stating merely wastes a little waiting.
+
+**What three points still cannot tell us:**
+
+- **Speed is completely untested.** All three marches were at +25%, so whether the multiplier
+  divides time (assumed) or acts inside the power is unknown, and every lead at another
+  speed is extrapolation. The app now says so on the results screen rather than presenting a
+  confident number.
+- **The exponent rests on one long march.** Two clusters — three points near 30 tiles and one
+  at 404 — pin a curve, but a march at 100-200 tiles would confirm the shape between them.
+- Whether the curve reflects genuine game mechanics or a route crossing slower terrain is
+  unknown. Empirically it holds; the cause does not.
+
 ### Beast and Terror march speed was buffed
 
 The [August 2026 patch notes](https://kingshotmastery.com/blog/kingshot-august-2026-update-patch-notes)
@@ -267,7 +310,10 @@ zone; log one and see.
 - [x] Settle Model A vs Model B — see Section 6a. **Both are wrong**; the real open-map rate
       is roughly 1.32 s/tile, not 2.778 or 6.
 - [x] Second open-map march recorded — see Section 6a. Default changed to 1.31 s/tile.
-- [ ] Fit the offset properly with a third march at a clearly longer distance (100+ tiles).
+- [x] Third march recorded at 404 tiles — the relationship is a curve, not a line.
+- [ ] A march at a **clearly different speed** (not +25%). This is now the largest untested
+      assumption in the whole model.
+- [ ] A march at 100-200 tiles, to confirm the curve between the two measured clusters.
 - [ ] Test whether confirmed Beast/Terror targets march faster than open map after the
       August 2026 buff, which would justify a zone of their own.
 - [ ] Confirm the distance metric with a near-axis vs near-diagonal pair (Section 6a).

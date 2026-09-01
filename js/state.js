@@ -319,21 +319,38 @@
       return { ok: false, fit: null, reason: 'No samples recorded for this zone yet.' };
     }
 
-    var fit = calc.fitAffine(samples, zone.constants);
+    // Fit whichever curve the zone runs on. The power model needs two samples
+    // at different distances; below that, fall back to the straight line, which
+    // a single sample can still pin down.
+    var fit = null;
+    var usedPower = false;
+    if (zone.formulaType === 'power') {
+      fit = calc.fitPower(samples);
+      usedPower = !!fit;
+    }
+    if (!fit) fit = calc.fitAffine(samples, affineSeed(zone));
+
     if (!fit) {
       return { ok: false, fit: null, reason: 'These samples do not produce a usable fit.' };
     }
 
-    zone.formulaType = 'affine';
-    zone.constants.secPerTile = fit.secPerTile;
-    zone.constants.offset = fit.offset;
+    if (usedPower) {
+      zone.formulaType = 'power';
+      zone.constants = { coefficient: fit.coefficient, exponent: fit.exponent };
+    } else {
+      zone.formulaType = 'affine';
+      zone.constants = { secPerTile: fit.secPerTile, offset: fit.offset };
+    }
     zone.trust = 'calibrated';
     zone.lastFitISO = new Date().toISOString();
     zone.fitQuality = {
       n: fit.n,
       rmse: fit.rmse,
       maxErrorSeconds: fit.maxErrorSeconds,
-      fittedOffset: fit.fittedOffset
+      fittedOffset: usedPower ? true : fit.fittedOffset,
+      model: usedPower ? 'power' : 'affine',
+      minDistance: fit.minDistance,
+      maxDistance: fit.maxDistance
     };
     persist('zones');
     notify();
@@ -352,6 +369,12 @@
       var value = Number(raw);
       if (isFinite(value)) targetObject[key] = value;
     });
+  }
+
+  /** A starting offset for the affine fallback, whatever model the zone is on. */
+  function affineSeed(zone) {
+    if (zone.constants && isFinite(zone.constants.offset)) return zone.constants;
+    return { secPerTile: 1.31, offset: 3.2 };
   }
 
   function updateZone(zoneKey, changes) {

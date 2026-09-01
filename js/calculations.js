@@ -92,12 +92,41 @@
   }
 
   /**
+   * t = coefficient * distance^exponent / speedMultiplier
+   *
+   * Field marches show time rising faster than distance: three real marches at
+   * +25% ran 0.862, 0.876 and 0.595 tiles per second at 29.7, 34.2 and 404.3
+   * tiles. An affine model can only bend that far by using a negative offset,
+   * which would have short marches finishing before they start. A power curve
+   * fits all three to within 0.8 s across a thirteen-fold range of distance.
+   *
+   * Speed is applied to the whole result rather than inside the power, on the
+   * reading that a March Speed Up percentage scales time. Every sample so far
+   * is at +25%, so that half of the model is NOT yet tested — see
+   * RESEARCH-NOTES.md.
+   */
+  function powerMarchSeconds(distance, multiplier, constants) {
+    var coefficient = Number(constants.coefficient);
+    var exponent = Number(constants.exponent);
+    if (!isFinite(coefficient) || !isFinite(exponent) || distance <= 0) return 0;
+    return (coefficient * Math.pow(distance, exponent)) / multiplier;
+  }
+
+  /**
    * March time from a zone formula record.
    * @returns {{seconds:number, distance:number, insideTiles:number}}
    */
   function marchSecondsForZone(zone, from, to, speedPercent) {
     var multiplier = speedMultiplier(speedPercent);
     var distance = distanceTiles(from, to);
+
+    if (zone.formulaType === 'power') {
+      return {
+        seconds: powerMarchSeconds(distance, multiplier, zone.constants),
+        distance: distance,
+        insideTiles: 0
+      };
+    }
 
     if (zone.formulaType === 'segmented') {
       var c = zone.segmented || {};
@@ -131,6 +160,68 @@
    * @returns {{secPerTile:number, offset:number, n:number, rmse:number,
    *            maxErrorSeconds:number, fittedOffset:boolean}|null}
    */
+  /**
+   * Least-squares fit of t = c * d^k / multiplier, solved on logs.
+   *
+   * Needs samples at genuinely different distances: two marches of similar
+   * length fix a line through one point and the exponent runs away.
+   *
+   * @returns {{coefficient:number, exponent:number, n:number, rmse:number,
+   *            maxErrorSeconds:number, minDistance:number,
+   *            maxDistance:number}|null}
+   */
+  function fitPower(samples) {
+    var pts = [];
+    for (var i = 0; i < samples.length; i++) {
+      var s = samples[i];
+      var d = Number(s.distance);
+      var t = Number(s.observedTimeSeconds) * speedMultiplier(s.speedPercent);
+      if (isFinite(d) && isFinite(t) && d > 0 && t > 0) pts.push({ lx: Math.log(d), ly: Math.log(t), d: d });
+    }
+    if (pts.length < 2) return null;
+
+    var meanLx = 0, meanLy = 0, j;
+    for (j = 0; j < pts.length; j++) { meanLx += pts[j].lx; meanLy += pts[j].ly; }
+    meanLx /= pts.length;
+    meanLy /= pts.length;
+
+    var sxy = 0, sxx = 0;
+    for (j = 0; j < pts.length; j++) {
+      var dx = pts[j].lx - meanLx;
+      sxy += dx * (pts[j].ly - meanLy);
+      sxx += dx * dx;
+    }
+    // All samples at one distance cannot describe a curve.
+    if (sxx < 1e-6) return null;
+
+    var exponent = sxy / sxx;
+    var coefficient = Math.exp(meanLy - exponent * meanLx);
+    if (!isFinite(exponent) || !isFinite(coefficient) || coefficient <= 0) return null;
+
+    var sumSq = 0, maxErr = 0, minD = Infinity, maxD = 0;
+    for (j = 0; j < samples.length; j++) {
+      var sample = samples[j];
+      var dist = Number(sample.distance);
+      if (!(dist > 0)) continue;
+      var predicted = coefficient * Math.pow(dist, exponent) / speedMultiplier(sample.speedPercent);
+      var err = Math.abs(predicted - Number(sample.observedTimeSeconds));
+      sumSq += err * err;
+      if (err > maxErr) maxErr = err;
+      if (dist < minD) minD = dist;
+      if (dist > maxD) maxD = dist;
+    }
+
+    return {
+      coefficient: coefficient,
+      exponent: exponent,
+      n: pts.length,
+      rmse: Math.sqrt(sumSq / pts.length),
+      maxErrorSeconds: maxErr,
+      minDistance: minD,
+      maxDistance: maxD
+    };
+  }
+
   function fitAffine(samples, currentConstants) {
     var pts = [];
     for (var i = 0; i < samples.length; i++) {
@@ -537,6 +628,8 @@
     speedMultiplier: speedMultiplier,
     segmentLengthInsideCircle: segmentLengthInsideCircle,
     affineMarchSeconds: affineMarchSeconds,
+    powerMarchSeconds: powerMarchSeconds,
+    fitPower: fitPower,
     segmentedMarchSeconds: segmentedMarchSeconds,
     marchSecondsForZone: marchSecondsForZone,
     fitAffine: fitAffine,

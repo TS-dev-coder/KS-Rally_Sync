@@ -460,34 +460,69 @@ test('the booking horizon outruns background timer throttling', () => {
 
 // ================================================== field-measured defaults
 
-test('the shipped default reproduces both recorded field marches', () => {
-  // Two real marches at +25%: 29.73 tiles took 34-35s, 34.18 tiles took 39s.
-  // The default must land on them, not merely be in the right region.
+test('the shipped default reproduces every recorded field march', () => {
+  // Three real marches at +25%, spanning a thirteen-fold range of distance.
+  // Asked through the public API so this survives a change of model shape.
   const zone = zones.findZone(zones.defaultZoneFormulas(), 'general');
-  const predict = (dx, dy, speedPercent) =>
-    zone.constants.secPerTile * Math.hypot(dx, dy) / (1 + speedPercent / 100) +
-    zone.constants.offset;
+  const predict = (dx, dy) =>
+    calc.marchSecondsForZone(zone, { x: 0, y: 0 }, { x: dx, y: dy }, 25).seconds;
 
-  assert.ok(Math.abs(predict(28, 10, 25) - 34.5) < 1.5,
-    'first field march, got ' + predict(28, 10, 25).toFixed(1));
-  assert.ok(Math.abs(predict(12, 32, 25) - 39) < 1.5,
-    'second field march, got ' + predict(12, 32, 25).toFixed(1));
+  const marches = [
+    { dx: 28, dy: 10, actual: 34.5, what: 'Terror, 29.7 tiles' },
+    { dx: 12, dy: 32, actual: 39, what: 'near base, 34.2 tiles' },
+    { dx: 32, dy: 403, actual: 679, what: 'far base, 404.3 tiles' }
+  ];
+
+  marches.forEach((m) => {
+    const got = predict(m.dx, m.dy);
+    assert.ok(Math.abs(got - m.actual) < 2,
+      m.what + ': predicted ' + got.toFixed(1) + 's against an actual ' + m.actual + 's');
+  });
+});
+
+test('a straight line cannot fit the field data, which is why the model curves', () => {
+  // The short marches ran ~0.87 tiles/sec and the long one ~0.60. Forcing a
+  // line through all three drives the intercept negative, which would have a
+  // short march finishing before it began.
+  const samples = [
+    { distance: Math.hypot(28, 10), speedPercent: 25, observedTimeSeconds: 34.5 },
+    { distance: Math.hypot(12, 32), speedPercent: 25, observedTimeSeconds: 39 },
+    { distance: Math.hypot(32, 403), speedPercent: 25, observedTimeSeconds: 679 }
+  ];
+
+  const line = calc.fitAffine(samples, { secPerTile: 1.31, offset: 3.2 });
+  assert.ok(line.offset < 0 || line.maxErrorSeconds > 10,
+    'a line either goes negative or misses badly; got offset ' +
+    line.offset.toFixed(1) + ' and worst error ' + line.maxErrorSeconds.toFixed(1) + 's');
+
+  const curve = calc.fitPower(samples);
+  assert.ok(curve.exponent > 1, 'time rises faster than distance');
+  assert.ok(curve.maxErrorSeconds < 2,
+    'the curve should fit all three within a couple of seconds, got ' +
+    curve.maxErrorSeconds.toFixed(2) + 's');
+});
+
+test('fitPower needs samples at genuinely different distances', () => {
+  const sameDistance = [
+    { distance: 30, speedPercent: 25, observedTimeSeconds: 34 },
+    { distance: 30, speedPercent: 25, observedTimeSeconds: 36 }
+  ];
+  assert.strictEqual(calc.fitPower(sameDistance), null,
+    'two marches of the same length cannot describe a curve');
+  assert.strictEqual(calc.fitPower([sameDistance[0]]), null, 'one sample cannot either');
 });
 
 test('the superseded community models are kept, and both are far too slow', () => {
   // They stay selectable so the disagreement stays visible rather than being
   // quietly rewritten out of the app.
-  const dist = Math.hypot(12, 32);
-  const rateOf = (preset) =>
-    zones.findZone(zones.defaultZoneFormulas(preset), 'general').constants;
+  const far = (preset) => {
+    const zone = zones.findZone(zones.defaultZoneFormulas(preset), 'general');
+    return calc.marchSecondsForZone(zone, { x: 0, y: 0 }, { x: 12, y: 32 }, 25).seconds;
+  };
 
-  const measured = rateOf('measured');
-  const coefficient = rateOf('coefficient');
-  const sixSecond = rateOf('sixSecond');
-
-  const t = (c) => c.secPerTile * dist / 1.25 + c.offset;
-  assert.ok(t(coefficient) / t(measured) > 1.8, 'the coefficient model runs ~2x slow');
-  assert.ok(t(sixSecond) / t(measured) > 3.5, 'the six-second model runs ~4x slow');
+  const measured = far('measured');
+  assert.ok(far('coefficient') / measured > 1.8, 'the coefficient model runs ~2x slow');
+  assert.ok(far('sixSecond') / measured > 3.5, 'the six-second model runs ~4x slow');
   assert.strictEqual(zones.DEFAULT_PRESET, 'measured');
 });
 

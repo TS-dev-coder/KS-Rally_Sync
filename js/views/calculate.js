@@ -722,6 +722,13 @@
 
     resultsHost.appendChild(G.helpBlock('timingChain'));
 
+    var caveat = modelCaveat(plan.rows);
+    if (caveat) {
+      resultsHost.appendChild(el('div.banner.banner-warn', {}, [
+        icon('alert', 16), el('span', { text: caveat })
+      ]));
+    }
+
     resultsHost.appendChild(el('p.disclaimer', {}, [
       el('strong', { text: 'Estimates, not guarantees. ' }),
       'Rows marked ', el('span.badge.badge-measured', { text: 'measured' }),
@@ -763,6 +770,49 @@
         ' · ' + d.utcDate(landingMs);
     }
     if (hint) hint.textContent = 'as early as the slowest lead can make it';
+  }
+
+  /**
+   * The shipped curve was fitted from a handful of real marches, all at one
+   * speed. Rows outside that range are extrapolation, and saying so is more
+   * use than a confident wrong number.
+   */
+  function modelCaveat(rows) {
+    var zone = S.findZone(S.data.settings.selectedTargetId
+      ? (S.findTarget(S.data.settings.selectedTargetId) || {}).zoneKey
+      : 'general');
+    if (!zone || !zone.fittedFrom || zone.trust === 'calibrated') return null;
+
+    var range = zone.fittedFrom;
+    var speeds = {};
+    var beyond = 0;
+
+    rows.forEach(function (row) {
+      if (row.errors.length > 0) return;
+      var lead = S.findLead(row.leadId);
+      if (lead && lead.marchSpeedUpPercent !== null) speeds[lead.marchSpeedUpPercent] = true;
+      if (row.distance > range.maxDistance * 1.25 || row.distance < range.minDistance * 0.5) beyond++;
+    });
+
+    var offSpeed = Object.keys(speeds).filter(function (value) {
+      return range.speedPercents.indexOf(Number(value)) === -1;
+    }).length;
+
+    var notes = [];
+    if (offSpeed > 0) {
+      notes.push(offSpeed + (offSpeed === 1 ? ' lead marches' : ' leads march') +
+        ' at a speed the model has never been measured at (it was fitted only at +' +
+        range.speedPercents.join('/+') + '%)');
+    }
+    if (beyond > 0) {
+      notes.push(beyond + (beyond === 1 ? ' march is' : ' marches are') +
+        ' outside the ' + Math.round(range.minDistance) + '–' +
+        Math.round(range.maxDistance) + ' tile range it was fitted over');
+    }
+    if (notes.length === 0) return null;
+
+    return 'Extrapolating: ' + notes.join(', ') +
+      '. Log a real march for those and they become exact.';
   }
 
   // ------------------------------------------------------------- row grouping

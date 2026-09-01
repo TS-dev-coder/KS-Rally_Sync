@@ -95,12 +95,25 @@
     measured: {
       id: 'measured',
       label: 'Field-measured',
-      note: 'Fitted from two real marches (Sept 2026), which agreed within 0.5%. Open map is measured; the Castle and Ruins rates are still only inferred.',
+      note: 'Power curve fitted to three real marches spanning 30 to 404 tiles, matching all three within 0.8s. Open map is measured; Castle and Ruins are still only inferred.',
+      formulaType: 'power',
+      /**
+       * What the curve was fitted against. Everything outside this is
+       * extrapolation, and the app says so rather than quietly guessing.
+       */
+      fittedFrom: {
+        sampleCount: 3,
+        minDistance: 29.7,
+        maxDistance: 404.3,
+        speedPercents: [25]
+      },
       rates: {
-        general: { secPerTile: 1.31, offset: 3.2 },
-        castle_relic: { secPerTile: 1.31 * (0.360 / 0.185), offset: 3.2 },
-        turret: { secPerTile: 1.31, offset: 3.2 },
-        ruins: { secPerTile: 1.31 * (0.360 / 0.185), offset: 3.2 }
+        general: { coefficient: 0.86137, exponent: 1.14826 },
+        turret: { coefficient: 0.86137, exponent: 1.14826 },
+        // The community's own claim that the Forbidden Zone runs 1.95x slower,
+        // applied to the measured curve. Untested.
+        castle_relic: { coefficient: 0.86137 * (0.360 / 0.185), exponent: 1.14826 },
+        ruins: { coefficient: 0.86137 * (0.360 / 0.185), exponent: 1.14826 }
       }
     },
     coefficient: {
@@ -157,17 +170,27 @@
   /** Build a fresh set of ZoneFormula records from a preset id. */
   function defaultZoneFormulas(presetId) {
     var preset = MODEL_PRESETS[presetId] || MODEL_PRESETS[DEFAULT_PRESET];
+    var formulaType = preset.formulaType || 'affine';
+
     return ZONE_DEFS.map(function (def) {
       var rates = preset.rates[def.key];
+      var constants = formulaType === 'power'
+        ? { coefficient: rates.coefficient, exponent: rates.exponent }
+        : { secPerTile: rates.secPerTile, offset: rates.offset };
+
+      // The geometric Relic model is affine-based, so it needs a per-tile rate
+      // even when the zone itself is running on the power curve.
+      var segmentedSource = formulaType === 'power'
+        ? { secPerTile: MODEL_PRESETS.coefficient.rates[def.key].secPerTile, offset: 3.2 }
+        : rates;
+
       return {
         zoneKey: def.key,
         label: def.label,
-        formulaType: 'affine',
-        constants: {
-          secPerTile: rates.secPerTile,
-          offset: rates.offset
-        },
-        segmented: defaultSegmentedConstants(rates),
+        formulaType: formulaType,
+        constants: constants,
+        segmented: defaultSegmentedConstants(segmentedSource),
+        fittedFrom: preset.fittedFrom || null,
         presetId: preset.id,
         trust: DEFAULT_TRUST[def.key] || 'unverified',
         lastFitISO: null

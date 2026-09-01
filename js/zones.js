@@ -79,6 +79,30 @@
    * selectable so the user can settle the disagreement with real data.
    */
   var MODEL_PRESETS = {
+    /**
+     * Fitted from marches actually recorded in play, and the shipped default.
+     *
+     * Two marches at +25% speed, 29.7 and 34.2 tiles, took 34-35 s and 39 s.
+     * Solved independently they give 1.316 and 1.309 s/tile — agreement within
+     * half a percent, across different distances and different target types.
+     * Both published community models predict roughly twice those times.
+     *
+     * The red-zone figure is the community's own claim that the Forbidden Zone
+     * runs 0.360/0.185 = 1.95x slower, applied to this measured base. Their
+     * relative claim may hold even though their absolute scale did not, but it
+     * is untested — calibrate before trusting a Castle march.
+     */
+    measured: {
+      id: 'measured',
+      label: 'Field-measured',
+      note: 'Fitted from two real marches (Sept 2026), which agreed within 0.5%. Open map is measured; the Castle and Ruins rates are still only inferred.',
+      rates: {
+        general: { secPerTile: 1.31, offset: 3.2 },
+        castle_relic: { secPerTile: 1.31 * (0.360 / 0.185), offset: 3.2 },
+        turret: { secPerTile: 1.31, offset: 3.2 },
+        ruins: { secPerTile: 1.31 * (0.360 / 0.185), offset: 3.2 }
+      }
+    },
     coefficient: {
       id: 'coefficient',
       label: 'Coefficient model',
@@ -103,13 +127,15 @@
     }
   };
 
-  var DEFAULT_PRESET = 'coefficient';
+  var DEFAULT_PRESET = 'measured';
 
   /**
    * Confidence a zone's constants carry before any calibration.
    * 'guess' is deliberately harsher than 'unverified' — see RESEARCH-NOTES 5.
    */
   var DEFAULT_TRUST = {
+    // Still 'unverified' even under the measured preset: those marches came from
+    // one kingdom, and nothing here is your own data until you log a march.
     general: 'unverified',
     castle_relic: 'unverified',
     turret: 'unverified',

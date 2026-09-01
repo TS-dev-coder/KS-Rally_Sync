@@ -457,3 +457,54 @@ test('the booking horizon outruns background timer throttling', () => {
   assert.ok(HORIZON_SECONDS > WORST_BACKGROUND_TICK_SECONDS * 2,
     'a single missed wakeup must not leave a gap in booked alarms');
 });
+
+// ================================================== field-measured defaults
+
+test('the shipped default reproduces both recorded field marches', () => {
+  // Two real marches at +25%: 29.73 tiles took 34-35s, 34.18 tiles took 39s.
+  // The default must land on them, not merely be in the right region.
+  const zone = zones.findZone(zones.defaultZoneFormulas(), 'general');
+  const predict = (dx, dy, speedPercent) =>
+    zone.constants.secPerTile * Math.hypot(dx, dy) / (1 + speedPercent / 100) +
+    zone.constants.offset;
+
+  assert.ok(Math.abs(predict(28, 10, 25) - 34.5) < 1.5,
+    'first field march, got ' + predict(28, 10, 25).toFixed(1));
+  assert.ok(Math.abs(predict(12, 32, 25) - 39) < 1.5,
+    'second field march, got ' + predict(12, 32, 25).toFixed(1));
+});
+
+test('the superseded community models are kept, and both are far too slow', () => {
+  // They stay selectable so the disagreement stays visible rather than being
+  // quietly rewritten out of the app.
+  const dist = Math.hypot(12, 32);
+  const rateOf = (preset) =>
+    zones.findZone(zones.defaultZoneFormulas(preset), 'general').constants;
+
+  const measured = rateOf('measured');
+  const coefficient = rateOf('coefficient');
+  const sixSecond = rateOf('sixSecond');
+
+  const t = (c) => c.secPerTile * dist / 1.25 + c.offset;
+  assert.ok(t(coefficient) / t(measured) > 1.8, 'the coefficient model runs ~2x slow');
+  assert.ok(t(sixSecond) / t(measured) > 3.5, 'the six-second model runs ~4x slow');
+  assert.strictEqual(zones.DEFAULT_PRESET, 'measured');
+});
+
+test('an untouched zone migrates to a better default, a calibrated one does not', () => {
+  // Simulates an install carrying the old, twice-too-slow constants.
+  const stale = zones.defaultZoneFormulas('coefficient');
+  const rate = (list, key) => zones.findZone(list, key).constants.secPerTile;
+  assert.ok(rate(stale, 'general') > 2.7, 'fixture really does hold the old value');
+
+  // The reconcile rule: untouched means no fit, no hand edit.
+  const untouched = (z) => !z.lastFitISO && !z.fitQuality &&
+    z.trust !== 'calibrated' && z.trust !== 'manual';
+  assert.strictEqual(untouched(zones.findZone(stale, 'general')), true);
+
+  const calibrated = zones.findZone(zones.defaultZoneFormulas('coefficient'), 'general');
+  calibrated.trust = 'calibrated';
+  calibrated.lastFitISO = new Date().toISOString();
+  assert.strictEqual(untouched(calibrated), false,
+    'a zone fitted from real samples must never be overwritten by a new default');
+});

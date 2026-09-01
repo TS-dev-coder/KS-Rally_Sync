@@ -122,10 +122,11 @@ tab is hidden; and nothing here survives the operating system killing the browse
 ## Accuracy
 
 The developer publishes no march-time formula. The community models that exist disagree by
-roughly **2× on seconds per tile**, and the "ceiling model" some sites cite for the red zone
-is never actually defined anywhere — so RallySync does not pretend to implement it. See
-[RESEARCH-NOTES.md](RESEARCH-NOTES.md) for the full sourcing, the disagreements, and the
-open questions.
+roughly **2× on seconds per tile** with each other — and measured against real marches, both
+are too slow, by 2× and 4× respectively. The open-map rate now shipped is fitted from actual
+marches recorded in play, which agreed within half a percent. The Castle and Ruins rates are
+still only inferred. See [RESEARCH-NOTES.md](RESEARCH-NOTES.md) for the measurements, the
+sourcing and what remains untested.
 
 Instead of guessing, the app ranks its own confidence per lead:
 

@@ -217,9 +217,48 @@ unattributed SEO page, and it turns out none of them match reality.
   marches of similar length but very different shape — one near-axis, one near-diagonal —
   would settle it.
 
-**The shipped default has deliberately not been changed** on the strength of one sample from
-one kingdom. Calibration is the supported path: logging this march refits the zone locally
-to ~1.32 s/tile and makes that lead-target pair exact.
+### Second measurement, and the default changed
+
+**2026-09-02.** A second march, at a different distance and a different kind of target.
+
+| | march 1 | march 2 |
+|---|---|---|
+| Distance | 29.73 tiles | 34.18 tiles |
+| Speed | +25% | +25% |
+| Observed | 34-35 s | 39 s |
+| Rate implied (offset held at 3.2 s) | **1.3159 s/tile** | **1.3094 s/tile** |
+| Shipped default predicted | 69.3 s (2.01x slow) | 79.1 s (2.03x slow) |
+
+The two agree **within half a percent**, at different distances, and the shipped model is
+out by a consistent factor of two in both. That is no longer a single anecdote, so the
+default has been changed: `general` and `turret` now ship at **1.31 s/tile with a +3.2 s
+offset**, which reproduces both marches to within 0.1 s.
+
+A joint fit of both points solves the offset as well and gives 1.266 s/tile with a 4.39 s
+offset. It is not used: with only two points and a +/-0.5 s reading on the first, the offset
+is poorly constrained, whereas holding the community's 3.2 s makes both samples agree with
+each other. A third march at a clearly longer distance would settle it properly.
+
+**The two community models are kept as selectable presets** rather than deleted, so the
+disagreement stays visible in the app instead of being quietly rewritten away.
+
+**Still inferred, not measured:** the Castle and Ruins rates. Those are the community's own
+relative claim — the Forbidden Zone running 0.360/0.185 = 1.95x slower — applied to the new
+measured base. Their ratio may survive even though their absolute scale did not, but nothing
+tests it yet. Calibrate before trusting a Castle march.
+
+### Beast and Terror march speed was buffed
+
+The [August 2026 patch notes](https://kingshotmastery.com/blog/kingshot-august-2026-update-patch-notes)
+state that the default March Speed for **Beast Hunting and Rally Terrors was increased**,
+which shortens those marches. Every community formula found in Section 3 predates it, and
+none mention it — a plausible contributor to their being uniformly too slow.
+
+**Untested here:** whether Beast/Terror marches now run at a *different* rate from ordinary
+open-map marches. The two samples above agree with each other, but it is not known whether
+either target was an actual Terror or Beast rather than a player structure. If a march on a
+confirmed Terror or Beast comes out faster than 1.31 s/tile predicts, that warrants its own
+zone; log one and see.
 
 ---
 
@@ -227,7 +266,10 @@ to ~1.32 s/tile and makes that lead-target pair exact.
 
 - [x] Settle Model A vs Model B — see Section 6a. **Both are wrong**; the real open-map rate
       is roughly 1.32 s/tile, not 2.778 or 6.
-- [ ] Fit the fixed offset with a second open-map march at a clearly different distance.
+- [x] Second open-map march recorded — see Section 6a. Default changed to 1.31 s/tile.
+- [ ] Fit the offset properly with a third march at a clearly longer distance (100+ tiles).
+- [ ] Test whether confirmed Beast/Terror targets march faster than open map after the
+      August 2026 buff, which would justify a zone of their own.
 - [ ] Confirm the distance metric with a near-axis vs near-diagonal pair (Section 6a).
 - [ ] Quantify the Ruins penalty — currently a pure placeholder.
 - [ ] Determine whether turrets inside the Forbidden Zone use the red-zone rate.

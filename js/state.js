@@ -115,7 +115,14 @@
     return state;
   }
 
-  /** Keeps stored zones usable if a future version adds a zone or a field. */
+  /**
+   * Keeps stored zones usable if a future version adds a zone or a field.
+   *
+   * A zone the user has never touched is also moved onto the current default
+   * preset, so an install carrying constants that later turned out to be twice
+   * the real value does not keep them forever. Anything fitted from samples or
+   * hand-edited is left exactly as it is — that is the user's own data.
+   */
   function reconcileZones(stored, presetId) {
     var defaults = zonesLib.defaultZoneFormulas(presetId);
     return defaults.map(function (def) {
@@ -124,6 +131,11 @@
         if (stored[i].zoneKey === def.zoneKey) { found = stored[i]; break; }
       }
       if (!found) return def;
+
+      var untouched = !found.lastFitISO && !found.fitQuality &&
+        found.trust !== 'calibrated' && found.trust !== 'manual';
+      if (untouched && found.presetId !== def.presetId) return def;
+
       return Object.assign({}, def, found, {
         constants: Object.assign({}, def.constants, found.constants),
         segmented: Object.assign({}, def.segmented, found.segmented)

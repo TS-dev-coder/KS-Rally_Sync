@@ -134,9 +134,12 @@ maybe('the only lead taps exactly at the start, and the landing follows from the
     // The slowest lead — here the only one — taps at the start moment itself.
     assert.strictEqual(rows[0].querySelector('.result-time-value').textContent, utc(start));
 
-    // And the landing is that start plus their rally window and march:
-    // 100 tiles at +0% is 100 / 0.36 + 3.2 seconds, plus the 300s window.
-    const expectedLanding = start + (300 + 100 / 0.36 + 3.2) * 1000;
+    // And the landing is that start plus their rally window and march. The
+    // rate comes from the shipped default rather than being restated here, so
+    // this stays true when the default is refitted from new field data.
+    const zone = state.findZone('general');
+    const march = zone.constants.secPerTile * 100 / 1 + zone.constants.offset;
+    const expectedLanding = start + (300 + march) * 1000;
     const facts = rows[0].textContent;
     assert.ok(facts.indexOf(utc(expectedLanding)) !== -1,
       'the row should land at ' + utc(expectedLanding) + ', got: ' + facts);
@@ -758,16 +761,23 @@ maybe('logging a march reports how far the shipped default was out', async () =>
     });
     const lead = state.upsertLead({ name: 'TS', x: 536, y: 740, marchSpeedUpPercent: 25 });
 
+    // The shipped default now predicts this march closely, so logging it should
+    // barely move the rate — the point of the test is that a measurement lands
+    // where the model already sits, not that it always causes a big correction.
     const before = state.findZone('general').constants.secPerTile;
-    assert.ok(Math.abs(before - 1 / 0.36) < 1e-6, 'starts on the community default');
+    const predicted = ctx.RS.calc.marchSecondsForZone(
+      state.findZone('general'), state.findLead(lead.id), state.findTarget(target.id), 25
+    ).seconds;
+    assert.ok(Math.abs(predicted - 35) < 2,
+      'the shipped default should already be within a couple of seconds, got ' + predicted);
 
     state.recordMeasurement(lead.id, target.id, 35);
     const fit = state.recalibrateZone('general');
 
     assert.strictEqual(fit.ok, true);
     const after = state.findZone('general').constants.secPerTile;
-    assert.ok(after < before / 1.8,
-      'a real march this much faster must pull the rate down sharply, got ' + after);
+    assert.ok(Math.abs(after - before) / before < 0.1,
+      'a march matching the model must not swing the rate, got ' + after + ' from ' + before);
 
     // And the pair itself is now exact rather than fitted.
     const plan = ctx.RS.calc.buildMultiPlan({

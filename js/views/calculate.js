@@ -195,7 +195,7 @@
       var incomplete = t.x === null || t.y === null;
       chips.appendChild(el('button.chip' + (selected ? ' is-selected' : '') + (incomplete ? ' is-incomplete' : ''), {
         type: 'button',
-        title: incomplete ? 'No coordinates set' : 'X:' + t.x + ' Y:' + t.y,
+        title: Z.targetTypeLabel(t.type) + (incomplete ? ' · no coordinates set' : ' · X:' + t.x + ' Y:' + t.y),
         onclick: function () {
           S.updateSettings({ selectedTargetId: t.id });
           root.RallySync.app.refresh();
@@ -213,6 +213,7 @@
         ]));
       } else {
         children.push(el('p.group-note', {}, [
+          el('span.tag.tag-squad', { text: Z.targetTypeLabel(target.type) }),
           el('span.tag.tag-zone', { text: Z.zoneLabel(target.zoneKey) }),
           el('span.mono', { text: ' X:' + target.x + ' Y:' + target.y }),
           el('span.dot', { text: '·' }),
@@ -479,11 +480,7 @@
               S.updateSettings({ assignments: next });
               root.RallySync.app.refresh();
             }
-          }, S.data.targets.map(function (t) {
-            return el('option', {
-              value: t.id, selected: assigned && t.id === assigned.id
-            }, [t.name || 'Unnamed']);
-          }))
+          }, targetOptionsGrouped(assigned))
         ]));
       });
       children.push(el('p.group-note', { text: 'Each lead marches on:' }));
@@ -523,6 +520,21 @@
     }
 
     return group('Who is marching', children, selected.length + '/' + S.data.leads.length);
+  }
+
+  /** Targets as <optgroup>s by type, so a long list stays navigable. */
+  function targetOptionsGrouped(assigned) {
+    var groups = [];
+    Z.TARGET_TYPES.forEach(function (def) {
+      var members = S.data.targets.filter(function (t) { return (t.type || 'other') === def.key; });
+      if (members.length === 0) return;
+      groups.push(el('optgroup', { label: def.label }, members.map(function (t) {
+        return el('option', {
+          value: t.id, selected: assigned && t.id === assigned.id
+        }, [t.name || 'Unnamed']);
+      })));
+    });
+    return groups;
   }
 
   function toggleGroupSelection(members, allIn) {

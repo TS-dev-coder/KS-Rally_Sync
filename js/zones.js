@@ -36,6 +36,45 @@
   ];
 
   /**
+   * The kinds of structure you can rally. A type is a starting point, not a
+   * constraint: it seeds the zone model and rally window for a new target, and
+   * both stay editable afterwards. You can have as many of a type as you like —
+   * three Sanctuaries with your own names for them is the normal case.
+   */
+  var TARGET_TYPES = [
+    { key: 'castle', label: 'King’s Castle', zoneKey: 'castle_relic', gatherSeconds: 300 },
+    { key: 'turret', label: 'Turret', zoneKey: 'turret', gatherSeconds: 300 },
+    { key: 'sanctuary', label: 'Sanctuary', zoneKey: 'general', gatherSeconds: 300 },
+    { key: 'fortress', label: 'Fortress', zoneKey: 'general', gatherSeconds: 300 },
+    { key: 'outpost', label: 'Outpost', zoneKey: 'general', gatherSeconds: 300 },
+    { key: 'ruins', label: 'Ruins', zoneKey: 'ruins', gatherSeconds: 300 },
+    { key: 'other', label: 'Other', zoneKey: 'general', gatherSeconds: 300 }
+  ];
+
+  function targetTypeDef(key) {
+    for (var i = 0; i < TARGET_TYPES.length; i++) {
+      if (TARGET_TYPES[i].key === key) return TARGET_TYPES[i];
+    }
+    return TARGET_TYPES[TARGET_TYPES.length - 1];
+  }
+
+  function targetTypeLabel(key) { return targetTypeDef(key).label; }
+
+  /** Best guess for targets saved before types existed. */
+  function inferTargetType(target) {
+    var name = String(target && target.name || '').toLowerCase();
+    for (var i = 0; i < TARGET_TYPES.length - 1; i++) {
+      var def = TARGET_TYPES[i];
+      var word = def.label.toLowerCase().replace('king’s ', '');
+      if (name.indexOf(word) !== -1) return def.key;
+    }
+    if (target && target.zoneKey === 'castle_relic') return 'castle';
+    if (target && target.zoneKey === 'turret') return 'turret';
+    if (target && target.zoneKey === 'ruins') return 'ruins';
+    return 'other';
+  }
+
+  /**
    * Competing community models (RESEARCH-NOTES 3.1). Both unverified; both
    * selectable so the user can settle the disagreement with real data.
    */
@@ -146,6 +185,10 @@
   root.RallySync = root.RallySync || {};
   root.RallySync.zones = {
     ZONE_DEFS: ZONE_DEFS,
+    TARGET_TYPES: TARGET_TYPES,
+    targetTypeDef: targetTypeDef,
+    targetTypeLabel: targetTypeLabel,
+    inferTargetType: inferTargetType,
     MODEL_PRESETS: MODEL_PRESETS,
     DEFAULT_PRESET: DEFAULT_PRESET,
     defaultZoneFormulas: defaultZoneFormulas,

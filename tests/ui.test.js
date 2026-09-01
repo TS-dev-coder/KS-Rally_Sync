@@ -623,3 +623,74 @@ maybe('settings fields persist', async () => {
     assert.strictEqual(state.data.settings.clockOffsetSeconds, -1.5, 'clock offset must survive');
   } finally { teardown(ctx); }
 });
+
+maybe('you can add several targets of the same type, auto-numbered', async () => {
+  const ctx = await boot();
+  try {
+    const { state } = ctx.RS;
+    const before = state.data.targets.filter((t) => t.type === 'sanctuary').length;
+
+    const first = state.addTargetOfType('sanctuary');
+    const second = state.addTargetOfType('sanctuary');
+    const third = state.addTargetOfType('sanctuary');
+
+    assert.strictEqual(first.name, before === 0 ? 'Sanctuary' : 'Sanctuary ' + (before + 1));
+    assert.strictEqual(second.name, 'Sanctuary ' + (before + 2));
+    assert.strictEqual(third.name, 'Sanctuary ' + (before + 3));
+
+    // Distinct records, each independently editable.
+    const ids = [first.id, second.id, third.id];
+    assert.strictEqual(new Set(ids).size, 3);
+
+    // Renaming one leaves the others alone.
+    state.upsertTarget(Object.assign({}, second, { name: 'East Sanctuary', x: 604, y: 455 }));
+    assert.strictEqual(state.findTarget(second.id).name, 'East Sanctuary');
+    assert.strictEqual(state.findTarget(first.id).name, first.name);
+    assert.strictEqual(state.findTarget(third.id).name, third.name);
+  } finally { teardown(ctx); }
+});
+
+maybe('a target type seeds the zone model and rally window but does not lock them', async () => {
+  const ctx = await boot();
+  try {
+    const { state, zones } = ctx.RS;
+
+    const castle = state.addTargetOfType('castle');
+    assert.strictEqual(castle.zoneKey, 'castle_relic', 'the Castle sits in the Forbidden Zone');
+    assert.strictEqual(castle.gatherSeconds, 300);
+
+    const outpost = state.addTargetOfType('outpost');
+    assert.strictEqual(outpost.zoneKey, 'general', 'Outposts are free-form world map');
+
+    // Both stay editable afterwards.
+    state.upsertTarget(Object.assign({}, outpost, { zoneKey: 'ruins', gatherSeconds: 0 }));
+    const edited = state.findTarget(outpost.id);
+    assert.strictEqual(edited.zoneKey, 'ruins');
+    assert.strictEqual(edited.gatherSeconds, 0);
+    assert.strictEqual(edited.type, 'outpost', 'editing the zone must not change the type');
+
+    assert.strictEqual(zones.targetTypeLabel('sanctuary'), 'Sanctuary');
+  } finally { teardown(ctx); }
+});
+
+maybe('targets saved before types existed get one inferred on load', async () => {
+  const ctx = await boot();
+  try {
+    const { state, storage } = ctx.RS;
+
+    // Write a legacy-shaped target with no type field at all.
+    storage.write('targets', [
+      { id: 'legacy1', name: 'North Turret', x: 1, y: 2, zoneKey: 'turret', gatherSeconds: 300 },
+      { id: 'legacy2', name: 'Some Sanctuary', x: 3, y: 4, zoneKey: 'general', gatherSeconds: 300 },
+      { id: 'legacy3', name: 'Whatever', x: 5, y: 6, zoneKey: 'castle_relic', gatherSeconds: 300 }
+    ]);
+    state.load();
+
+    assert.strictEqual(state.findTarget('legacy1').type, 'turret', 'inferred from the name');
+    assert.strictEqual(state.findTarget('legacy2').type, 'sanctuary');
+    assert.strictEqual(state.findTarget('legacy3').type, 'castle', 'falls back to the zone');
+
+    // And the inference is persisted, not recomputed every load.
+    assert.match(storage.read('targets', '') && JSON.stringify(storage.read('targets', [])), /"type":"turret"/);
+  } finally { teardown(ctx); }
+});

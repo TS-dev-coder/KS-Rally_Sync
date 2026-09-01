@@ -20,8 +20,9 @@ non-use, and installed web apps are exempt from that.
 
 1. **Leads** — add each player who opens rallies: name, city X/Y, March Speed Up %. Paste a
    whole roster at once instead of adding people one at a time.
-2. **Targets** — fill in your kingdom's coordinates once. Castle, turrets, Ruins, Sanctuary,
-   Fortress and Outpost come preloaded.
+2. **Targets** — add as many as you hit, of any type, with your own names. Pick a type
+   (Castle, Turret, Sanctuary, Fortress, Outpost, Ruins) and it seeds the zone model and
+   rally window; both stay editable. Three Sanctuaries with your own names is normal.
 3. **Calculate** — set a base time, choose how long after it marches should land, pick who is
    going. Launch times appear immediately, sorted by who acts first, each with a countdown.
 4. **Share** — copy a table for Discord, or send each person a link that shows only their own
@@ -37,6 +38,8 @@ the in-game steps.
 - **Sync or Sequence** — land together, or stagger by a set gap (Sanctuary and Fortress
   pushes usually want 10–15s).
 - **Multiple targets in one run** — part of the roster on the Castle, the rest on a turret.
+- **Target types** — add any number of each, auto-named, filterable, each with its own
+  coordinates, zone model and rally window.
 - **Alliance and squad grouping** — tag leads, select a whole group in one tap, and group the
   results by alliance, squad or target with committed power per group.
 - **Rally capacity and power** — optional, and never part of the timing math.

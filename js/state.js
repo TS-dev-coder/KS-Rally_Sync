@@ -51,27 +51,41 @@
    */
   function seedTargets() {
     var seeds = [
-      ['King’s Castle', 'castle_relic'],
+      ['King’s Castle', 'castle'],
       ['North Turret', 'turret'],
       ['South Turret', 'turret'],
       ['East Turret', 'turret'],
       ['West Turret', 'turret'],
-      ['Ruins', 'ruins'],
-      ['Sanctuary', 'general'],
-      ['Fortress', 'general'],
-      ['Outpost', 'general'],
-      ['Other structure', 'general']
+      ['Ruins', 'ruins']
     ];
     return seeds.map(function (seed) {
-      return {
-        id: uid(),
-        name: seed[0],
-        x: null,
-        y: null,
-        zoneKey: seed[1],
-        gatherSeconds: DEFAULT_GATHER_SECONDS
-      };
+      return newTargetOfType(seed[1], seed[0]);
     });
+  }
+
+  /** A blank target of a given type, with that type's defaults filled in. */
+  function newTargetOfType(typeKey, name) {
+    var def = zonesLib.targetTypeDef(typeKey);
+    return {
+      id: uid(),
+      name: name || def.label,
+      type: def.key,
+      x: null,
+      y: null,
+      zoneKey: def.zoneKey,
+      gatherSeconds: def.gatherSeconds
+    };
+  }
+
+  /**
+   * Adds a target of a type, numbering it if you already have one — a second
+   * Sanctuary comes out as "Sanctuary 2" rather than a duplicate name.
+   */
+  function addTargetOfType(typeKey) {
+    var def = zonesLib.targetTypeDef(typeKey);
+    var sameType = state.targets.filter(function (t) { return t.type === def.key; });
+    var name = sameType.length === 0 ? def.label : def.label + ' ' + (sameType.length + 1);
+    return upsertTarget(newTargetOfType(def.key, name));
   }
 
   function uid() {
@@ -102,7 +116,16 @@
 
     var storedTargets = storage.read('targets', null);
     state.targets = storedTargets === null ? seedTargets() : storedTargets;
-    if (storedTargets === null) storage.write('targets', state.targets);
+    if (storedTargets === null) {
+      storage.write('targets', state.targets);
+    } else {
+      // Targets saved before types existed get one inferred from their name.
+      var migrated = false;
+      state.targets.forEach(function (t) {
+        if (!t.type) { t.type = zonesLib.inferTargetType(t); migrated = true; }
+      });
+      if (migrated) storage.write('targets', state.targets);
+    }
 
     var storedZones = storage.read('zones', null);
     state.zones = storedZones === null
@@ -176,6 +199,7 @@
       name: String(target.name || '').trim(),
       x: numberOrNull(target.x),
       y: numberOrNull(target.y),
+      type: target.type || zonesLib.inferTargetType(target),
       zoneKey: target.zoneKey || 'general',
       gatherSeconds: target.gatherSeconds === null || target.gatherSeconds === undefined || target.gatherSeconds === ''
         ? DEFAULT_GATHER_SECONDS
@@ -527,6 +551,8 @@
     deleteLead: deleteLead,
     findLead: findLead,
     upsertTarget: upsertTarget,
+    addTargetOfType: addTargetOfType,
+    newTargetOfType: newTargetOfType,
     deleteTarget: deleteTarget,
     findTarget: findTarget,
     recordMeasurement: recordMeasurement,

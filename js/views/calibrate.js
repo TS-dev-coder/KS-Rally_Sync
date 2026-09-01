@@ -13,7 +13,9 @@
   var C = root.RallySync.calc;
   var Z = root.RallySync.zones;
   var G = root.RallySync.guide;
+  var I = root.RallySync.icons;
   var el = d.el;
+  var icon = I.icon;
 
   var draft = { leadId: '', targetId: '', observed: '' };
   var message = null;
@@ -30,7 +32,13 @@
     ]));
 
     if (message) {
-      container.appendChild(el('div.banner.banner-' + message.kind, { text: message.text }));
+      container.appendChild(el('div.banner.banner-' + message.kind, {}, [
+        icon(message.kind === 'error' ? 'alert' : 'check', 16),
+        el('span', {}, [
+          el('strong', { text: message.text }),
+          message.detail ? el('span', { text: ' ' + message.detail }) : null
+        ])
+      ]));
       message = null;
     }
 
@@ -106,20 +114,56 @@
       return fail((target.name || 'That target') + ' has no coordinates yet.');
     }
 
-    S.recordMeasurement(lead.id, target.id, seconds);
+    // What the model thought, before this observation changes it.
     var zoneKey = target.zoneKey;
+    var before = S.findZone(zoneKey);
+    var predicted = before
+      ? C.marchSecondsForZone(before, lead, target, lead.marchSpeedUpPercent).seconds
+      : null;
+
+    S.recordMeasurement(lead.id, target.id, seconds);
     var result = S.recalibrateZone(zoneKey);
 
     draft.observed = '';
     message = {
       kind: 'ok',
-      text: lead.name + ' → ' + target.name + ' is now exact at ' + C.formatDuration(seconds) +
-        '. ' + (result.ok
-          ? Z.zoneLabel(zoneKey) + ' refitted from ' + result.fit.n +
-            ' sample' + (result.fit.n === 1 ? '' : 's') + '.'
-          : Z.zoneLabel(zoneKey) + ' not refitted: ' + result.reason)
+      text: lead.name + ' → ' + target.name + ' is now exact at ' + C.formatDuration(seconds) + '.',
+      detail: buildFitDetail(predicted, seconds, zoneKey, result)
     };
     root.RallySync.app.refresh();
+  }
+
+  /**
+   * Says how far the model was out and what changed, because a measurement that
+   * silently disappears into a fit teaches the user nothing about how much the
+   * shipped defaults could be trusted.
+   */
+  function buildFitDetail(predicted, observed, zoneKey, result) {
+    var parts = [];
+
+    if (predicted !== null && predicted > 0 && observed > 0) {
+      var ratio = predicted / observed;
+      if (ratio >= 1.15 || ratio <= 0.87) {
+        parts.push('The model predicted ' + C.formatDuration(predicted) + ', so it was ' +
+          (ratio > 1 ? ratio.toFixed(2) + '× too slow' : (1 / ratio).toFixed(2) + '× too fast') +
+          '. That is the community default being wrong, not your reading.');
+      } else {
+        parts.push('The model predicted ' + C.formatDuration(predicted) + ' — close already.');
+      }
+    }
+
+    if (result.ok) {
+      parts.push(Z.zoneLabel(zoneKey) + ' refitted to ' +
+        result.fit.secPerTile.toFixed(3) + ' s/tile from ' + result.fit.n +
+        ' sample' + (result.fit.n === 1 ? '' : 's') + '.');
+      if (!result.fit.fittedOffset) {
+        parts.push('Log one more at a clearly different distance and the fixed offset can be fitted too, which sharpens everything else.');
+      }
+    } else {
+      parts.push(Z.zoneLabel(zoneKey) + ' not refitted: ' + result.reason);
+    }
+
+    return parts.join(' ');
   }
 
   function fail(text) {

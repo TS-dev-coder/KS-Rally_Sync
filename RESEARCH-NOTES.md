@@ -189,9 +189,46 @@ not mitigate it. Mitigations shipped instead: JSON **export/import backup**, and
 
 ---
 
+## 6a. FIELD MEASUREMENT — both published models are wrong
+
+**2026-09-02.** First real march recorded in play, and it contradicts both community models
+by a wide margin.
+
+| | value |
+|---|---|
+| Lead | X:536 Y:740, March Speed Up +25% |
+| Target | "Terror", X:508 Y:730, open map |
+| Euclidean distance | 29.73 tiles |
+| **Observed march time** | **34–35 s** |
+| Model A prediction (2.778 s/tile, shipped default) | 69.3 s — **2.01x too slow** |
+| Model B prediction (6 s/tile) | 142.7 s — 4.1x too slow |
+| Rate implied by the observation (offset held at 3.2 s) | **~1.32 s/tile** |
+
+The app's arithmetic was verified correct against this case; the error is entirely in the
+constant. This is the outcome Section 1 warned about — every published source is an
+unattributed SEO page, and it turns out none of them match reality.
+
+**Not yet resolved by this single sample:**
+
+- The fixed offset cannot be fitted from one point, so 3.2 s is still inherited from Model A
+  and may be wrong or may not exist at all.
+- The distance metric is unconfirmed. This march is 28 across and 10 down, so Euclidean
+  (29.73), Chebyshev (28) and Manhattan (38) are not far enough apart to distinguish. Two
+  marches of similar length but very different shape — one near-axis, one near-diagonal —
+  would settle it.
+
+**The shipped default has deliberately not been changed** on the strength of one sample from
+one kingdom. Calibration is the supported path: logging this march refits the zone locally
+to ~1.32 s/tile and makes that lead-target pair exact.
+
+---
+
 ## 7. Open items for future calibration
 
-- [ ] Settle Model A vs Model B with one measured long march on open map.
+- [x] Settle Model A vs Model B — see Section 6a. **Both are wrong**; the real open-map rate
+      is roughly 1.32 s/tile, not 2.778 or 6.
+- [ ] Fit the fixed offset with a second open-map march at a clearly different distance.
+- [ ] Confirm the distance metric with a near-axis vs near-diagonal pair (Section 6a).
 - [ ] Quantify the Ruins penalty — currently a pure placeholder.
 - [ ] Determine whether turrets inside the Forbidden Zone use the red-zone rate.
 - [ ] Confirm the +3.2 s offset is real and not an artifact of Model A's fitting.

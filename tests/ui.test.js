@@ -745,3 +745,37 @@ maybe('audio arms itself on the first interaction rather than needing a special 
     alarm.prime = realPrime;
   } finally { teardown(ctx); }
 });
+
+maybe('logging a march reports how far the shipped default was out', async () => {
+  const ctx = await boot();
+  try {
+    const { state } = ctx.RS;
+
+    // The real march reported from the field: 29.7 tiles at +25% took ~35s,
+    // while the community default predicts ~69s.
+    const target = state.upsertTarget({
+      name: 'Terror', x: 508, y: 730, zoneKey: 'general', gatherSeconds: 300
+    });
+    const lead = state.upsertLead({ name: 'TS', x: 536, y: 740, marchSpeedUpPercent: 25 });
+
+    const before = state.findZone('general').constants.secPerTile;
+    assert.ok(Math.abs(before - 1 / 0.36) < 1e-6, 'starts on the community default');
+
+    state.recordMeasurement(lead.id, target.id, 35);
+    const fit = state.recalibrateZone('general');
+
+    assert.strictEqual(fit.ok, true);
+    const after = state.findZone('general').constants.secPerTile;
+    assert.ok(after < before / 1.8,
+      'a real march this much faster must pull the rate down sharply, got ' + after);
+
+    // And the pair itself is now exact rather than fitted.
+    const plan = ctx.RS.calc.buildMultiPlan({
+      groups: [{ target: state.findTarget(target.id), leads: [state.findLead(lead.id)] }],
+      zones: state.data.zones, measurements: state.data.measurements,
+      mode: 'sync', gapSeconds: 0, startMs: Date.now() + 600000, nowMs: Date.now()
+    });
+    assert.strictEqual(plan.rows[0].tier, 'measured');
+    assert.strictEqual(Math.round(plan.rows[0].marchSeconds), 35);
+  } finally { teardown(ctx); }
+});

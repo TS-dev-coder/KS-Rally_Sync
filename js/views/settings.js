@@ -501,7 +501,7 @@
     ]));
 
     section.appendChild(el('div.tier-legend', {}, [
-      legendRow('measured', 'Exact', 'A real march you logged for this exact lead and target. No formula involved.'),
+      legendRow('measured', 'Exact', 'The time the game itself gave for this exact lead and target. Read it from the rally screen without deploying, then set it on the result row. No formula involved.'),
       legendRow('calibrated', 'Calibrated', 'Zone constants fitted to your own recorded samples.'),
       legendRow('estimated', 'Estimated', 'Unverified community defaults. Keep a safety buffer.')
     ]));

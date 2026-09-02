@@ -875,6 +875,30 @@ select.input {
 
 .result-actions { display: flex; gap: 7px; margin-top: 10px; }
 
+/* Setting the exact march time the game states. Green throughout, matching the
+   'measured' badge, so the row and its control read as one idea. */
+.btn.is-exact { color: var(--green); border-color: var(--green); background: var(--green-soft); }
+
+.exact-panel {
+  margin-top: 9px;
+  padding: 10px 11px;
+  background: var(--sunk);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+}
+.exact-panel[hidden] { display: none; }
+.exact-help { font-size: 11.5px; line-height: 1.45; color: var(--text-3); }
+.exact-row { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 9px; }
+.exact-input { flex: 1 1 150px; min-width: 0; font-family: var(--mono); }
+.exact-feedback:empty { display: none; }
+.exact-feedback {
+  margin-top: 8px;
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: var(--green);
+}
+.exact-feedback.is-bad { color: var(--red); }
+
 .result-note {
   display: flex;
   align-items: flex-start;

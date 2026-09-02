@@ -1006,3 +1006,90 @@ maybe('a zone the user actually calibrated survives a new default', async () => 
       'the user\u2019s own fit is their data and must never be overwritten');
   } finally { teardown(ctx); }
 });
+
+maybe('an exact march time typed from the game overrides the formula', async () => {
+  const ctx = await boot();
+  try {
+    const { state, calc } = ctx.RS;
+    const doc = ctx.window.document;
+
+    const target = state.upsertTarget({
+      name: 'WHITESNAKE722', x: 448, y: 756, zoneKey: 'general', gatherSeconds: 300
+    });
+    const lead = state.upsertLead({ name: 'TS', x: 536, y: 740, marchSpeedUpPercent: 25 });
+    state.updateSettings({ selectedTargetId: target.id, selectedLeadIds: [lead.id] });
+    ctx.RS.app.go('calculate');
+    ctx.RS.app.refresh();
+
+    const row = () => doc.querySelector('.result');
+    assert.strictEqual(row().querySelector('.badge').textContent, 'estimated',
+      'without a measurement the row should be running on the formula');
+
+    // The control is on the row itself: being exact should not mean a trip to
+    // another tab, now that the game states the number before you commit.
+    const open = Array.from(row().querySelectorAll('.result-actions button'))
+      .find((b) => b.textContent.includes('Exact time'));
+    assert.ok(open, 'the result row should offer to set an exact time');
+
+    const panel = row().querySelector('.exact-panel');
+    assert.strictEqual(panel.hidden, true, 'the panel should start closed');
+    open.dispatchEvent(new ctx.window.Event('click', { bubbles: true }));
+    assert.strictEqual(row().querySelector('.exact-panel').hidden, false);
+
+    // 3:33 is what the rally screen reads for this pair.
+    const input = row().querySelector('.exact-input');
+    input.value = '3:33';
+    Array.from(row().querySelectorAll('.exact-panel button'))
+      .find((b) => b.textContent.includes('Set exact'))
+      .dispatchEvent(new ctx.window.Event('click', { bubbles: true }));
+
+    assert.strictEqual(row().querySelector('.badge').textContent, 'measured',
+      'the row should switch to the exact tier');
+    const march = Array.from(row().querySelectorAll('.fact'))
+      .find((f) => f.querySelector('.fact-label').textContent === 'march');
+    assert.strictEqual(march.querySelector('.fact-value').textContent, '3m 33s');
+
+    const stored = state.measurementFor(lead.id, target.id);
+    assert.strictEqual(stored.seconds, 213, 'mm:ss should be stored as seconds');
+
+    // The panel has to survive the re-render, or it collapses at the moment it
+    // has something to report.
+    assert.strictEqual(row().querySelector('.exact-panel').hidden, false,
+      'the panel should stay open after setting a time');
+    assert.match(row().querySelector('.exact-feedback').textContent, /formula/,
+      'it should say how far the formula had been off');
+
+    // It also has to survive as a calibration sample, since one reading should
+    // improve every lead who has not measured this pair.
+    assert.ok(state.data.samples.some((s) => Math.abs(s.observedTimeSeconds - 213) < 0.01),
+      'the reading should feed zone calibration too');
+  } finally { teardown(ctx); }
+});
+
+maybe('an exact time is dropped when the inputs behind it change', async () => {
+  const ctx = await boot();
+  try {
+    const { state, calc } = ctx.RS;
+    const target = state.upsertTarget({ name: 'T', x: 448, y: 756, zoneKey: 'general' });
+    const lead = state.upsertLead({ name: 'TS', x: 536, y: 740, marchSpeedUpPercent: 25 });
+    state.recordMeasurement(lead.id, target.id, 213);
+
+    const zones = ctx.RS.zones.defaultZoneFormulas();
+    const exact = calc.resolveMarchSeconds({
+      lead: state.findLead(lead.id), target: state.findTarget(target.id),
+      zones, measurement: state.measurementFor(lead.id, target.id)
+    });
+    assert.strictEqual(exact.seconds, 213);
+    assert.strictEqual(exact.tier, calc.TIER.MEASURED);
+
+    // Move the lead: the old reading is no longer about this march.
+    state.upsertLead({ id: lead.id, name: 'TS', x: 600, y: 740, marchSpeedUpPercent: 25 });
+    const after = calc.resolveMarchSeconds({
+      lead: state.findLead(lead.id), target: state.findTarget(target.id),
+      zones, measurement: state.measurementFor(lead.id, target.id)
+    });
+    assert.notStrictEqual(after.tier, calc.TIER.MEASURED,
+      'a stale reading must not be presented as exact');
+    assert.ok(after.notes.join(' ').includes('ignored'));
+  } finally { teardown(ctx); }
+});

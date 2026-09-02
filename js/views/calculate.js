@@ -29,6 +29,9 @@
   var el = d.el;
   var icon = I.icon;
 
+  // Which result row has its exact-time panel open, kept across re-renders.
+  var exactOpenKey = null;
+
   var live = [];          // per-row countdown nodes, updated by tick()
   var lastPlan = null;
   var resultsHost = null;
@@ -1030,20 +1033,108 @@
     });
 
     var slot = slotFor(row, target);
+    var exact = exactTimeControl(row, lead, target);
     node.appendChild(el('div.result-actions', {}, [
       el('button.btn.btn-ghost.btn-sm', {
         type: 'button', onclick: function () { F.open(slot, S.now); }
       }, [icon('crosshair', 14), el('span', { text: 'Focus' })]),
       el('button.btn.btn-ghost.btn-sm', {
         type: 'button', onclick: function (e) { shareSlot(slot, e.currentTarget); }
-      }, [icon('share', 14), el('span', { text: 'Share link' })])
+      }, [icon('share', 14), el('span', { text: 'Share link' })]),
+      exact.button
     ]));
+    node.appendChild(exact.panel);
 
     live.push({
       node: node, countdownNode: countdownNode, pill: countdownPill,
       rallyOpenMs: row.rallyOpenMs, leadId: row.leadId, name: row.name || 'Rally'
     });
     return node;
+  }
+
+  /**
+   * Type in the march time the game itself states, which beats every formula.
+   *
+   * This exists because the game will tell you the number before you commit
+   * anything: Rally -> Hold a rally -> the time beside the timer icon, then back
+   * out. So being exact costs a few taps rather than a whole march, and there is
+   * no reason for a lead you care about to stay on an estimate.
+   */
+  function exactTimeControl(row, lead, target) {
+    var existing = S.measurementFor(row.leadId, row.targetId);
+    // Setting a time re-renders the row, so the open panel has to survive that
+    // — otherwise it collapses at the exact moment it has something to say.
+    var key = row.leadId + '|' + row.targetId;
+
+    var input = el('input.input.exact-input', {
+      type: 'text', inputmode: 'text', placeholder: '3:33, or 213 for seconds',
+      value: existing ? C.formatDuration(existing.seconds) : '',
+      'aria-label': 'Exact march time as the game states it'
+    });
+    var feedback = el('div.exact-feedback');
+
+    function save() {
+      var seconds = C.parseDuration(input.value);
+      if (seconds === null || seconds <= 0) {
+        feedback.className = 'exact-feedback is-bad';
+        feedback.textContent = 'Enter it the way the game writes it — 3:33, or 213 for plain seconds.';
+        return;
+      }
+      S.recordMeasurement(row.leadId, row.targetId, seconds);
+      root.RallySync.app.refresh();
+    }
+
+    var panel = el('div.exact-panel', { hidden: exactOpenKey !== key }, [
+      el('div.exact-help', {
+        text: 'In game: tap the target, Rally, Hold a rally, then read the time beside the ' +
+          'timer icon at the bottom right. Back out with the arrow — nothing is deployed.'
+      }),
+      el('div.exact-row', {}, [
+        input,
+        el('button.btn.btn-primary.btn-sm', { type: 'button', onclick: save }, [
+          icon('check', 14), el('span', { text: 'Set exact' })
+        ]),
+        existing ? el('button.btn.btn-ghost.btn-sm', {
+          type: 'button',
+          onclick: function () {
+            S.deleteMeasurement(row.leadId, row.targetId);
+            exactOpenKey = null;
+            root.RallySync.app.refresh();
+          }
+        }, [icon('trash', 14), el('span', { text: 'Clear' })]) : null
+      ]),
+      feedback
+    ]);
+
+    // With a time set, say how far the formula had been off. That is the whole
+    // argument for setting one, and it is also the only place the app's own
+    // error is ever visible.
+    if (existing) {
+      var zone = Z.findZone(S.data.zones, target.zoneKey);
+      var predicted = zone
+        ? C.marchSecondsForZone(zone, lead, target, lead.marchSpeedUpPercent).seconds
+        : null;
+      if (predicted !== null && isFinite(predicted)) {
+        var off = predicted - Number(existing.seconds);
+        feedback.className = 'exact-feedback';
+        feedback.textContent = Math.abs(off) < 1
+          ? 'The formula agreed with this to within a second.'
+          : 'Using this. The formula was ' + C.formatDuration(Math.abs(off)) +
+            (off > 0 ? ' too slow.' : ' too fast.');
+      }
+    }
+
+    var button = el('button.btn.btn-ghost.btn-sm' + (existing ? ' is-exact' : ''), {
+      type: 'button',
+      title: existing ? 'Exact time set from the game' : 'Set the exact march time the game states',
+      onclick: function () {
+        panel.hidden = !panel.hidden;
+        exactOpenKey = panel.hidden ? null : key;
+        if (!panel.hidden) input.focus();
+      }
+    }, [icon('clock', 14), el('span', { text: existing ? 'Exact set' : 'Exact time' })]);
+
+    return { button: button, panel: panel };
   }
 
   function slotFor(row, target) {

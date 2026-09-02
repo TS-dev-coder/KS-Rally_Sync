@@ -41,14 +41,14 @@
       note: 'These are kingdom-specific. Set them once and they are reused every event.'
     },
     marchTime: {
-      title: 'Read a real march time',
+      title: 'Read a march time without marching',
       steps: [
-        'Open the rally as normal and let the rally window run out.',
-        'The moment troops depart, the march bar shows the travel time remaining.',
-        'Note that number at departure — that is the full march time.',
-        'Enter it above.'
+        'Tap the target on the map, then Rally.',
+        'Pick any rally window and tap Hold a rally.',
+        'On the troop screen, read the time beside the timer icon at the bottom right — that is the march time.',
+        'Leave with the arrow at the top left. Nothing is deployed and no rally is created.'
       ],
-      note: 'Read it at the instant of departure. Reading it later gives you time remaining, not total march time.'
+      note: 'The number holds still rather than counting down, and does not depend on which rally window you picked — so you can read it at your leisure. Typing it in makes that lead and target exact, with no formula involved.'
     },
     rallyWindow: {
       title: 'What is the rally window?',

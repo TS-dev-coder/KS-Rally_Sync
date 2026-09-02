@@ -86,6 +86,12 @@
 
   var listeners = [];
 
+  /**
+   * Nothing currently subscribes, so notify() is inert: views re-render by
+   * calling root.RallySync.app.refresh() themselves after a mutation. Do not
+   * read a notify() call below as "the screen updates here" — it does not.
+   * Kept because the hook is harmless and a future view may want it.
+   */
   function subscribe(fn) { listeners.push(fn); }
   function notify() { listeners.forEach(function (fn) { fn(state); }); }
 

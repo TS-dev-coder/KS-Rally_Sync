@@ -51,6 +51,7 @@ that hour; it is kept only to show which way the model was wrong. "You reported"
 | 12 | Great Moose (Lv.3 Beast) | X:500 Y:1143 | Beast, open map | — | rally screen read `00:05:56` | **356 s** |
 | 13 | Cheetah (Lv.13 Beast) | X:396 Y:597 | Beast — **solo attack**, not a rally | 187 s (monster line) | attack screen read `00:03:21` | **201 s** |
 | 14 | WHITESNAKE722 [HZN]HORIZON | X:448 Y:756 | Enemy city — **solo attack** | 213 s (its own rally, minutes earlier) | attack screen read `00:03:33` | **213 s** |
+| 15 | [HZN]Plains HQ | X:443 Y:753 | Enemy HQ — rally | 220.9 s (structure line) | rally screen read `00:03:42` | **222 s** |
 
 Provenance: rows 1, 2, 4, 5, 6 were pasted as chat messages. Rows **3 and 7 arrived as
 queued messages sent mid-turn**, which is why a naive scan of chat messages misses them —
@@ -81,6 +82,7 @@ Euclidean column on every row, and the game's map bubble confirms 1 tile = 1 km,
 | 12 | −36 | +403 | 404.60 | 439 | 403 | 0.089 | 356 s | 1.137 t/s | 0.880 |
 | 13 | −140 | −143 | 200.12 | 283 | 143 | **0.979** | 201 s | 0.996 t/s | 1.004 |
 | 14 | −88 | +16 | 89.44 | 104 | 88 | 0.182 | 213 s | 0.420 t/s | 2.381 |
+| 15 | −93 | +13 | 93.90 | 106 | 93 | 0.140 | 222 s | 0.423 t/s | 2.364 |
 
 Diagonality is `min(|dx|,|dy|) / max(|dx|,|dy|)`: 0 is a straight line along an axis, 1 is a
 perfect 45°. March 7 is the only genuinely diagonal march in the whole set.
@@ -609,6 +611,52 @@ The **structure** line is unaffected: it is still fitted at 89 and 402 tiles and
 an HQ at 410. But it has **never been tested mid-range either**, and monsters have just shown
 that the middle is exactly where an affine fit through two far-apart points fails. **A player
 structure at roughly 200 tiles is now the single most valuable unmeasured reading.**
+
+## 6i. City and HQ are one family, confirmed at both ends
+
+**2026-09-02, ~20:05 UTC.** March 15 is the enemy **[HZN]Plains HQ** at X:443 Y:753, 93.9
+tiles out, read from the rally screen.
+
+The structure line was fitted on **two cities only**. Both HQ readings now test it without
+having been used:
+
+| out-of-sample test | distance | actual | predicted | error |
+|---|---|---|---|---|
+| Plains HQ | 93.90 t | 222 s | 220.9 s | **−1.1 s (−0.5%)** |
+| Badland HQ | 409.67 t | 777 s | 779.9 s | **+2.9 s (+0.4%)** |
+
+**A city and an alliance HQ march identically.** Two independent confirmations, at opposite
+ends of the range, both inside half a percent. This is the best-supported claim in the file.
+
+### The caveat that stops this being a victory
+
+| | |
+|---|---|
+| line fitted at | 89.4 and 402.4 tiles |
+| line tested at | 93.9 and 409.7 tiles |
+
+Both tests sit **almost on top of the fitted anchors**. They establish that a city and an HQ
+behave the same; they say **nothing** about the shape between 90 and 400 tiles.
+
+That is exactly the trap monsters fell into. The monster line looked healthy at both of its
+anchors too, and then missed by **7.4%** in the middle (6h). An affine fit through two
+far-apart points *cannot* fail at those points — it is fitted there.
+
+### The one reading that would settle it
+
+A power curve through the same two cities is `t = 4.6307 x d^0.8520`, and it also passes
+through both exactly. The two models only separate in the middle:
+
+| distance | affine | power curve | difference |
+|---|---|---|---|
+| 150 t | 320.2 s | 330.9 s | 10.7 s |
+| **200 t** | **408.7 s** | **422.8 s** | **14.1 s** |
+| 250 t | 497.2 s | 511.3 s | 14.1 s |
+| 300 t | 585.8 s | 597.3 s | 11.5 s |
+
+About **14 s at 200 tiles — 3.4%**, and readings are exact to the second, so a single
+**enemy city or HQ near 200 tiles** decides whether structures are affine or curved. Given
+what monsters did, the curve should not be assumed away.
 
 ## 7. Adding the next measurement
 

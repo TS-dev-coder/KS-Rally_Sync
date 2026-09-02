@@ -49,6 +49,7 @@ that hour; it is kept only to show which way the model was wrong. "You reported"
 | 10 | [OCW]Badland HQ | X:154 Y:592 | Enemy HQ — attack | 684 s (march 5, same target) | rally screen read `00:12:57` | **777 s** |
 | 11 | [KHQ]Dora2mon | X:503 Y:1141 | **Enemy** player city | — | rally screen read `00:12:47` | **767 s** |
 | 12 | Great Moose (Lv.3 Beast) | X:500 Y:1143 | Beast, open map | — | rally screen read `00:05:56` | **356 s** |
+| 13 | Cheetah (Lv.13 Beast) | X:396 Y:597 | Beast — **solo attack**, not a rally | 187 s (monster line) | attack screen read `00:03:21` | **201 s** |
 
 Provenance: rows 1, 2, 4, 5, 6 were pasted as chat messages. Rows **3 and 7 arrived as
 queued messages sent mid-turn**, which is why a naive scan of chat messages misses them —
@@ -77,6 +78,7 @@ Euclidean column on every row, and the game's map bubble confirms 1 tile = 1 km,
 | 10 | −382 | −148 | 409.67 | 530 | 382 | 0.387 | 777 s | 0.527 t/s | 1.897 |
 | 11 | −33 | +401 | 402.36 | 434 | 401 | 0.082 | 767 s | 0.525 t/s | 1.906 |
 | 12 | −36 | +403 | 404.60 | 439 | 403 | 0.089 | 356 s | 1.137 t/s | 0.880 |
+| 13 | −140 | −143 | 200.12 | 283 | 143 | **0.979** | 201 s | 0.996 t/s | 1.004 |
 
 Diagonality is `min(|dx|,|dy|) / max(|dx|,|dy|)`: 0 is a straight line along an axis, 1 is a
 perfect 45°. March 7 is the only genuinely diagonal march in the whole set.
@@ -499,6 +501,54 @@ distance.**
   Exact time control on each result row is for.
 - **Speed multiplier still never varied.** Every reading in this file, old and new, was taken
   without deliberately changing March Speed Up.
+
+## 6g. The diagonal anomaly is probably not about diagonals
+
+**2026-09-02, same session.** March 13 is a Lv.13 Cheetah at X:396 Y:597, 200.1 tiles out.
+It is the **most diagonal march ever measured here — diagonality 0.979**, essentially a
+perfect 45 degrees.
+
+It is also a **solo attack, not a rally**: small Beasts offer only Attack. The screen read
+`00:03:21`, **201 s**, and was backed out of without deploying.
+
+| | |
+|---|---|
+| monster rally line predicts | 187.1 s |
+| observed (solo) | **201 s** |
+| difference | +13.9 s, **+7.4%** |
+
+Two readings of that 7%, and this measurement cannot separate them: either the line is
+slightly off at mid-range, or **a solo march is slightly slower than a rally**. It is the
+first solo reading in this file, so there is nothing to compare it against yet.
+
+### Why it matters more than its 7%
+
+Back out the path length the time implies:
+
+| | tiles |
+|---|---|
+| Euclidean | 200 |
+| Manhattan | 283 |
+| **implied by the observed time** | **217** |
+
+That is **20% of the way** from Euclidean to Manhattan. Now compare the original anomaly:
+
+| march | diagonality | implied path sits |
+|---|---|---|
+| 7 (756 t, enemy HQ) | 0.774 | **95% of the way to Manhattan** |
+| **13 (200 t, Beast)** | **0.979** | **20% of the way** |
+
+**March 13 is markedly more diagonal and behaves markedly better.** If diagonality caused the
+anomaly, a near-45-degree march should be the worst case available. It is close to the best.
+
+So the Manhattan-path explanation for march 7 is **evidence-against, not merely unproven**.
+Something else made that march slow — terrain routed around, a different regime, or a
+misreading — and the app is right to flag such marches rather than model a grid path.
+
+**Caveats, honestly:** march 7 was a rally on an enemy HQ in an older regime; march 13 is a
+solo attack on a Beast today. They differ in action, target family and session, so this is
+suggestive rather than decisive. What would settle it is a **strongly diagonal rally on a
+player structure, measured today.**
 
 ## 7. Adding the next measurement
 

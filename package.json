@@ -5,7 +5,8 @@
   "private": true,
   "scripts": {
     "test": "node --test tests/",
-    "stamp": "node tools/stamp.js"
+    "stamp": "node tools/stamp.js",
+    "serve": "node tools/serve.js"
   },
   "devDependencies": {
     "jsdom": "^26.0.0"

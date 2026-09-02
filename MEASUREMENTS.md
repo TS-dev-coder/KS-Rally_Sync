@@ -50,6 +50,7 @@ that hour; it is kept only to show which way the model was wrong. "You reported"
 | 11 | [KHQ]Dora2mon | X:503 Y:1141 | **Enemy** player city | — | rally screen read `00:12:47` | **767 s** |
 | 12 | Great Moose (Lv.3 Beast) | X:500 Y:1143 | Beast, open map | — | rally screen read `00:05:56` | **356 s** |
 | 13 | Cheetah (Lv.13 Beast) | X:396 Y:597 | Beast — **solo attack**, not a rally | 187 s (monster line) | attack screen read `00:03:21` | **201 s** |
+| 14 | WHITESNAKE722 [HZN]HORIZON | X:448 Y:756 | Enemy city — **solo attack** | 213 s (its own rally, minutes earlier) | attack screen read `00:03:33` | **213 s** |
 
 Provenance: rows 1, 2, 4, 5, 6 were pasted as chat messages. Rows **3 and 7 arrived as
 queued messages sent mid-turn**, which is why a naive scan of chat messages misses them —
@@ -79,6 +80,7 @@ Euclidean column on every row, and the game's map bubble confirms 1 tile = 1 km,
 | 11 | −33 | +401 | 402.36 | 434 | 401 | 0.082 | 767 s | 0.525 t/s | 1.906 |
 | 12 | −36 | +403 | 404.60 | 439 | 403 | 0.089 | 356 s | 1.137 t/s | 0.880 |
 | 13 | −140 | −143 | 200.12 | 283 | 143 | **0.979** | 201 s | 0.996 t/s | 1.004 |
+| 14 | −88 | +16 | 89.44 | 104 | 88 | 0.182 | 213 s | 0.420 t/s | 2.381 |
 
 Diagonality is `min(|dx|,|dy|) / max(|dx|,|dy|)`: 0 is a straight line along an axis, 1 is a
 perfect 45°. March 7 is the only genuinely diagonal march in the whole set.
@@ -549,6 +551,64 @@ misreading — and the app is right to flag such marches rather than model a gri
 solo attack on a Beast today. They differ in action, target family and session, so this is
 suggestive rather than decisive. What would settle it is a **strongly diagonal rally on a
 player structure, measured today.**
+
+## 6h. Solo equals rally — and the monster line is wrong in the middle
+
+**2026-09-02, ~20:00 UTC.**
+
+### Solo and rally are the same march
+
+WHITESNAKE722, the enemy city at X:448 Y:756, offers both. Read one minute apart with the
+same troops loaded:
+
+| action | reading |
+|---|---|
+| Rally | **213 s** |
+| Attack (solo) | **213 s** |
+
+**Identical.** Whatever else varies, the action of rallying does not change travel time. This
+had been a live confound since march 13 and it is now closed.
+
+### And there is no drift *within* a session
+
+The same city read **213 s at ~16:00** and **213 s at ~20:00** on the same day. So the regime
+shift recorded in 6d happened between the original set and today, **not** hour to hour. A
+single day's readings can be pooled; readings from different days cannot.
+
+### Which makes march 13 a real miss
+
+With solo ruled out, march 13's **+7.4%** is genuine error in the monster line, not an
+artefact. And the three monster readings are **not on one straight line**:
+
+| segment | slope |
+|---|---|
+| Terror 60.8 t → Cheetah 200.1 t | 0.926 s/tile |
+| Cheetah 200.1 t → Moose 404.6 t | 0.758 s/tile |
+
+The slope **falls with distance**, so the relation is concave, and an affine model cannot hold
+across all three. Two explanations remain, and this data cannot separate them:
+
+**A — Terror and Beast are different targets.** Fitting the two Beasts alone gives
+`t = 0.758 x d + 49.3`, which predicts the Terror at 60.8 tiles as 95.4 s against an actual
+**72 s**. That would make a Terror about **24% faster** than a Beast.
+
+**B — one monster law, but a power curve.** Fitting `t = 2.2541 x d^0.8433` on the Terror and
+the Moose predicts the Cheetah at 200.1 tiles as **196.6 s** against an actual **201 s** — within
+**2.2%**, with the Cheetah **not** used in the fit.
+
+B currently fits better and is the only one with an out-of-sample check, but A is not
+excluded. **One Terror at long range, or one Beast at short range, decides it.**
+
+Note the irony: a power curve was refuted for the older data in Section 6, and is now the
+better description of monsters today. Different regime, different answer — which is the
+standing lesson of this file.
+
+### What this does not touch
+
+The **structure** line is unaffected: it is still fitted at 89 and 402 tiles and confirmed by
+an HQ at 410. But it has **never been tested mid-range either**, and monsters have just shown
+that the middle is exactly where an affine fit through two far-apart points fails. **A player
+structure at roughly 200 tiles is now the single most valuable unmeasured reading.**
 
 ## 7. Adding the next measurement
 

@@ -44,7 +44,8 @@ that hour; it is kept only to show which way the model was wrong. "You reported"
 | 5 | Alliance HQ | X:154 Y:592 | Enemy HQ — attack | 11m 28s (688 s) | "11 24 is actual" | **684 s** |
 | 6 | Alliance HQ | X:497 Y:63 | Enemy HQ — attack | 18m 53s (1133 s) | "16:17" | **977 s** |
 | 7 | Alliance HQ | X:999 Y:142 | Enemy HQ — attack | 17m 42s (1062 s) | "its 22:58" | **1378 s** |
-| 8 | WHITESNAKE722 [HZN]HORIZON | X:448 Y:756 | Player town, open map | 97 s (current model) | rally screen read `00:03:33` | **213 s** |
+| 8 | WHITESNAKE722 [HZN]HORIZON | X:448 Y:756 | **Enemy** player town | 97 s (current model) | rally screen read `00:03:33` | **213 s** |
+| 9 | Titan Roc (Lv.8 Terror) | X:585 Y:776 | Terror, open map | 67 s (current model) | rally screen read `00:01:12` | **72 s** |
 
 Provenance: rows 1, 2, 4, 5, 6 were pasted as chat messages. Rows **3 and 7 arrived as
 queued messages sent mid-turn**, which is why a naive scan of chat messages misses them —
@@ -69,6 +70,7 @@ Euclidean column on every row, and the game's map bubble confirms 1 tile = 1 km,
 | 6 | −39 | −677 | 678.12 | 716 | 677 | 0.058 | 977 s | 0.694 t/s | 1.441 |
 | 7 | +463 | −598 | 756.29 | 1061 | 598 | **0.774** | 1378 s | 0.549 t/s | 1.822 |
 | 8 | −88 | +16 | 89.44 | 104 | 88 | 0.182 | 213 s | 0.420 t/s | 2.381 |
+| 9 | +49 | +36 | 60.80 | 85 | 49 | 0.735 | 72 s | 0.844 t/s | 1.184 |
 
 Diagonality is `min(|dx|,|dy|) / max(|dx|,|dy|)`: 0 is a straight line along an axis, 1 is a
 perfect 45°. March 7 is the only genuinely diagonal march in the whole set.
@@ -242,6 +244,66 @@ which would explain everything without either hypothesis above being about dista
 The clean test is to read the same target's time from the solo attack screen and compare, but
 that route is deliberately not taken here without asking, since the instruction was to never
 attack.
+
+## 6c. The overhead belongs to the ACTION, not the distance
+
+**2026-09-02.** March 9 settles what march 8 opened. A Lv.8 Terror was rallied at 60.8 tiles
+and the screen read **1:12 (72 s)**, against 67 s from the shipped open-map line. A Terror is
+directly comparable to march 1, which was also a Terror and also a rally.
+
+| the two Terror rallies | distance | observed |
+|---|---|---|
+| march 1 (2026-09-02, earlier) | 29.73 t | 34.5 s |
+| march 9 (2026-09-02, rally screen) | 60.80 t | 72 s |
+
+A line through both is `t = 1.207 x d - 1.4`, against the shipped `t = 1.050 x d + 3.2`. Close,
+with **no large constant** — so nothing global slowed down between the old set and today.
+
+That kills the two hypotheses from 6b outright:
+
+- **Not a uniform slowdown.** A 2.19x factor would have made this Terror take 147 s. It took 72.
+- **Not a rally overhead.** Marches 1 and 9 are both rallies and both carry ~0 s of constant.
+
+What is left is the **target**. Measuring march 8's excess against both lines:
+
+| march | target | distance | observed | pure travel | overhead |
+|---|---|---|---|---|---|
+| 2 | friendly base | 34.18 t | 39 s | 39.1 s | **-0.1 s** |
+| 9 | Terror | 60.80 t | 72 s | ~72 s | **~0 s** |
+| 8 | **enemy** player town | 89.44 t | 213 s | 97-107 s | **+106 to +116 s** |
+
+March 2 was `T S - FUN base` — **FUN is the user's own alliance**, so it was a friendly march.
+March 8 was `[HZN]HORIZON`, an enemy. That is the variable that was hiding: not town versus
+base, but **friendly versus enemy**.
+
+### The law that now fits everything
+
+`t = rate x distance / speedMultiplier + overhead(action)`
+
+with the overhead set by what you are doing, not how far:
+
+| action | overhead |
+|---|---|
+| rally a Terror or Beast | ~0 s |
+| march to a friendly base | ~3 s |
+| reinforce your **own** HQ | ~22 s (march 3) |
+| rally an **enemy** player city | **~110 s (march 8, new)** |
+| attack an **enemy** alliance HQ | ~238 s (marches 4-6) |
+
+The ordering is not arbitrary: the harder the target is to assault, the longer the fixed cost
+before the march clock effectively starts. It is the same shape as the attack-versus-reinforce
+split already found for HQs, extended to player cities.
+
+**Still to pin down:** the enemy-city overhead rests on **one** observation, so its ~110 s
+cannot yet be separated from a steeper rate, exactly as with the HQ before march 6 arrived.
+One more enemy-city rally at a very different distance fixes it. The Terror rate of 1.207
+versus the shipped 1.050 also wants a third Terror to confirm.
+
+### The oracle, confirmed a second time
+
+The Terror rally offered a **3-minute** window. A draining countdown would have read close to
+`3:00`. The screen read `1:12`. Together with the same-value-at-different-elapsed-times check
+in 6b, the bottom-right figure is settled as the march time.
 
 ## 7. Adding the next measurement
 

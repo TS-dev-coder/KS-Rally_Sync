@@ -217,11 +217,16 @@ March 8 is the first reading taken this way, and it does not fit:
 | Current model predicts | **97 s** |
 | Rally screen reads | **213 s** — 2.19x longer |
 
-The lead's coordinates were re-verified rather than assumed: a coordinate jump to 536,740
-rendered as empty grass, which looked like the city had been moved, but the neighbouring city
-**Ashborn reads X:538 Y:740** and sits exactly two tiles of screen offset along the +X
-isometric axis from "My City". The origin is correct; the empty tile was a map-loading
-artifact.
+The lead's coordinates were verified rather than assumed. A coordinate jump to 536,740
+rendered as empty grass, which looked like the city had been moved. It has not:
+
+- **Directly** - tapping the city opens its panel, which reads **X:536 Y:740**, name **TS**,
+  alliance **[FUN]DirtyDevils**.
+- Indirectly, before that - the neighbouring city **Ashborn reads X:538 Y:740** and sits
+  exactly two tiles of screen offset along the +X isometric axis from "My City".
+
+The origin is unchanged and the empty tile was a map-loading artifact. Every distance in this
+file is measured from 536,740.
 
 So march 8 is a real contradiction, not a bookkeeping error. It also cannot be reconciled with
 march 2 (a player base, 34.18 tiles, 39 s) under any straight line: fitting both gives an
@@ -272,9 +277,9 @@ What is left is the **target**. Measuring march 8's excess against both lines:
 | 9 | Terror | 60.80 t | 72 s | ~72 s | **~0 s** |
 | 8 | **enemy** player town | 89.44 t | 213 s | 97-107 s | **+106 to +116 s** |
 
-March 2 was `T S - FUN base` — **FUN is the user's own alliance**, so it was a friendly march.
-March 8 was `[HZN]HORIZON`, an enemy. That is the variable that was hiding: not town versus
-base, but **friendly versus enemy**.
+March 2 was `T S - FUN base`, and the lead's own alliance is confirmed from the city panel as
+**[FUN]DirtyDevils** — so that march was **friendly**. March 8 was `[HZN]HORIZON`, an **enemy**.
+That is the variable that was hiding: not town versus base, but **friendly versus enemy**.
 
 ### The law that now fits everything
 

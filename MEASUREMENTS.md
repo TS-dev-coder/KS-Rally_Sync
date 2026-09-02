@@ -46,6 +46,7 @@ that hour; it is kept only to show which way the model was wrong. "You reported"
 | 7 | Alliance HQ | X:999 Y:142 | Enemy HQ — attack | 17m 42s (1062 s) | "its 22:58" | **1378 s** |
 | 8 | WHITESNAKE722 [HZN]HORIZON | X:448 Y:756 | **Enemy** player town | 97 s (current model) | rally screen read `00:03:33` | **213 s** |
 | 9 | Titan Roc (Lv.8 Terror) | X:585 Y:776 | Terror, open map | 67 s (current model) | rally screen read `00:01:12` | **72 s** |
+| 10 | [OCW]Badland HQ | X:154 Y:592 | Enemy HQ — attack | 684 s (march 5, same target) | rally screen read `00:12:57` | **777 s** |
 
 Provenance: rows 1, 2, 4, 5, 6 were pasted as chat messages. Rows **3 and 7 arrived as
 queued messages sent mid-turn**, which is why a naive scan of chat messages misses them —
@@ -71,6 +72,7 @@ Euclidean column on every row, and the game's map bubble confirms 1 tile = 1 km,
 | 7 | +463 | −598 | 756.29 | 1061 | 598 | **0.774** | 1378 s | 0.549 t/s | 1.822 |
 | 8 | −88 | +16 | 89.44 | 104 | 88 | 0.182 | 213 s | 0.420 t/s | 2.381 |
 | 9 | +49 | +36 | 60.80 | 85 | 49 | 0.735 | 72 s | 0.844 t/s | 1.184 |
+| 10 | −382 | −148 | 409.67 | 530 | 382 | 0.387 | 777 s | 0.527 t/s | 1.897 |
 
 Diagonality is `min(|dx|,|dy|) / max(|dx|,|dy|)`: 0 is a straight line along an axis, 1 is a
 perfect 45°. March 7 is the only genuinely diagonal march in the whole set.
@@ -309,6 +311,65 @@ versus the shipped 1.050 also wants a third Terror to confirm.
 The Terror rally offered a **3-minute** window. A draining countdown would have read close to
 `3:00`. The screen read `1:12`. Together with the same-value-at-different-elapsed-times check
 in 6b, the bottom-right figure is settled as the march time.
+
+## 6d. The same march, measured twice, is not the same
+
+**2026-09-02, later.** March 10 re-reads **the exact target of march 5** — the enemy alliance
+HQ at **X:154 Y:592**, 409.67 tiles out, same action, same lead.
+
+| | reading |
+|---|---|
+| march 5, from your set at +25% | **684 s** |
+| march 10, from the rally screen today | **777 s** |
+| difference | **+93 s, +13.6%** |
+
+Identical coordinates, identical target, identical action, different answer. **Conditions
+changed between that set and today**, so the two are separate regimes and **must not be
+pooled**. Everything in Sections 5 and 6c that mixed them is suspect.
+
+This is the pooling trap again, in its purest form. The earlier sections were careful to
+separate Terror from base, and attack from reinforce, but assumed *time* was not a variable.
+It is.
+
+### A speed change alone does not explain it
+
+Solving each reading for the multiplier, holding the HQ model at 1.3622 s/tile and 238 s:
+
+| reading | implied multiplier |
+|---|---|
+| march 5 | 1.2512 — i.e. +25%, exactly as recorded |
+| march 10 | 1.0353 — i.e. +3.5% |
+
+Self-consistent, and a tidy story: the +25% buff lapsed. But **today's Terror refuses it**.
+March 9, at 60.80 tiles, took 72 s, implying a multiplier of **1.1604 (+16%)**. One march
+speed cannot be +3.5% and +16% at the same moment, so a pure speed change is not the answer
+either. Something else — troop composition setting the slowest unit, a hero or gear change,
+an event modifier — is moving as well.
+
+### What this costs, and what it buys
+
+**Costs:** today still has one reading per target type, so rate and overhead remain
+inseparable *within* today. Worse, the ~110 s enemy-city overhead in Section 6c was derived
+by comparing a today reading against a line fitted to the older set. That comparison is now
+invalid: **it should not be trusted, and it is not shipped.**
+
+**Buys:** the rally screen makes a clean single-session dataset cheap, and a single session
+holds conditions fixed by construction — which is the only way this was ever going to work.
+
+### The next measurements, and why these ones
+
+Re-read the three remaining known enemy HQs **today**, back to back:
+
+| target | distance | earlier reading |
+|---|---|---|
+| X:504 Y:1143 | 404.27 t | 679 s |
+| X:497 Y:63 | 678.12 t | 977 s |
+| X:999 Y:142 | 756.29 t | 1378 s |
+
+With march 10 that gives **four enemy-HQ points spanning 404 to 756 tiles under identical
+conditions** — enough to fit rate and overhead properly for the first time, instead of
+inferring one by assuming the other. The 999,142 reading also re-tests the diagonal anomaly
+within a single regime, which the original pair never could.
 
 ## 7. Adding the next measurement
 

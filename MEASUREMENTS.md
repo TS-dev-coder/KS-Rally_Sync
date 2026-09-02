@@ -47,6 +47,7 @@ that hour; it is kept only to show which way the model was wrong. "You reported"
 | 8 | WHITESNAKE722 [HZN]HORIZON | X:448 Y:756 | **Enemy** player town | 97 s (current model) | rally screen read `00:03:33` | **213 s** |
 | 9 | Titan Roc (Lv.8 Terror) | X:585 Y:776 | Terror, open map | 67 s (current model) | rally screen read `00:01:12` | **72 s** |
 | 10 | [OCW]Badland HQ | X:154 Y:592 | Enemy HQ — attack | 684 s (march 5, same target) | rally screen read `00:12:57` | **777 s** |
+| 11 | [KHQ]Dora2mon | X:503 Y:1141 | **Enemy** player city | — | rally screen read `00:12:47` | **767 s** |
 
 Provenance: rows 1, 2, 4, 5, 6 were pasted as chat messages. Rows **3 and 7 arrived as
 queued messages sent mid-turn**, which is why a naive scan of chat messages misses them —
@@ -73,6 +74,7 @@ Euclidean column on every row, and the game's map bubble confirms 1 tile = 1 km,
 | 8 | −88 | +16 | 89.44 | 104 | 88 | 0.182 | 213 s | 0.420 t/s | 2.381 |
 | 9 | +49 | +36 | 60.80 | 85 | 49 | 0.735 | 72 s | 0.844 t/s | 1.184 |
 | 10 | −382 | −148 | 409.67 | 530 | 382 | 0.387 | 777 s | 0.527 t/s | 1.897 |
+| 11 | −33 | +401 | 402.36 | 434 | 401 | 0.082 | 767 s | 0.525 t/s | 1.906 |
 
 Diagonality is `min(|dx|,|dy|) / max(|dx|,|dy|)`: 0 is a straight line along an axis, 1 is a
 perfect 45°. March 7 is the only genuinely diagonal march in the whole set.
@@ -370,6 +372,65 @@ With march 10 that gives **four enemy-HQ points spanning 404 to 756 tiles under 
 conditions** — enough to fit rate and overhead properly for the first time, instead of
 inferring one by assuming the other. The 999,142 reading also re-tests the diagonal anomaly
 within a single regime, which the original pair never could.
+
+## 6e. A clean fit at last — and target type barely matters
+
+**2026-09-02, same session as marches 9–11.** Four readings now exist under **fixed
+conditions**, and two of them are the same target type at very different ranges — the first
+time that has ever been true.
+
+| # | target | distance | observed | s/tile |
+|---|---|---|---|---|
+| 9 | Terror | 60.80 t | 72 s | 1.184 |
+| 8 | enemy city | 89.44 t | 213 s | 2.381 |
+| 11 | enemy city | 402.36 t | 767 s | 1.906 |
+| 10 | enemy HQ | 409.67 t | 777 s | 1.897 |
+
+### The two cities fix the line
+
+Marches 8 and 11 are both **enemy player cities**, 313 tiles apart. They give the first
+affine fit that was ever actually *measured* rather than assumed:
+
+```
+t = 1.7705 x distance + 54.6      (enemy player structures, this session)
+```
+
+### And the HQ lands on it without being asked to
+
+That line was fitted on **cities only**. The enemy **HQ** at 409.67 tiles then predicts
+**779.9 s** against an actual **777 s** — out by **2.9 s**, about 0.4%.
+
+This is the first genuine out-of-sample success anywhere in this file. Every earlier "fit"
+either had as many parameters as points, or was checked against the same data it came from.
+
+**So an enemy HQ carries no meaningful overhead over an enemy city.** A city at 402 t takes
+767 s and an HQ at 410 t takes 777 s — near-identical distance, near-identical time. The
+**238 s HQ overhead** fitted to the older set does **not** hold in this regime, and neither
+does the ~110 s enemy-city overhead from 6c. Both were artefacts of comparing across regimes.
+
+### Monsters are a genuinely different family
+
+The city line predicts **162 s** for the Terror at 60.80 tiles. It took **72 s**. Forcing the
+Terror onto the city rate demands an overhead of **−35.6 s**, which would have the march
+finish before it began — so a monster rally does **not** share the player-structure rate.
+Taken alone at zero overhead it implies **1.184 s/tile**, against 1.770 for player structures.
+
+### The structure, as measured
+
+Two families, not five:
+
+| family | law |
+|---|---|
+| monsters (Terror, Beast) | fast — about **1.18 s/tile**, overhead ~0 |
+| player structures (city **and** HQ alike) | **t = 1.77 x d + 55** |
+
+That is much simpler than the five-tier overhead table in 6c, and unlike that table it is
+measured inside one regime and validated out of sample.
+
+**Still open:** only **one** Terror exists in this session, so its rate and overhead are not
+yet separated — the 1.184 s/tile assumes zero overhead. **One more Terror at long range
+closes the model.** The absolute constants are also specific to this session's conditions;
+what should transfer is the *shape*: two families, affine, Euclidean distance.
 
 ## 7. Adding the next measurement
 

@@ -83,12 +83,12 @@
     zoneAccuracy: {
       title: 'Why some zones are trusted more than others',
       steps: [
-        'Open map is fitted from two real marches, but both were about 30 tiles.',
-        'Alliance HQ is fitted from one march, and that one was 404 tiles.',
-        'Castle and Ruins have never been measured at all.',
-        'Anything far outside what a zone was measured over is flagged on the results.'
+        'Monsters and player structures are two different families: a rally on a city or an HQ runs about 2.1x slower per tile than one on a Terror or Beast.',
+        'Each family is fitted from two real marches, read minutes apart so nothing else could drift between them.',
+        'The city line then predicted an HQ it had never seen to within 3 seconds, which is the only out-of-sample check in the model.',
+        'Castle and Ruins have never been measured at all, and anything far outside a fitted range is flagged on the results.'
       ],
-      note: 'Whether a long march to a base behaves like open map or like the HQ is genuinely unknown, because the only long march so far was to an HQ. One long march on a base or Terror would settle it \u2014 log it and the app stops guessing.'
+      note: 'The constants drift between sessions — one identical march has read 684s on one day and 777s on another — so treat them as a starting point, not gospel. For any target you actually care about, read its march time off the rally screen and set it with Exact time on the result row: that is exact, with no formula involved.'
     },
     bulkPaste: {
       title: 'Pasting a roster',

@@ -34,9 +34,14 @@
       blurb: 'The Ruins chokepoint. Penalty is a placeholder — no source quantifies it.'
     },
     {
+      key: 'city',
+      label: 'Enemy player city',
+      blurb: 'A rally on another player’s city. Marches to player structures run about 2.1x slower per tile than marches to monsters — measured over two cities 313 tiles apart.'
+    },
+    {
       key: 'hq',
       label: 'Enemy HQ (attack)',
-      blurb: 'Attacking an enemy alliance headquarters carries about four minutes of fixed overhead on top of the usual per-tile rate. Measured over three marches from 404 to 678 tiles.'
+      blurb: 'Attacking an enemy alliance headquarters. Measured to behave the same as an enemy player city: a city at 402 tiles took 767 s and an HQ at 410 tiles took 777 s.'
     },
     {
       key: 'hq_own',
@@ -57,6 +62,8 @@
     { key: 'sanctuary', label: 'Sanctuary', zoneKey: 'general', gatherSeconds: 300 },
     { key: 'fortress', label: 'Fortress', zoneKey: 'general', gatherSeconds: 300 },
     { key: 'outpost', label: 'Outpost', zoneKey: 'general', gatherSeconds: 300 },
+    { key: 'monster', label: 'Terror or Beast', zoneKey: 'general', gatherSeconds: 180 },
+    { key: 'city', label: 'Enemy player city', zoneKey: 'city', gatherSeconds: 300 },
     { key: 'hq', label: 'Enemy HQ', zoneKey: 'hq', gatherSeconds: 300 },
     { key: 'hq_own', label: 'Own HQ (reinforce)', zoneKey: 'hq_own', gatherSeconds: 300 },
     { key: 'ruins', label: 'Ruins', zoneKey: 'ruins', gatherSeconds: 300 },
@@ -83,6 +90,7 @@
     if (target && target.zoneKey === 'castle_relic') return 'castle';
     if (target && target.zoneKey === 'turret') return 'turret';
     if (target && target.zoneKey === 'ruins') return 'ruins';
+    if (target && target.zoneKey === 'city') return 'city';
     if (target && target.zoneKey === 'hq') return 'hq';
     if (target && target.zoneKey === 'hq_own') return 'hq_own';
     return 'other';
@@ -109,40 +117,54 @@
     measured: {
       id: 'measured',
       label: 'Field-measured',
-      note: 'Each zone fitted from real marches on that kind of target. Open map from two marches near 30 tiles; HQ from three spanning 404 to 678 tiles. Castle and Ruins are still only inferred.',
+      note: 'Two families measured in one session: monsters from a Terror at 61 tiles and a Beast at 405; player structures from two cities 313 tiles apart, then confirmed against an HQ that was not used in the fit. Castle and Ruins are still only inferred.',
       formulaType: 'affine',
       rates: {
-        // Terror at 29.7 tiles took 34.5 s; a player base at 34.2 tiles took
-        // 39 s. Both at +25%, and they agree to within half a percent.
-        general: { secPerTile: 1.313, offset: 3.2 },
-        turret: { secPerTile: 1.313, offset: 3.2 },
-
         /**
-         * ATTACKING an enemy HQ. Three marches at +25%, spanning 404 to 678
-         * tiles and all close to an axis, fit a straight line to within half a
-         * second: 1.3622 s/tile on a 238 s fixed overhead.
+         * MONSTERS and open map. A Terror at 60.8 tiles took 72 s and a Beast
+         * at 404.6 tiles took 356 s, read from the rally screen minutes apart
+         * so conditions were fixed. Those two fix this line exactly.
          *
-         * The overhead is the whole story. Measured only near 405 tiles it
-         * looked like a higher per-tile rate; the 678 tile march showed the
-         * rate falling with distance, which is what a large constant does when
-         * divided back out. Note how close 1.362 is to the 1.313 of open map:
-         * the action changes the overhead, not the speed.
+         * These constants are session-specific -- see MEASUREMENTS.md 6d, where
+         * one identical march read 684 s on one day and 777 s on another. What
+         * is durable is the shape, not these numbers. Set an exact time on a
+         * result row to pin any pair you actually care about.
+         *
+         * Stored at a +25%% baseline because marchSecondsForZone divides by the
+         * speed multiplier: 1.0326 / 1.25 = 0.8261, the rate actually observed.
+         * The buff during these readings was never verified, so +25%% is an
+         * assumption inherited from the earlier set.
          */
-        hq: { secPerTile: 1.3622, offset: 238.0 },
+        general: { secPerTile: 1.0326, offset: 21.8 },
+        turret: { secPerTile: 1.0326, offset: 21.8 },
 
         /**
-         * REINFORCING your own HQ is a different action entirely. A 14.4 tile
-         * reinforcement took 38 s, where the attack model predicts 254 s. At
-         * the usual 1.3622 s/tile that implies about 22 s of overhead rather
-         * than 238. One sample, so the rate and the overhead cannot yet be
-         * separated.
+         * PLAYER STRUCTURES. Two enemy cities 313 tiles apart -- 89.4 tiles at
+         * 213 s and 402.4 tiles at 767 s -- fix this line.
+         *
+         * It then predicted an enemy HQ at 409.7 tiles as 779.9 s against an
+         * actual 777 s, out by 2.9 s, WITHOUT that HQ being used in the fit.
+         * That is the only out-of-sample test anywhere in this model, and it is
+         * why a city and an HQ share one set of constants here.
+         *
+         * The 238 s HQ overhead this replaces was an artefact of comparing
+         * readings taken in different sessions (MEASUREMENTS.md 6d).
          */
-        hq_own: { secPerTile: 1.3622, offset: 22.3 },
+        city: { secPerTile: 2.2131, offset: 54.6 },
+        hq: { secPerTile: 2.2131, offset: 54.6 },
+
+        /**
+         * REINFORCING your own HQ was not re-measured in this session, so it is
+         * left in the fast family and marked a guess. The older evidence put
+         * friendly marches near the monster rate: a 14.4 tile reinforcement took
+         * 38 s while a Terror at twice the distance took 34.5 s.
+         */
+        hq_own: { secPerTile: 1.0326, offset: 21.8 },
 
         // The community's own claim that the Forbidden Zone runs 1.95x slower,
         // applied to the measured open-map rate. Untested.
-        castle_relic: { secPerTile: 1.313 * (0.360 / 0.185), offset: 3.2 },
-        ruins: { secPerTile: 1.313 * (0.360 / 0.185), offset: 3.2 }
+        castle_relic: { secPerTile: 1.0326 * (0.360 / 0.185), offset: 21.8 },
+        ruins: { secPerTile: 1.0326 * (0.360 / 0.185), offset: 21.8 }
       },
       /**
        * What each zone was actually measured over. Anything outside is
@@ -150,10 +172,11 @@
        * open map has only ever been measured at about 30 tiles.
        */
       fittedFrom: {
-        general: { sampleCount: 2, minDistance: 29.7, maxDistance: 34.2, speedPercents: [25] },
+        general: { sampleCount: 2, minDistance: 60.8, maxDistance: 404.6, speedPercents: [25] },
         turret: null,
-        hq: { sampleCount: 3, minDistance: 404.3, maxDistance: 678.1, speedPercents: [25] },
-        hq_own: { sampleCount: 1, minDistance: 14.4, maxDistance: 14.4, speedPercents: [25] },
+        city: { sampleCount: 2, minDistance: 89.4, maxDistance: 402.4, speedPercents: [25] },
+        hq: { sampleCount: 2, minDistance: 89.4, maxDistance: 402.4, speedPercents: [25] },
+        hq_own: null,
         castle_relic: null,
         ruins: null
       }
@@ -167,6 +190,7 @@
         castle_relic: { secPerTile: 1 / 0.185, offset: 3.2 },
         turret: { secPerTile: 1 / 0.360, offset: 3.2 },
         ruins: { secPerTile: 1 / 0.185, offset: 3.2 },
+        city: { secPerTile: 1 / 0.360, offset: 3.2 },
         hq: { secPerTile: 1 / 0.360, offset: 3.2 },
         hq_own: { secPerTile: 1 / 0.360, offset: 3.2 }
       }
@@ -180,6 +204,7 @@
         castle_relic: { secPerTile: 6 * (0.360 / 0.185), offset: 0 },
         turret: { secPerTile: 6, offset: 0 },
         ruins: { secPerTile: 6 * (0.360 / 0.185), offset: 0 },
+        city: { secPerTile: 6, offset: 0 },
         hq: { secPerTile: 6, offset: 0 },
         hq_own: { secPerTile: 6, offset: 0 }
       }
@@ -199,6 +224,7 @@
     castle_relic: 'unverified',
     turret: 'unverified',
     ruins: 'guess',
+    city: 'unverified',
     hq: 'unverified',
     hq_own: 'guess'
   };

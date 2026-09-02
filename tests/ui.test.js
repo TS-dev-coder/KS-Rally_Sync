@@ -760,10 +760,9 @@ maybe('logging a march reports how far the shipped default was out', async () =>
   try {
     const { state } = ctx.RS;
 
-    // The real march reported from the field: 29.7 tiles at +25% took ~35s,
-    // while the community default predicts ~69s.
+    // A real reading from the rally screen: a Terror 60.8 tiles out took 72s.
     const target = state.upsertTarget({
-      name: 'Terror', x: 508, y: 730, zoneKey: 'general', gatherSeconds: 300
+      name: 'Terror', x: 585, y: 776, zoneKey: 'general', gatherSeconds: 300
     });
     const lead = state.upsertLead({ name: 'TS', x: 536, y: 740, marchSpeedUpPercent: 25 });
 
@@ -772,17 +771,17 @@ maybe('logging a march reports how far the shipped default was out', async () =>
     const predictedBefore = ctx.RS.calc.marchSecondsForZone(
       state.findZone('general'), state.findLead(lead.id), state.findTarget(target.id), 25
     ).seconds;
-    assert.ok(Math.abs(predictedBefore - 35) < 2,
+    assert.ok(Math.abs(predictedBefore - 72) < 2,
       'the shipped default should already be within a couple of seconds, got ' + predictedBefore);
 
-    state.recordMeasurement(lead.id, target.id, 35);
+    state.recordMeasurement(lead.id, target.id, 72);
     const fit = state.recalibrateZone('general');
     assert.strictEqual(fit.ok, true);
 
     const predictedAfter = ctx.RS.calc.marchSecondsForZone(
       state.findZone('general'), state.findLead(lead.id), state.findTarget(target.id), 25
     ).seconds;
-    assert.ok(Math.abs(predictedAfter - 35) < 2,
+    assert.ok(Math.abs(predictedAfter - 72) < 2,
       'and it should still predict the march it was just given, got ' + predictedAfter);
 
     // And the pair itself is now exact rather than fitted.
@@ -792,7 +791,7 @@ maybe('logging a march reports how far the shipped default was out', async () =>
       mode: 'sync', gapSeconds: 0, startMs: Date.now() + 600000, nowMs: Date.now()
     });
     assert.strictEqual(plan.rows[0].tier, 'measured');
-    assert.strictEqual(Math.round(plan.rows[0].marchSeconds), 35);
+    assert.strictEqual(Math.round(plan.rows[0].marchSeconds), 72);
   } finally { teardown(ctx); }
 });
 
@@ -940,8 +939,10 @@ maybe('the app admits when it is extrapolating past its own measurements', async
   const ctx = await boot();
   try {
     const { state } = ctx.RS;
+    // Inside the fitted range: the monster line was measured from 60.8 to
+    // 404.6 tiles, so a target at ~90 tiles is interpolation, not extrapolation.
     const target = state.upsertTarget({
-      name: 'Base', x: 508, y: 730, zoneKey: 'general', gatherSeconds: 300
+      name: 'Base', x: 448, y: 756, zoneKey: 'general', gatherSeconds: 300
     });
 
     // +25% is the only speed the shipped curve was ever fitted at.

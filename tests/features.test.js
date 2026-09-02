@@ -461,22 +461,25 @@ test('the booking horizon outruns background timer throttling', () => {
 // ================================================== field-measured defaults
 
 test('the shipped default reproduces every recorded field march', () => {
-  // Three real marches at +25%, spanning a thirteen-fold range of distance.
+  // The five readings of MEASUREMENTS.md 6f, all taken in ONE session from the
+  // rally screen so conditions were fixed. That matters: section 6d records the
+  // same march reading 684s once and 777s later, so readings from different
+  // sessions must never be pooled, and the older set is deliberately not here.
+  //
   // Asked through the public API so this survives a change of model shape.
-  // Each march is checked against the zone for the kind of target it was on.
-  // Distance and target type were confounded in the field data — the only long
-  // march was also the only HQ — so they must not be pooled.
   const all = zones.defaultZoneFormulas();
   const predict = (zoneKey, dx, dy) => calc.marchSecondsForZone(
     zones.findZone(all, zoneKey), { x: 0, y: 0 }, { x: dx, y: dy }, 25
   ).seconds;
 
   const marches = [
-    { zone: 'general', dx: 28, dy: 10, actual: 34.5, what: 'Terror, 29.7 tiles' },
-    { zone: 'general', dx: 12, dy: 32, actual: 39, what: 'player base, 34.2 tiles' },
-    { zone: 'hq', dx: 32, dy: 403, actual: 679, what: 'alliance HQ, 404.3 tiles' },
-    { zone: 'hq', dx: 382, dy: 148, actual: 684, what: 'alliance HQ, 409.7 tiles' },
-    { zone: 'hq', dx: 39, dy: 677, actual: 977, what: 'alliance HQ, 678.1 tiles' }
+    { zone: 'general', dx: 49, dy: 36, actual: 72, what: 'Terror, 60.8 tiles' },
+    { zone: 'general', dx: 36, dy: 403, actual: 356, what: 'Beast, 404.6 tiles' },
+    { zone: 'city', dx: 88, dy: 16, actual: 213, what: 'enemy city, 89.4 tiles' },
+    { zone: 'city', dx: 33, dy: 401, actual: 767, what: 'enemy city, 402.4 tiles' },
+    // Not used in any fit: the structure line came from the two cities above,
+    // so this is the only genuine out-of-sample check in the model.
+    { zone: 'hq', dx: 382, dy: 148, actual: 777, what: 'enemy HQ, 409.7 tiles' }
   ];
 
   marches.forEach((m) => {
@@ -530,9 +533,12 @@ test('fitPower needs samples at genuinely different distances', () => {
 test('the superseded community models are kept, and both are far too slow', () => {
   // They stay selectable so the disagreement stays visible rather than being
   // quietly rewritten out of the app.
+  //
+  // Measured over a LONG march, where the per-tile rate dominates. Over a short
+  // one the fixed offsets crowd the comparison and understate the gap.
   const far = (preset) => {
     const zone = zones.findZone(zones.defaultZoneFormulas(preset), 'general');
-    return calc.marchSecondsForZone(zone, { x: 0, y: 0 }, { x: 12, y: 32 }, 25).seconds;
+    return calc.marchSecondsForZone(zone, { x: 0, y: 0 }, { x: 36, y: 403 }, 25).seconds;
   };
 
   const measured = far('measured');
@@ -597,9 +603,13 @@ test('the outlier time matches the grid path, not the straight line', () => {
   const euclidean = calc.distanceTiles(from, to);
   const manhattan = Math.abs(to.x - from.x) + Math.abs(to.y - from.y);
 
-  // Back out the path length the observed 1378s implies, using the HQ zone.
-  const zone = zones.findZone(zones.defaultZoneFormulas(), 'hq');
-  const implied = (1378 - zone.constants.offset) * 1.25 / zone.constants.secPerTile;
+  // A HISTORICAL finding, from the older regime (MEASUREMENTS.md 6). Its
+  // constants are pinned here rather than read from the shipped zone, because
+  // the shipped model has since been refitted to a different session and no
+  // longer describes that march. The anomaly itself still stands and is why
+  // strongly diagonal marches are flagged rather than silently modelled.
+  const OLD_HQ = { secPerTile: 1.3622, offset: 238.0 };
+  const implied = (1378 - OLD_HQ.offset) * 1.25 / OLD_HQ.secPerTile;
 
   assert.ok(Math.abs(implied - manhattan) / manhattan < 0.05,
     'implied path ' + implied.toFixed(0) + ' should be near the grid path ' + manhattan);

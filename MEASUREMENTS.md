@@ -48,6 +48,7 @@ that hour; it is kept only to show which way the model was wrong. "You reported"
 | 9 | Titan Roc (Lv.8 Terror) | X:585 Y:776 | Terror, open map | 67 s (current model) | rally screen read `00:01:12` | **72 s** |
 | 10 | [OCW]Badland HQ | X:154 Y:592 | Enemy HQ — attack | 684 s (march 5, same target) | rally screen read `00:12:57` | **777 s** |
 | 11 | [KHQ]Dora2mon | X:503 Y:1141 | **Enemy** player city | — | rally screen read `00:12:47` | **767 s** |
+| 12 | Great Moose (Lv.3 Beast) | X:500 Y:1143 | Beast, open map | — | rally screen read `00:05:56` | **356 s** |
 
 Provenance: rows 1, 2, 4, 5, 6 were pasted as chat messages. Rows **3 and 7 arrived as
 queued messages sent mid-turn**, which is why a naive scan of chat messages misses them —
@@ -75,6 +76,7 @@ Euclidean column on every row, and the game's map bubble confirms 1 tile = 1 km,
 | 9 | +49 | +36 | 60.80 | 85 | 49 | 0.735 | 72 s | 0.844 t/s | 1.184 |
 | 10 | −382 | −148 | 409.67 | 530 | 382 | 0.387 | 777 s | 0.527 t/s | 1.897 |
 | 11 | −33 | +401 | 402.36 | 434 | 401 | 0.082 | 767 s | 0.525 t/s | 1.906 |
+| 12 | −36 | +403 | 404.60 | 439 | 403 | 0.089 | 356 s | 1.137 t/s | 0.880 |
 
 Diagonality is `min(|dx|,|dy|) / max(|dx|,|dy|)`: 0 is a straight line along an axis, 1 is a
 perfect 45°. March 7 is the only genuinely diagonal march in the whole set.
@@ -431,6 +433,72 @@ measured inside one regime and validated out of sample.
 yet separated — the 1.184 s/tile assumes zero overhead. **One more Terror at long range
 closes the model.** The absolute constants are also specific to this session's conditions;
 what should transfer is the *shape*: two families, affine, Euclidean distance.
+
+## 6f. The law, as measured
+
+**2026-09-02, one session, five readings, conditions fixed throughout.**
+
+| # | target | distance | observed |
+|---|---|---|---|
+| 9 | monster (Terror) | 60.80 t | 72 s |
+| 12 | monster (Beast) | 404.60 t | 356 s |
+| 8 | structure (enemy city) | 89.44 t | 213 s |
+| 11 | structure (enemy city) | 402.36 t | 767 s |
+| 10 | structure (enemy HQ) | 409.67 t | 777 s |
+
+### Two affine laws, split by what you are marching at
+
+```
+monsters    (Terror, Beast)        t = 0.8261 x d + 21.8
+structures  (player city, HQ)      t = 1.7705 x d + 54.6
+```
+
+| # | distance | actual | predicted | error |
+|---|---|---|---|---|
+| 9 | 60.80 t | 72 s | 72.0 s | 0.0 s |
+| 12 | 404.60 t | 356 s | 356.0 s | 0.0 s |
+| 8 | 89.44 t | 213 s | 213.0 s | 0.0 s |
+| 11 | 402.36 t | 767 s | 767.0 s | 0.0 s |
+| **10** | **409.67 t** | **777 s** | **779.9 s** | **+2.9 s** |
+
+Be clear about what is and is not evidence here. Each line is fitted on two points, so those
+four zeros are **fitted, not predicted** — a line through two points always passes through
+them. **March 10 is the only genuine test**: the structure line was fitted on *cities*, and the
+*HQ* then landed on it within **2.9 s (0.4%)** without being used. That single out-of-sample
+success is the whole basis for trusting the shape.
+
+### The target sets the speed, and by a lot
+
+At the same distance, same troops, same session:
+
+| ~404 tiles | time |
+|---|---|
+| monster | 356 s |
+| player structure | 771 s |
+
+**2.14x slower per tile** for a player structure. That is not an overhead effect — it is the
+*rate* that differs. It is also not a constant multiple of the monster time (the ratio runs
+2.16–2.23 across the readings), so these are two independent laws, not one law scaled.
+
+### What this replaces
+
+The five-tier overhead table in 6c is **withdrawn**. It came from comparing readings across
+regimes, which 6d showed is invalid. The 238 s HQ overhead and the ~110 s enemy-city overhead
+were both artefacts. The real structure is simpler: **two families, each affine in Euclidean
+distance.**
+
+### What is still not established
+
+- **Two points per line.** Only the HQ is out of sample. A third monster and a third structure
+  at fresh distances would make both lines properly tested rather than merely consistent.
+- **Terror and Beast are assumed to share a law.** The monster line is fitted across a Terror
+  and a Beast. If those differ, that line is a blend of two.
+- **The constants are session-specific.** March 5 versus march 10 proved the same march changes
+  between sessions. **Only the shape should be treated as durable** — two families, affine,
+  Euclidean. Absolute numbers must be re-fitted per session, which is exactly what the
+  Exact time control on each result row is for.
+- **Speed multiplier still never varied.** Every reading in this file, old and new, was taken
+  without deliberately changing March Speed Up.
 
 ## 7. Adding the next measurement
 

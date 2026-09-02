@@ -44,6 +44,7 @@ that hour; it is kept only to show which way the model was wrong. "You reported"
 | 5 | Alliance HQ | X:154 Y:592 | Enemy HQ — attack | 11m 28s (688 s) | "11 24 is actual" | **684 s** |
 | 6 | Alliance HQ | X:497 Y:63 | Enemy HQ — attack | 18m 53s (1133 s) | "16:17" | **977 s** |
 | 7 | Alliance HQ | X:999 Y:142 | Enemy HQ — attack | 17m 42s (1062 s) | "its 22:58" | **1378 s** |
+| 8 | WHITESNAKE722 [HZN]HORIZON | X:448 Y:756 | Player town, open map | 97 s (current model) | rally screen read `00:03:33` | **213 s** |
 
 Provenance: rows 1, 2, 4, 5, 6 were pasted as chat messages. Rows **3 and 7 arrived as
 queued messages sent mid-turn**, which is why a naive scan of chat messages misses them —
@@ -67,6 +68,7 @@ Euclidean column on every row, and the game's map bubble confirms 1 tile = 1 km,
 | 5 | −382 | −148 | 409.67 | 530 | 382 | 0.387 | 684 s | 0.599 t/s | 1.670 |
 | 6 | −39 | −677 | 678.12 | 716 | 677 | 0.058 | 977 s | 0.694 t/s | 1.441 |
 | 7 | +463 | −598 | 756.29 | 1061 | 598 | **0.774** | 1378 s | 0.549 t/s | 1.822 |
+| 8 | −88 | +16 | 89.44 | 104 | 88 | 0.182 | 213 s | 0.420 t/s | 2.381 |
 
 Diagonality is `min(|dx|,|dy|) / max(|dx|,|dy|)`: 0 is a straight line along an axis, 1 is a
 perfect 45°. March 7 is the only genuinely diagonal march in the whole set.
@@ -183,6 +185,63 @@ strongly diagonal marches rather than silently fitting a curve through one point
 **This is the top open question.** One more march with diagonality above ~0.6 decides it.
 
 ---
+
+## 6b. The rally screen is a march-time oracle
+
+**2026-09-02.** Reading a march time no longer requires launching anything. Tapping a target
+then **Rally -> pick a window -> Hold a rally** opens the hero/troop screen, which shows a
+time beside a timer icon at the bottom right. Backing out with the top-left arrow commits
+nothing: no rally is created and no troops move.
+
+That number was initially ambiguous. In the first screenshots it read `00:03:33` on a
+5-minute window 82 s after the rally was held, and 300 - 87 = 213 s, so it fitted a *rally
+countdown draining* exactly as well as it fitted a march time.
+
+**It is the march time.** Re-opening the same target read `00:03:33` again, 8 s after holding
+the rally instead of 82 s. A countdown cannot show the same value at two different elapsed
+times. The agreement with 300 - 87 was a coincidence.
+
+This makes measurement effectively free: any target can be priced in about six taps without
+committing troops, so the sample can grow much faster than one march at a time.
+
+### And it immediately contradicts the model
+
+March 8 is the first reading taken this way, and it does not fit:
+
+| | |
+|---|---|
+| Target | WHITESNAKE722, a player town at X:448 Y:756 |
+| Distance | 89.44 tiles from the lead at 536,740 |
+| Current model predicts | **97 s** |
+| Rally screen reads | **213 s** — 2.19x longer |
+
+The lead's coordinates were re-verified rather than assumed: a coordinate jump to 536,740
+rendered as empty grass, which looked like the city had been moved, but the neighbouring city
+**Ashborn reads X:538 Y:740** and sits exactly two tiles of screen offset along the +X
+isometric axis from "My City". The origin is correct; the empty tile was a map-loading
+artifact.
+
+So march 8 is a real contradiction, not a bookkeeping error. It also cannot be reconciled with
+march 2 (a player base, 34.18 tiles, 39 s) under any straight line: fitting both gives an
+intercept of **-68.6 s**, which would make a short march finish before it started.
+
+**Two explanations survive, and they are the same trap as before** — an additive constant
+versus a multiplicative one:
+
+| hypothesis | fits march 8 by | predicts for a ~10-tile rally |
+|---|---|---|
+| A rally carries a large **fixed overhead** (~119 s) | 1.0504 x 89.44 + **119** | ~130 s |
+| A rally is **uniformly slower** (~2.19x) | 2.19 x (1.0504 x 89.44 + 3.2) | ~30 s |
+
+The two differ by more than 4x at short range, so **one short-range rally reading decides
+it**. Until then neither is shipped, and the earlier seven marches are left untouched.
+
+**Unresolved:** it is not recorded whether the original seven were rallies or solo marches.
+If they were solo, then rally and solo are simply different actions with different constants —
+which would explain everything without either hypothesis above being about distance at all.
+The clean test is to read the same target's time from the solo attack screen and compare, but
+that route is deliberately not taken here without asking, since the instruction was to never
+attack.
 
 ## 7. Adding the next measurement
 

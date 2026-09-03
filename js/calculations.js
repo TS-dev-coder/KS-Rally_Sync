@@ -122,38 +122,47 @@
    * data to pin the waypoint, so inventing a detour figure would be guessing.
    */
   /**
-   * The slow zone at the centre of the map, as a circle a march can cut a chord
-   * through. Fitted to the four known blocked marches; leave-one-out
-   * cross-validation predicts a held-out march's total time to 2.7% on average,
-   * against 27.1% with no correction, and the parameters stay stable across
-   * folds (centre 601-610, radius 54-71).
+   * The slow zone near the centre of the map, as a circle a march cuts a chord
+   * through. The delay is proportional to the chord length.
    *
-   * PROVISIONAL: three parameters fitted to four observations. The shape is
-   * cross-validated, the exact numbers are not settled. A reading whose line
-   * clips the edge -- crossing y=600 near x=545 or x=670 -- would pin the radius
-   * far better than anything inside the zone.
+   * The geometry is 2D: what matters is the PERPENDICULAR distance from the
+   * zone's centre to the march line, not where the line crosses some latitude.
+   * An earlier version tested the crossing at y=600 and got the classification
+   * wrong for a march that crossed at x=683 but still clipped the zone -- it
+   * under-predicted that march by 164 seconds.
+   *
+   * PROVISIONAL. Fitted to six blocked and eighteen clear marches from one
+   * lead. Five of the six blocked predict within 3.3% when held out. The RADIUS
+   * however rests on a single reading: 916,380 passes 56.3 tiles from the
+   * centre and is slow, while 552,435 passes 60.5 and is not, so the boundary
+   * is pinned within four tiles by those two alone. Hold the radius loosely.
+   *
+   * Note the zone is NOT centred exactly on the map centre (600,600): at that
+   * centre a clear march passes at 56.6 tiles and a blocked one at 57.6, which
+   * no circle can satisfy.
    */
-  var BLOCKED_CENTRE = { x: 607, y: 600, radius: 62, secondsPerChordTile: 3.3815 };
+  var BLOCKED_CENTRE = { x: 604, y: 598, radius: 60.4, secondsPerChordTile: 3.2901 };
 
-  /** Where the straight line crosses the zone's latitude, or null if it never does. */
-  function centreCrossingX(from, to) {
-    var y0 = Number(from.y), y1 = Number(to.y), band = BLOCKED_CENTRE.y;
-    if (y0 === y1) return null;
-    if ((y0 - band) * (y1 - band) > 0) return null;
-    var f = (y0 - band) / (y0 - y1);
-    return Number(from.x) + (Number(to.x) - Number(from.x)) * f;
+  /** Closest approach of the march line to a point, treating it as a segment. */
+  function closestApproach(from, to, cx, cy) {
+    var ax = Number(from.x), ay = Number(from.y);
+    var dx = Number(to.x) - ax, dy = Number(to.y) - ay;
+    var len2 = dx * dx + dy * dy;
+    if (!(len2 > 0)) return Math.sqrt((cx - ax) * (cx - ax) + (cy - ay) * (cy - ay));
+    var t = ((cx - ax) * dx + (cy - ay) * dy) / len2;
+    if (t < 0) t = 0; else if (t > 1) t = 1;
+    var px = ax + t * dx, py = ay + t * dy;
+    return Math.sqrt((cx - px) * (cx - px) + (cy - py) * (cy - py));
   }
 
   /**
-   * Seconds added by cutting through the slow centre, at the model's own
-   * baseline speed. Zero when the march misses the zone.
+   * Seconds added by cutting through the slow centre, at the model's baseline
+   * speed. Zero when the march misses the zone entirely.
    */
   function blockedCentreDelay(from, to) {
-    var x = centreCrossingX(from, to);
-    if (x === null) return 0;
-    var off = Math.abs(x - BLOCKED_CENTRE.x);
-    if (off >= BLOCKED_CENTRE.radius) return 0;
-    var chord = 2 * Math.sqrt(BLOCKED_CENTRE.radius * BLOCKED_CENTRE.radius - off * off);
+    var r = closestApproach(from, to, BLOCKED_CENTRE.x, BLOCKED_CENTRE.y);
+    if (r >= BLOCKED_CENTRE.radius) return 0;
+    var chord = 2 * Math.sqrt(BLOCKED_CENTRE.radius * BLOCKED_CENTRE.radius - r * r);
     return chord * BLOCKED_CENTRE.secondsPerChordTile;
   }
 
@@ -800,6 +809,7 @@
     scalePiecewiseConstants: scalePiecewiseConstants,
     crossesBlockedCentre: crossesBlockedCentre,
     blockedCentreDelay: blockedCentreDelay,
+    closestApproach: closestApproach,
     BLOCKED_CENTRE: BLOCKED_CENTRE,
     powerMarchSeconds: powerMarchSeconds,
     fitPower: fitPower,

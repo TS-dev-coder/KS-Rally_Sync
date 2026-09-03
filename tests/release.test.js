@@ -22,7 +22,7 @@ const VERSION = readVersion();
 
 test('the shipped version number is the one the app reports', () => {
   require('../js/dom.js');
-  assert.strictEqual(VERSION, '3.1');
+  assert.strictEqual(VERSION, '3.2');
 });
 
 test('every local asset URL carries the current version stamp', () => {

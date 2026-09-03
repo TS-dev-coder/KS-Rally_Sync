@@ -683,8 +683,14 @@ maybe('a target type seeds the zone model and rally window but does not lock the
     assert.strictEqual(castle.zoneKey, 'castle_relic', 'the Castle sits in the Forbidden Zone');
     assert.strictEqual(castle.gatherSeconds, 300);
 
+    // An Outpost is a structure, so it takes the player-structure curve. The
+    // monster zone is now reserved for Terrors and Beasts, which run about
+    // twice as fast; routing a structure there under-predicts it by ~2x.
     const outpost = state.addTargetOfType('outpost');
-    assert.strictEqual(outpost.zoneKey, 'general', 'Outposts are free-form world map');
+    assert.strictEqual(outpost.zoneKey, 'city', 'a structure uses the structure curve');
+
+    const monster = state.addTargetOfType('monster');
+    assert.strictEqual(monster.zoneKey, 'general', 'only monsters use the monster zone');
 
     // Both stay editable afterwards.
     state.upsertTarget(Object.assign({}, outpost, { zoneKey: 'ruins', gatherSeconds: 0 }));

@@ -15,8 +15,8 @@
   var ZONE_DEFS = [
     {
       key: 'general',
-      label: 'Open map',
-      blurb: 'Free-form world map with no known obstruction. Use this for Outposts, Sanctuaries, Fortresses and any other structure outside the Castle Forbidden Zone.'
+      label: 'Monster (Terror, Beast)',
+      blurb: 'ONLY for monsters. A rally on a Terror or Beast runs roughly half the time of one on a player structure, so using this for a city or an outpost under-predicts by about 2x. Everything that is a structure belongs on the player-structure curve instead.'
     },
     {
       key: 'castle_relic',
@@ -59,15 +59,15 @@
   var TARGET_TYPES = [
     { key: 'castle', label: 'King’s Castle', zoneKey: 'castle_relic', gatherSeconds: 300 },
     { key: 'turret', label: 'Turret', zoneKey: 'turret', gatherSeconds: 300 },
-    { key: 'sanctuary', label: 'Sanctuary', zoneKey: 'general', gatherSeconds: 300 },
-    { key: 'fortress', label: 'Fortress', zoneKey: 'general', gatherSeconds: 300 },
-    { key: 'outpost', label: 'Outpost', zoneKey: 'general', gatherSeconds: 300 },
+    { key: 'sanctuary', label: 'Sanctuary', zoneKey: 'city', gatherSeconds: 300 },
+    { key: 'fortress', label: 'Fortress', zoneKey: 'city', gatherSeconds: 300 },
+    { key: 'outpost', label: 'Outpost', zoneKey: 'city', gatherSeconds: 300 },
     { key: 'monster', label: 'Terror or Beast', zoneKey: 'general', gatherSeconds: 180 },
     { key: 'city', label: 'Enemy player city', zoneKey: 'city', gatherSeconds: 300 },
     { key: 'hq', label: 'Enemy HQ', zoneKey: 'hq', gatherSeconds: 300 },
     { key: 'hq_own', label: 'Own HQ (reinforce)', zoneKey: 'hq_own', gatherSeconds: 300 },
     { key: 'ruins', label: 'Ruins', zoneKey: 'ruins', gatherSeconds: 300 },
-    { key: 'other', label: 'Other', zoneKey: 'general', gatherSeconds: 300 }
+    { key: 'other', label: 'Other', zoneKey: 'city', gatherSeconds: 300 }
   ];
 
   function targetTypeDef(key) {

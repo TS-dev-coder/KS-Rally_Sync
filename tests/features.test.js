@@ -643,3 +643,30 @@ test('the outlier time matches the grid path, not the straight line', () => {
   assert.ok(Math.abs(implied - euclidean) / euclidean > 0.3,
     'and nowhere near the straight line ' + euclidean.toFixed(0));
 });
+
+test('an unknown target type takes the well-measured curve, not the guessed one', () => {
+  // "Other" is what a target gets when the player does not classify it, so it
+  // must fall back to the strongest evidence available. The structure curve is
+  // fitted to 55 marches across three leads and two kingdoms; the monster scale
+  // is inferred from four readings with 20% of scatter. Defaulting an unknown
+  // target to the monster zone under-predicted a real 11:16 march as 5:14.
+  const byKey = {};
+  zones.TARGET_TYPES.forEach((t) => { byKey[t.key] = t.zoneKey; });
+
+  assert.strictEqual(byKey.other, 'city', 'an unclassified target uses the structure curve');
+  ['sanctuary', 'fortress', 'outpost'].forEach((k) => {
+    assert.strictEqual(byKey[k], 'city', k + ' is a structure and must use the structure curve');
+  });
+  assert.strictEqual(byKey.monster, 'general', 'only Terrors and Beasts use the monster zone');
+
+  // And the two must actually differ, or none of this matters.
+  const all = zones.defaultZoneFormulas();
+  const at = (key) => calc.marchSecondsForZone(
+    zones.findZone(all, key), { x: 536, y: 740 }, { x: 503, y: 1141 }, 25
+  ).seconds;
+  assert.ok(at('city') / at('general') > 1.8,
+    'a structure march should be roughly twice a monster march; got ' +
+    (at('city') / at('general')).toFixed(2) + 'x');
+  assert.ok(Math.abs(at('city') - 676) < 8,
+    'the structure curve should reproduce the real 11:16 march; got ' + at('city').toFixed(0));
+});

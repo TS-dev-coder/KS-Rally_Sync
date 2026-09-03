@@ -110,6 +110,17 @@
     state.targets.forEach(function (t) {
       if (!t.type) { t.type = zonesLib.inferTargetType(t); migrated = true; }
     });
+
+    // Structures once defaulted to the monster zone, which under-predicts them
+    // by about 2x. That was a default nobody chose, so correct it -- but only
+    // where the stored zone still matches what that type used to hand out.
+    var MONSTER_DEFAULTED = ['sanctuary', 'fortress', 'outpost', 'other'];
+    state.targets.forEach(function (t) {
+      if (t.zoneKey === 'general' && MONSTER_DEFAULTED.indexOf(t.type) !== -1) {
+        t.zoneKey = 'city';
+        migrated = true;
+      }
+    });
     if (migrated) storage.write('targets', state.targets);
 
     var storedZones = storage.read('zones', null);

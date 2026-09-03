@@ -79,6 +79,113 @@
   // ------------------------------------------------------------------ models
 
   /** t = secPerTile * distance / speedMultiplier + offset */
+  /**
+   * The measured law, from 31 player-city readings off one lead in one sitting
+   * (MEASUREMENTS.md 6j-6k). Two branches meeting exactly at `join` tiles:
+   *
+   *   near  t = nearRate * d + nearOffset      -- exact to under a second
+   *   far   t = farRate * (d - join)
+   *           + farSqrt * (sqrt(d) - sqrt(join))
+   *           + joinSeconds
+   *
+   * The far branch is fitted UNDER a continuity constraint, so the two agree at
+   * the join to the last decimal. Fitting them independently leaves a step, and
+   * a march crossing the boundary would jump backwards in time.
+   *
+   * Speed scales the WHOLE result, overhead included, rather than the travel
+   * part alone. That is measured, not assumed: the same target read twice at
+   * different buffs gave a ratio of 1.133 at 89 tiles and 1.136 at 410 -- flat,
+   * where a fixed overhead would have made it shrink with distance.
+   */
+  function piecewiseMarchSeconds(distance, multiplier, c) {
+    var join = Number(c.join);
+    var seconds;
+    if (distance <= join) {
+      seconds = Number(c.nearRate) * distance + Number(c.nearOffset);
+    } else {
+      seconds = Number(c.farRate) * (distance - join) +
+        Number(c.farSqrt) * (Math.sqrt(distance) - Math.sqrt(join)) +
+        Number(c.joinSeconds);
+    }
+    return seconds * Number(c.baselineMultiplier) / multiplier;
+  }
+
+  /**
+   * Marches routed around the impassable centre of the map run far slower than
+   * the distance alone implies. Empirically the deciding test is where the
+   * straight line crosses y = 600: inside x in [540, 680] the march is slow, and
+   * outside it is on trend. That separated all seven known cases with no
+   * exceptions, including two that clear the band by only 9 and 32 tiles.
+   *
+   * Deliberately reported as a WARNING rather than modelled. The penalty ranges
+   * from +19% to +44% across the four slow readings and there is not yet enough
+   * data to pin the waypoint, so inventing a detour figure would be guessing.
+   */
+  function crossesBlockedCentre(from, to) {
+    var y0 = Number(from.y), y1 = Number(to.y);
+    var BAND_Y = 600, BAND_X0 = 540, BAND_X1 = 680;
+    if ((y0 - BAND_Y) * (y1 - BAND_Y) > 0) return false;  // never crosses y=600
+    if (y0 === y1) return false;
+    var f = (y0 - BAND_Y) / (y0 - y1);
+    var x = Number(from.x) + (Number(to.x) - Number(from.x)) * f;
+    return x >= BAND_X0 && x <= BAND_X1;
+  }
+
+  /**
+   * Calibrates a piecewise zone from real marches by fitting ONE number: the
+   * scale the whole curve sits at.
+   *
+   * That is not a shortcut, it is what the data says. The same target read at
+   * two different buffs gave a ratio that stayed flat with distance, so a buff
+   * (and by extension an account) rescales the entire curve rather than bending
+   * it. Which means a SINGLE observation is enough to pin a user's own curve,
+   * and scaling every coefficient together keeps the branches meeting at the
+   * join.
+   */
+  function fitPiecewiseScale(samples, constants) {
+    var num = 0, den = 0, used = [];
+    for (var i = 0; i < samples.length; i++) {
+      var s = samples[i];
+      var d = Number(s.distance);
+      var observed = Number(s.observedTimeSeconds);
+      if (!isFinite(d) || d <= 0 || !isFinite(observed) || observed <= 0) continue;
+      var predicted = piecewiseMarchSeconds(d, speedMultiplier(s.speedPercent), constants);
+      if (!isFinite(predicted) || predicted <= 0) continue;
+      num += predicted * observed;
+      den += predicted * predicted;
+      used.push({ d: d, observed: observed, predicted: predicted });
+    }
+    if (!used.length || den <= 0) return null;
+
+    var scale = num / den;
+    var sumSq = 0, worst = 0, lo = Infinity, hi = -Infinity;
+    for (var j = 0; j < used.length; j++) {
+      var err = used[j].predicted * scale - used[j].observed;
+      sumSq += err * err;
+      if (Math.abs(err) > worst) worst = Math.abs(err);
+      if (used[j].d < lo) lo = used[j].d;
+      if (used[j].d > hi) hi = used[j].d;
+    }
+    return {
+      scale: scale, n: used.length,
+      rmse: Math.sqrt(sumSq / used.length),
+      maxErrorSeconds: worst, minDistance: lo, maxDistance: hi
+    };
+  }
+
+  /** Applies a scale to every coefficient, which preserves the join exactly. */
+  function scalePiecewiseConstants(constants, scale) {
+    return {
+      join: constants.join,
+      nearRate: Number(constants.nearRate) * scale,
+      nearOffset: Number(constants.nearOffset) * scale,
+      farRate: Number(constants.farRate) * scale,
+      farSqrt: Number(constants.farSqrt) * scale,
+      joinSeconds: Number(constants.joinSeconds) * scale,
+      baselineMultiplier: constants.baselineMultiplier
+    };
+  }
+
   function affineMarchSeconds(distance, multiplier, constants) {
     return (Number(constants.secPerTile) * distance) / multiplier + Number(constants.offset || 0);
   }
@@ -133,6 +240,15 @@
   function marchSecondsForZone(zone, from, to, speedPercent) {
     var multiplier = speedMultiplier(speedPercent);
     var distance = distanceTiles(from, to);
+
+    if (zone.formulaType === 'piecewise') {
+      return {
+        seconds: piecewiseMarchSeconds(distance, multiplier, zone.constants),
+        distance: distance,
+        insideTiles: 0,
+        blockedCentre: crossesBlockedCentre(from, to)
+      };
+    }
 
     if (zone.formulaType === 'power') {
       return {
@@ -644,6 +760,10 @@
     speedMultiplier: speedMultiplier,
     segmentLengthInsideCircle: segmentLengthInsideCircle,
     affineMarchSeconds: affineMarchSeconds,
+    piecewiseMarchSeconds: piecewiseMarchSeconds,
+    fitPiecewiseScale: fitPiecewiseScale,
+    scalePiecewiseConstants: scalePiecewiseConstants,
+    crossesBlockedCentre: crossesBlockedCentre,
     powerMarchSeconds: powerMarchSeconds,
     fitPower: fitPower,
     segmentedMarchSeconds: segmentedMarchSeconds,

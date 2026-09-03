@@ -760,28 +760,29 @@ maybe('logging a march reports how far the shipped default was out', async () =>
   try {
     const { state } = ctx.RS;
 
-    // A real reading from the rally screen: a Terror 60.8 tiles out took 72s.
+    // A real reading from the rally screen: an enemy city 89.4 tiles out took
+    // 188s. A city, not a monster: the structure curve is the fitted one.
     const target = state.upsertTarget({
-      name: 'Terror', x: 585, y: 776, zoneKey: 'general', gatherSeconds: 300
+      name: 'Enemy city', x: 448, y: 756, zoneKey: 'city', gatherSeconds: 300
     });
     const lead = state.upsertLead({ name: 'TS', x: 536, y: 740, marchSpeedUpPercent: 25 });
 
     // The shipped default is fitted to this very march, so logging it should
     // land where the model already sits rather than swinging it.
     const predictedBefore = ctx.RS.calc.marchSecondsForZone(
-      state.findZone('general'), state.findLead(lead.id), state.findTarget(target.id), 25
+      state.findZone('city'), state.findLead(lead.id), state.findTarget(target.id), 25
     ).seconds;
-    assert.ok(Math.abs(predictedBefore - 72) < 2,
+    assert.ok(Math.abs(predictedBefore - 188) < 2,
       'the shipped default should already be within a couple of seconds, got ' + predictedBefore);
 
-    state.recordMeasurement(lead.id, target.id, 72);
-    const fit = state.recalibrateZone('general');
+    state.recordMeasurement(lead.id, target.id, 188);
+    const fit = state.recalibrateZone('city');
     assert.strictEqual(fit.ok, true);
 
     const predictedAfter = ctx.RS.calc.marchSecondsForZone(
-      state.findZone('general'), state.findLead(lead.id), state.findTarget(target.id), 25
+      state.findZone('city'), state.findLead(lead.id), state.findTarget(target.id), 25
     ).seconds;
-    assert.ok(Math.abs(predictedAfter - 72) < 2,
+    assert.ok(Math.abs(predictedAfter - 188) < 2,
       'and it should still predict the march it was just given, got ' + predictedAfter);
 
     // And the pair itself is now exact rather than fitted.
@@ -791,7 +792,7 @@ maybe('logging a march reports how far the shipped default was out', async () =>
       mode: 'sync', gapSeconds: 0, startMs: Date.now() + 600000, nowMs: Date.now()
     });
     assert.strictEqual(plan.rows[0].tier, 'measured');
-    assert.strictEqual(Math.round(plan.rows[0].marchSeconds), 72);
+    assert.strictEqual(Math.round(plan.rows[0].marchSeconds), 188);
   } finally { teardown(ctx); }
 });
 
@@ -942,7 +943,7 @@ maybe('the app admits when it is extrapolating past its own measurements', async
     // Inside the fitted range: the monster line was measured from 60.8 to
     // 404.6 tiles, so a target at ~90 tiles is interpolation, not extrapolation.
     const target = state.upsertTarget({
-      name: 'Base', x: 448, y: 756, zoneKey: 'general', gatherSeconds: 300
+      name: 'Base', x: 448, y: 756, zoneKey: 'city', gatherSeconds: 300
     });
 
     // +25% is the only speed the shipped curve was ever fitted at.
@@ -984,8 +985,16 @@ maybe('an install carrying old constants is migrated on load', async () => {
     state.load();
 
     const migrated = state.findZone('general');
-    assert.ok(migrated.constants.secPerTile < 2,
-      'an untouched zone must take the current default, got ' + migrated.constants.secPerTile);
+    // The current default is a piecewise curve, so there is no secPerTile to
+    // compare. What must hold is that the stale affine constants are gone.
+    assert.strictEqual(migrated.formulaType, 'piecewise',
+      'an untouched zone must take the current default shape, got ' + migrated.formulaType);
+    assert.strictEqual(migrated.constants.secPerTile, undefined,
+      'the old affine constants must not survive the migration');
+    const secs = ctx.RS.calc.marchSecondsForZone(
+      migrated, { x: 0, y: 0 }, { x: 30, y: 40 }, 25
+    ).seconds;
+    assert.ok(secs > 0 && secs < 200, 'and it must produce a sane march time, got ' + secs);
   } finally { teardown(ctx); }
 });
 

@@ -147,8 +147,15 @@
         found.trust !== 'calibrated' && found.trust !== 'manual';
       if (untouched) return def;
 
+      // A zone the user fitted is their data and is kept whole, including its
+      // formula shape. But constants must not be merged ACROSS shapes: affine
+      // numbers mean nothing to a piecewise zone, and Object.assign would leave
+      // a half-and-half object that silently keeps the old model alive.
+      var sameShape = !found.formulaType || found.formulaType === def.formulaType;
       return Object.assign({}, def, found, {
-        constants: Object.assign({}, def.constants, found.constants),
+        constants: sameShape
+          ? Object.assign({}, def.constants, found.constants)
+          : Object.assign({}, found.constants),
         segmented: Object.assign({}, def.segmented, found.segmented)
       });
     });
@@ -333,6 +340,27 @@
     // Fit whichever curve the zone runs on. The power model needs two samples
     // at different distances; below that, fall back to the straight line, which
     // a single sample can still pin down.
+    // A piecewise zone calibrates by scale, not by refitting the curve: one
+    // real march is enough, and every coefficient moves together so the two
+    // branches keep meeting at the join.
+    if (zone.formulaType === 'piecewise') {
+      var scaled = calc.fitPiecewiseScale(samples, zone.constants);
+      if (!scaled) {
+        return { ok: false, fit: null, reason: 'These samples do not produce a usable fit.' };
+      }
+      zone.constants = calc.scalePiecewiseConstants(zone.constants, scaled.scale);
+      zone.trust = 'calibrated';
+      zone.lastFitISO = new Date().toISOString();
+      zone.fitQuality = {
+        n: scaled.n, rmse: scaled.rmse, maxErrorSeconds: scaled.maxErrorSeconds,
+        fittedOffset: true, model: 'piecewise',
+        minDistance: scaled.minDistance, maxDistance: scaled.maxDistance
+      };
+      persist('zones');
+      notify();
+      return { ok: true, fit: scaled, reason: null };
+    }
+
     var fit = null;
     var usedPower = false;
     if (zone.formulaType === 'power') {

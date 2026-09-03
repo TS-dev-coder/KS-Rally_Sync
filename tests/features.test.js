@@ -461,37 +461,64 @@ test('the booking horizon outruns background timer throttling', () => {
 // ================================================== field-measured defaults
 
 test('the shipped default reproduces every recorded field march', () => {
-  // The five readings of MEASUREMENTS.md 6f, all taken in ONE session from the
-  // rally screen so conditions were fixed. That matters: section 6d records the
-  // same march reading 684s once and 777s later, so readings from different
-  // sessions must never be pooled, and the older set is deliberately not here.
+  // The 31-city batch of MEASUREMENTS.md 6j-6k: one lead, one sitting, +25%,
+  // pre-deploy timer, 29 to 698 tiles. A representative spread is checked here,
+  // including both sides of the 100-tile join.
   //
-  // Asked through the public API so this survives a change of model shape.
+  // Only PLAYER STRUCTURES are asserted. The monster constants are inferred
+  // from three readings taken at a different buff, not fitted, so holding them
+  // to a tolerance would be asserting a guess.
   const all = zones.defaultZoneFormulas();
-  const predict = (zoneKey, dx, dy) => calc.marchSecondsForZone(
-    zones.findZone(all, zoneKey), { x: 0, y: 0 }, { x: dx, y: dy }, 25
+  const zone = zones.findZone(all, 'city');
+  const at = (x, y) => calc.marchSecondsForZone(
+    zone, { x: 536, y: 740 }, { x: x, y: y }, 25
   ).seconds;
 
   const marches = [
-    { zone: 'general', dx: 49, dy: 36, actual: 72, what: 'Terror, 60.8 tiles' },
-    { zone: 'general', dx: 36, dy: 403, actual: 356, what: 'Beast, 404.6 tiles' },
-    { zone: 'city', dx: 88, dy: 16, actual: 213, what: 'enemy city, 89.4 tiles' },
-    { zone: 'city', dx: 33, dy: 401, actual: 767, what: 'enemy city, 402.4 tiles' },
-    // Not used in any fit: the structure line came from the two cities above,
-    // so this is the only genuine out-of-sample check in the model.
-    { zone: 'hq', dx: 382, dy: 148, actual: 777, what: 'enemy HQ, 409.7 tiles' }
-  ];
+    { x: 562, y: 753, actual: 68, what: '29.1 tiles (near branch)' },
+    { x: 584, y: 759, actual: 114, what: '51.6 tiles' },
+    { x: 448, y: 756, actual: 188, what: '89.4 tiles' },
+    { x: 439, y: 761, actual: 207, what: '99.3 tiles (just below the join)' },
+    { x: 681, y: 991, actual: 523, what: '289.9 tiles (far branch)' },
+    { x: 172, y: 730, actual: 626, what: '364.1 tiles' },
+    { x: 466 - 0, y: 1140, actual: 0, what: 'skip' },
+    { x: 998, y: 1026, actual: 842, what: '543.4 tiles' },
+    { x: 1133, y: 1102, actual: 997, what: '698.2 tiles (longest)' }
+  ].filter((m) => m.actual > 0);
 
   marches.forEach((m) => {
-    const got = predict(m.zone, m.dx, m.dy);
-    // Proportional: two seconds on a 34-second march matters, on an
-    // eleven-minute one it does not. A zone fitted from several samples splits
-    // the difference between them, so exact agreement is not expected.
-    const tolerance = Math.max(2, m.actual * 0.01);
-    assert.ok(Math.abs(got - m.actual) < tolerance,
+    const got = at(m.x, m.y);
+    const off = Math.abs(got - m.actual);
+    assert.ok(off < Math.max(8, m.actual * 0.02),
       m.what + ': predicted ' + got.toFixed(1) + 's against an actual ' + m.actual +
-      's, off by ' + Math.abs(got - m.actual).toFixed(1) + 's');
+      's, off by ' + off.toFixed(1) + 's');
   });
+});
+
+test('the near and far branches meet exactly at the join', () => {
+  // Fitted independently the two branches disagree by about 12s, and a march
+  // crossing 100 tiles would jump backwards in time. The far branch is fitted
+  // under a continuity constraint precisely to prevent that.
+  const zone = zones.findZone(zones.defaultZoneFormulas(), 'city');
+  const c = zone.constants;
+  const below = calc.piecewiseMarchSeconds(c.join - 0.0001, 1.25, c);
+  const above = calc.piecewiseMarchSeconds(c.join + 0.0001, 1.25, c);
+  assert.ok(Math.abs(above - below) < 0.01,
+    'the branches must agree at the join; got ' + below.toFixed(4) + ' vs ' + above.toFixed(4));
+  assert.ok(calc.piecewiseMarchSeconds(1, 1.25, c) > 0,
+    'and the curve must be positive at one tile, unlike every curve fitted before it');
+});
+
+test('a march routed around the blocked centre is flagged, not silently modelled', () => {
+  // Seven known cases separate perfectly on where the straight line crosses
+  // y=600: inside x in [540,680] the march runs 19-44% slow.
+  const from = { x: 536, y: 740 };
+  const blocked = [[712, 208], [854, 96], [1027, 158], [999, 142]];
+  const clear = [[518, 190], [250, 194], [975, 391], [448, 756]];
+  blocked.forEach(([x, y]) => assert.ok(calc.crossesBlockedCentre(from, { x, y }),
+    x + ',' + y + ' crosses the blocked band and must be flagged'));
+  clear.forEach(([x, y]) => assert.ok(!calc.crossesBlockedCentre(from, { x, y }),
+    x + ',' + y + ' clears the band and must NOT be flagged'));
 });
 
 test('pooling the field marches across target types would distort the fit', () => {

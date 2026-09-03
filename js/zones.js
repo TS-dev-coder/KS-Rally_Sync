@@ -117,65 +117,38 @@
     measured: {
       id: 'measured',
       label: 'Field-measured',
-      note: 'Two families measured in one session: monsters from a Terror at 61 tiles and a Beast at 405; player structures from two cities 313 tiles apart, then confirmed against an HQ that was not used in the fit. Castle and Ruins are still only inferred.',
-      formulaType: 'affine',
+      note: 'Fitted to 31 player-city marches from one lead in a single sitting at +25 percent, spanning 29 to 698 tiles. Two branches joined continuously at 100 tiles: mean error 1.8s, worst 7.5s, every reading inside 2 percent.',
+      formulaType: 'piecewise',
       rates: {
         /**
-         * MONSTERS and open map. A Terror at 60.8 tiles took 72 s and a Beast
-         * at 404.6 tiles took 356 s, read from the rally screen minutes apart
-         * so conditions were fixed. Those two fix this line exactly.
-         *
-         * These constants are session-specific -- see MEASUREMENTS.md 6d, where
-         * one identical march read 684 s on one day and 777 s on another. What
-         * is durable is the shape, not these numbers. Set an exact time on a
-         * result row to pin any pair you actually care about.
-         *
-         * Stored at a +25%% baseline because marchSecondsForZone divides by the
-         * speed multiplier: 1.0326 / 1.25 = 0.8261, the rate actually observed.
-         * The buff during these readings was never verified, so +25%% is an
-         * assumption inherited from the earlier set.
+         * PLAYER STRUCTURES. A city and an alliance HQ behave identically --
+         * confirmed twice out of sample, at 94 and 410 tiles, both inside 0.5%.
          */
-        general: { secPerTile: 1.0326, offset: 21.8 },
-        turret: { secPerTile: 1.0326, offset: 21.8 },
+        city: { join: 100, nearRate: 1.9744, nearOffset: 11.47, farRate: 0.2943, farSqrt: 37.6066, joinSeconds: 208.91, baselineMultiplier: 1.25 },
+        hq: { join: 100, nearRate: 1.9744, nearOffset: 11.47, farRate: 0.2943, farSqrt: 37.6066, joinSeconds: 208.91, baselineMultiplier: 1.25 },
 
         /**
-         * PLAYER STRUCTURES. Two enemy cities 313 tiles apart -- 89.4 tiles at
-         * 213 s and 402.4 tiles at 767 s -- fix this line.
-         *
-         * It then predicted an enemy HQ at 409.7 tiles as 779.9 s against an
-         * actual 777 s, out by 2.9 s, WITHOUT that HQ being used in the fit.
-         * That is the only out-of-sample test anywhere in this model, and it is
-         * why a city and an HQ share one set of constants here.
-         *
-         * The 238 s HQ overhead this replaces was an artefact of comparing
-         * readings taken in different sessions (MEASUREMENTS.md 6d).
+         * MONSTERS run faster than player structures by roughly a constant
+         * factor across every distance measured. Only three monster readings
+         * exist and they were taken at a different march buff, so this scale is
+         * INFERRED from them, not fitted. Treat as provisional.
          */
-        city: { secPerTile: 2.2131, offset: 54.6 },
-        hq: { secPerTile: 2.2131, offset: 54.6 },
+        general: { join: 100, nearRate: 0.918096, nearOffset: 5.33355, farRate: 0.13685, farSqrt: 17.487069, joinSeconds: 97.14315, baselineMultiplier: 1.25 },
+        turret: { join: 100, nearRate: 0.918096, nearOffset: 5.33355, farRate: 0.13685, farSqrt: 17.487069, joinSeconds: 97.14315, baselineMultiplier: 1.25 },
+        hq_own: { join: 100, nearRate: 0.918096, nearOffset: 5.33355, farRate: 0.13685, farSqrt: 17.487069, joinSeconds: 97.14315, baselineMultiplier: 1.25 },
 
         /**
-         * REINFORCING your own HQ was not re-measured in this session, so it is
-         * left in the fast family and marked a guess. The older evidence put
-         * friendly marches near the monster rate: a 14.4 tile reinforcement took
-         * 38 s while a Terror at twice the distance took 34.5 s.
+         * The community's Forbidden Zone claim (1.95x slower) applied to the
+         * measured curve. Never measured here.
          */
-        hq_own: { secPerTile: 1.0326, offset: 21.8 },
-
-        // The community's own claim that the Forbidden Zone runs 1.95x slower,
-        // applied to the measured open-map rate. Untested.
-        castle_relic: { secPerTile: 1.0326 * (0.360 / 0.185), offset: 21.8 },
-        ruins: { secPerTile: 1.0326 * (0.360 / 0.185), offset: 21.8 }
+        castle_relic: { join: 100, nearRate: 0.470818, nearOffset: 2.735154, farRate: 0.070179, farSqrt: 8.967728, joinSeconds: 49.817, baselineMultiplier: 1.25 },
+        ruins: { join: 100, nearRate: 0.470818, nearOffset: 2.735154, farRate: 0.070179, farSqrt: 8.967728, joinSeconds: 49.817, baselineMultiplier: 1.25 }
       },
-      /**
-       * What each zone was actually measured over. Anything outside is
-       * extrapolation and the app says so — which matters most here, because
-       * open map has only ever been measured at about 30 tiles.
-       */
       fittedFrom: {
-        general: { sampleCount: 2, minDistance: 60.8, maxDistance: 404.6, speedPercents: [25] },
+        city: { sampleCount: 31, minDistance: 29.1, maxDistance: 698.2, speedPercents: [25] },
+        hq: { sampleCount: 31, minDistance: 29.1, maxDistance: 698.2, speedPercents: [25] },
+        general: null,
         turret: null,
-        city: { sampleCount: 2, minDistance: 89.4, maxDistance: 402.4, speedPercents: [25] },
-        hq: { sampleCount: 2, minDistance: 89.4, maxDistance: 402.4, speedPercents: [25] },
         hq_own: null,
         castle_relic: null,
         ruins: null
@@ -248,13 +221,24 @@
 
     return ZONE_DEFS.map(function (def) {
       var rates = preset.rates[def.key];
-      var constants = formulaType === 'power'
-        ? { coefficient: rates.coefficient, exponent: rates.exponent }
-        : { secPerTile: rates.secPerTile, offset: rates.offset };
+      var constants;
+      if (formulaType === 'power') {
+        constants = { coefficient: rates.coefficient, exponent: rates.exponent };
+      } else if (formulaType === 'piecewise') {
+        // Copied wholesale: a piecewise zone carries six numbers, not two, and
+        // silently taking secPerTile/offset here produced NaN march times.
+        constants = {
+          join: rates.join, nearRate: rates.nearRate, nearOffset: rates.nearOffset,
+          farRate: rates.farRate, farSqrt: rates.farSqrt, joinSeconds: rates.joinSeconds,
+          baselineMultiplier: rates.baselineMultiplier
+        };
+      } else {
+        constants = { secPerTile: rates.secPerTile, offset: rates.offset };
+      }
 
       // The geometric Relic model is affine-based, so it needs a per-tile rate
       // even when the zone itself is running on the power curve.
-      var segmentedSource = formulaType === 'power'
+      var segmentedSource = (formulaType === 'power' || formulaType === 'piecewise')
         ? { secPerTile: MODEL_PRESETS.coefficient.rates[def.key].secPerTile, offset: 3.2 }
         : rates;
 

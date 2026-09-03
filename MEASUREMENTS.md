@@ -17,38 +17,38 @@ actually typed, not reconstructed from memory. Provenance is recorded per row.
 
 ### Lead A — marches 1 to 15
 
-| | |
-|---|---|
-| Rally lead | **X:536 Y:740**, "TS", alliance [FUN]DirtyDevils, power 211,470,069 |
-| March Speed Up | **+25%** — stated for the original set, **never verified in game** |
-| Troops | "Same troops every time" (confirmed); Apex 86,105 / 34,442 / 51,663 |
+|                |                                                                     |
+| -------------- | ------------------------------------------------------------------- |
+| Rally lead     | **X:536 Y:740**, "TS", alliance [FUN]DirtyDevils, power 211,470,069 |
+| March Speed Up | **+25%** — stated for the original set, **never verified in game**  |
+| Troops         | "Same troops every time" (confirmed); Apex 86,105 / 34,442 / 51,663 |
 
 ### Lead B — marches 16 onward
 
 **2026-09-03.** A second account, which is the first chance to vary the speed multiplier —
 the single biggest untested assumption in this file.
 
-| | |
-|---|---|
-| Rally lead | **X:973 Y:437**, "T S's", alliance [Uhh]Dueschbags, power 1,117,454 |
-| March Speed Up | **+5%** (stated) |
-| Kingdom | #1527, the same map as Lead A |
+|                |                                                                     |
+| -------------- | ------------------------------------------------------------------- |
+| Rally lead     | **X:973 Y:437**, "T S's", alliance [Uhh]Dueschbags, power 1,117,454 |
+| March Speed Up | **+5%** (stated)                                                    |
+| Kingdom        | #1527, the same map as Lead A                                       |
 
 Confirmed in game: jumping to X:833 Y:577 showed a **197km** bubble, and the Euclidean
 distance from 973,437 is 197.99 — so the origin is right and the metric is unchanged.
 
 **Lead B is a different player**, not just a different buff: different troops, heroes, power
 and alliance. So it is a **separate regime** by construction, exactly like the day boundary in
-6d. Its readings must be fitted on their own, and only *ratios* between the two leads mean
+6d. Its readings must be fitted on their own, and only _ratios_ between the two leads mean
 anything.
 
 ### Common to both
 
-| | |
-|---|---|
-| Time source | **The pre-deploy timer on the rally/hero screen**, for every reading. Verified by deploying once or twice and confirming the timer matched the real march. An earlier note in this file said these were read from the march bar after departure; that was wrong and is corrected here. |
-| Rally window used | 5m for alliance HQ; Terror options start at 3m |
-| Client | Kingshot in BlueStacks; the game clock runs on UTC |
+|                   |                                                                                                                                                                                                                                                                                        |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Time source       | **The pre-deploy timer on the rally/hero screen**, for every reading. Verified by deploying once or twice and confirming the timer matched the real march. An earlier note in this file said these were read from the march bar after departure; that was wrong and is corrected here. |
+| Rally window used | 5m for alliance HQ; Terror options start at 3m                                                                                                                                                                                                                                         |
+| Client            | Kingshot in BlueStacks; the game clock runs on UTC                                                                                                                                                                                                                                     |
 
 That every march shares one lead, one speed buff and one army is what makes them
 comparable. It is also the largest gap in the data: **the speed multiplier has never been
@@ -61,23 +61,23 @@ varied**, so the `/1.25` divisor is assumed throughout and has never actually be
 "App predicted" is what RallySync displayed at the time, on whatever constants were shipped
 that hour; it is kept only to show which way the model was wrong. "You reported" is verbatim.
 
-| # | Target | To | Target type | App predicted | You reported | Actual |
-|---|---|---|---|---|---|---|
-| 1 | "Terror", Other / Open map | X:508 Y:730 | Terror, open map | 1m 09s (69 s) | "actual march time is 34 or 35 seconds" | **34.5 s** |
-| 2 | "T S - FUN base" | X:548 Y:708 | Player base, open map | 1m 19s (79 s) | "actual time is 39 sec" | **39 s** |
-| 3 | Alliance HQ (own) | X:544 Y:752 | **Own HQ — reinforcing** | 4m 14s (254 s) | "actual march 38 sec" | **38 s** |
-| 4 | Alliance HQ | X:504 Y:1143 | Enemy HQ — attack | 15m 02s (902 s) | "actual 11m:19s" | **679 s** |
-| 5 | Alliance HQ | X:154 Y:592 | Enemy HQ — attack | 11m 28s (688 s) | "11 24 is actual" | **684 s** |
-| 6 | Alliance HQ | X:497 Y:63 | Enemy HQ — attack | 18m 53s (1133 s) | "16:17" | **977 s** |
-| 7 | Alliance HQ | X:999 Y:142 | Enemy HQ — attack | 17m 42s (1062 s) | "its 22:58" | **1378 s** |
-| 8 | WHITESNAKE722 [HZN]HORIZON | X:448 Y:756 | **Enemy** player town | 97 s (current model) | rally screen read `00:03:33` | **213 s** |
-| 9 | Titan Roc (Lv.8 Terror) | X:585 Y:776 | Terror, open map | 67 s (current model) | rally screen read `00:01:12` | **72 s** |
-| 10 | [OCW]Badland HQ | X:154 Y:592 | Enemy HQ — attack | 684 s (march 5, same target) | rally screen read `00:12:57` | **777 s** |
-| 11 | [KHQ]Dora2mon | X:503 Y:1141 | **Enemy** player city | — | rally screen read `00:12:47` | **767 s** |
-| 12 | Great Moose (Lv.3 Beast) | X:500 Y:1143 | Beast, open map | — | rally screen read `00:05:56` | **356 s** |
-| 13 | Cheetah (Lv.13 Beast) | X:396 Y:597 | Beast — **solo attack**, not a rally | 187 s (monster line) | attack screen read `00:03:21` | **201 s** |
-| 14 | WHITESNAKE722 [HZN]HORIZON | X:448 Y:756 | Enemy city — **solo attack** | 213 s (its own rally, minutes earlier) | attack screen read `00:03:33` | **213 s** |
-| 15 | [HZN]Plains HQ | X:443 Y:753 | Enemy HQ — rally | 220.9 s (structure line) | rally screen read `00:03:42` | **222 s** |
+| #   | Target                     | To           | Target type                          | App predicted                          | You reported                            | Actual     |
+| --- | -------------------------- | ------------ | ------------------------------------ | -------------------------------------- | --------------------------------------- | ---------- |
+| 1   | "Terror", Other / Open map | X:508 Y:730  | Terror, open map                     | 1m 09s (69 s)                          | "actual march time is 34 or 35 seconds" | **34.5 s** |
+| 2   | "T S - FUN base"           | X:548 Y:708  | Player base, open map                | 1m 19s (79 s)                          | "actual time is 39 sec"                 | **39 s**   |
+| 3   | Alliance HQ (own)          | X:544 Y:752  | **Own HQ — reinforcing**             | 4m 14s (254 s)                         | "actual march 38 sec"                   | **38 s**   |
+| 4   | Alliance HQ                | X:504 Y:1143 | Enemy HQ — attack                    | 15m 02s (902 s)                        | "actual 11m:19s"                        | **679 s**  |
+| 5   | Alliance HQ                | X:154 Y:592  | Enemy HQ — attack                    | 11m 28s (688 s)                        | "11 24 is actual"                       | **684 s**  |
+| 6   | Alliance HQ                | X:497 Y:63   | Enemy HQ — attack                    | 18m 53s (1133 s)                       | "16:17"                                 | **977 s**  |
+| 7   | Alliance HQ                | X:999 Y:142  | Enemy HQ — attack                    | 17m 42s (1062 s)                       | "its 22:58"                             | **1378 s** |
+| 8   | WHITESNAKE722 [HZN]HORIZON | X:448 Y:756  | **Enemy** player town                | 97 s (current model)                   | rally screen read `00:03:33`            | **213 s**  |
+| 9   | Titan Roc (Lv.8 Terror)    | X:585 Y:776  | Terror, open map                     | 67 s (current model)                   | rally screen read `00:01:12`            | **72 s**   |
+| 10  | [OCW]Badland HQ            | X:154 Y:592  | Enemy HQ — attack                    | 684 s (march 5, same target)           | rally screen read `00:12:57`            | **777 s**  |
+| 11  | [KHQ]Dora2mon              | X:503 Y:1141 | **Enemy** player city                | —                                      | rally screen read `00:12:47`            | **767 s**  |
+| 12  | Great Moose (Lv.3 Beast)   | X:500 Y:1143 | Beast, open map                      | —                                      | rally screen read `00:05:56`            | **356 s**  |
+| 13  | Cheetah (Lv.13 Beast)      | X:396 Y:597  | Beast — **solo attack**, not a rally | 187 s (monster line)                   | attack screen read `00:03:21`           | **201 s**  |
+| 14  | WHITESNAKE722 [HZN]HORIZON | X:448 Y:756  | Enemy city — **solo attack**         | 213 s (its own rally, minutes earlier) | attack screen read `00:03:33`           | **213 s**  |
+| 15  | [HZN]Plains HQ             | X:443 Y:753  | Enemy HQ — rally                     | 220.9 s (structure line)               | rally screen read `00:03:42`            | **222 s**  |
 
 Provenance: rows 1, 2, 4, 5, 6 were pasted as chat messages. Rows **3 and 7 arrived as
 queued messages sent mid-turn**, which is why a naive scan of chat messages misses them —
@@ -92,23 +92,23 @@ Speed Up was still +25%".
 Distances are from the lead at 536,740. The app's own `dist` readout agreed with the
 Euclidean column on every row, and the game's map bubble confirms 1 tile = 1 km, floored.
 
-| # | dx | dy | Euclidean | Manhattan | Chebyshev | Diagonality | Actual | Implied speed (d/t) | s per tile |
-|---|---|---|---|---|---|---|---|---|---|
-| 1 | −28 | −10 | 29.73 | 38 | 28 | 0.357 | 34.5 s | 0.862 t/s | 1.160 |
-| 2 | +12 | −32 | 34.18 | 44 | 32 | 0.375 | 39 s | 0.876 t/s | 1.141 |
-| 3 | +8 | +12 | 14.42 | 20 | 12 | 0.667 | 38 s | **0.380 t/s** | 2.635 |
-| 4 | −32 | +403 | 404.27 | 435 | 403 | 0.079 | 679 s | 0.595 t/s | 1.680 |
-| 5 | −382 | −148 | 409.67 | 530 | 382 | 0.387 | 684 s | 0.599 t/s | 1.670 |
-| 6 | −39 | −677 | 678.12 | 716 | 677 | 0.058 | 977 s | 0.694 t/s | 1.441 |
-| 7 | +463 | −598 | 756.29 | 1061 | 598 | **0.774** | 1378 s | 0.549 t/s | 1.822 |
-| 8 | −88 | +16 | 89.44 | 104 | 88 | 0.182 | 213 s | 0.420 t/s | 2.381 |
-| 9 | +49 | +36 | 60.80 | 85 | 49 | 0.735 | 72 s | 0.844 t/s | 1.184 |
-| 10 | −382 | −148 | 409.67 | 530 | 382 | 0.387 | 777 s | 0.527 t/s | 1.897 |
-| 11 | −33 | +401 | 402.36 | 434 | 401 | 0.082 | 767 s | 0.525 t/s | 1.906 |
-| 12 | −36 | +403 | 404.60 | 439 | 403 | 0.089 | 356 s | 1.137 t/s | 0.880 |
-| 13 | −140 | −143 | 200.12 | 283 | 143 | **0.979** | 201 s | 0.996 t/s | 1.004 |
-| 14 | −88 | +16 | 89.44 | 104 | 88 | 0.182 | 213 s | 0.420 t/s | 2.381 |
-| 15 | −93 | +13 | 93.90 | 106 | 93 | 0.140 | 222 s | 0.423 t/s | 2.364 |
+| #   | dx   | dy   | Euclidean | Manhattan | Chebyshev | Diagonality | Actual | Implied speed (d/t) | s per tile |
+| --- | ---- | ---- | --------- | --------- | --------- | ----------- | ------ | ------------------- | ---------- |
+| 1   | −28  | −10  | 29.73     | 38        | 28        | 0.357       | 34.5 s | 0.862 t/s           | 1.160      |
+| 2   | +12  | −32  | 34.18     | 44        | 32        | 0.375       | 39 s   | 0.876 t/s           | 1.141      |
+| 3   | +8   | +12  | 14.42     | 20        | 12        | 0.667       | 38 s   | **0.380 t/s**       | 2.635      |
+| 4   | −32  | +403 | 404.27    | 435       | 403       | 0.079       | 679 s  | 0.595 t/s           | 1.680      |
+| 5   | −382 | −148 | 409.67    | 530       | 382       | 0.387       | 684 s  | 0.599 t/s           | 1.670      |
+| 6   | −39  | −677 | 678.12    | 716       | 677       | 0.058       | 977 s  | 0.694 t/s           | 1.441      |
+| 7   | +463 | −598 | 756.29    | 1061      | 598       | **0.774**   | 1378 s | 0.549 t/s           | 1.822      |
+| 8   | −88  | +16  | 89.44     | 104       | 88        | 0.182       | 213 s  | 0.420 t/s           | 2.381      |
+| 9   | +49  | +36  | 60.80     | 85        | 49        | 0.735       | 72 s   | 0.844 t/s           | 1.184      |
+| 10  | −382 | −148 | 409.67    | 530       | 382       | 0.387       | 777 s  | 0.527 t/s           | 1.897      |
+| 11  | −33  | +401 | 402.36    | 434       | 401       | 0.082       | 767 s  | 0.525 t/s           | 1.906      |
+| 12  | −36  | +403 | 404.60    | 439       | 403       | 0.089       | 356 s  | 1.137 t/s           | 0.880      |
+| 13  | −140 | −143 | 200.12    | 283       | 143       | **0.979**   | 201 s  | 0.996 t/s           | 1.004      |
+| 14  | −88  | +16  | 89.44     | 104       | 88        | 0.182       | 213 s  | 0.420 t/s           | 2.381      |
+| 15  | −93  | +13  | 93.90     | 106       | 93        | 0.140       | 222 s  | 0.423 t/s           | 2.364      |
 
 Diagonality is `min(|dx|,|dy|) / max(|dx|,|dy|)`: 0 is a straight line along an axis, 1 is a
 perfect 45°. March 7 is the only genuinely diagonal march in the whole set.
@@ -118,20 +118,90 @@ perfect 45°. March 7 is the only genuinely diagonal march in the whole set.
 A second lead means a second origin, so these are kept apart from Table A rather than mixed
 into it. Distances below are measured from **973,437**, not 536,740.
 
-| # | Target | To | Target type | Predicted | Reported | Actual |
-|---|---|---|---|---|---|---|
-| 16 | Gray Wolf (Lv.1 Beast) | X:976 Y:449 | Beast — solo attack | — | attack screen read `00:00:24` | **24 s** |
+| #   | Target                 | To          | Target type         | Predicted | Reported                      | Actual   |
+| --- | ---------------------- | ----------- | ------------------- | --------- | ----------------------------- | -------- |
+| 16  | Gray Wolf (Lv.1 Beast) | X:976 Y:449 | Beast — solo attack | —         | attack screen read `00:00:24` | **24 s** |
 
 ## 3b. Table B2 — Lead B geometry
 
-| # | dx | dy | Euclidean | Manhattan | Chebyshev | Diagonality | Actual | Implied speed (d/t) | s per tile |
-|---|---|---|---|---|---|---|---|---|---|
-| 16 | +3 | +12 | 12.37 | 15 | 12 | 0.250 | 24 s | 0.515 t/s | 1.940 |
+| #   | dx  | dy  | Euclidean | Manhattan | Chebyshev | Diagonality | Actual | Implied speed (d/t) | s per tile |
+| --- | --- | --- | --------- | --------- | --------- | ----------- | ------ | ------------------- | ---------- |
+| 16  | +3  | +12 | 12.37     | 15        | 12        | 0.250       | 24 s   | 0.515 t/s           | 1.940      |
 
 **Note on finding targets for Lead B.** The in-game monster search is **city-relative, not
 view-relative**: it always returns the nearest monster to your own city, however far away the
-map is scrolled. So it can only ever supply *short-range* monsters, and mid-range readings
+map is scrolled. So it can only ever supply _short-range_ monsters, and mid-range readings
 have to come from player structures reached by the coordinate jump.
+
+---
+
+## 2c. Table A3 — Lead A, batch of 2026-09-04
+
+**27 player-city (TC) targets, one lead, one sitting, +25% march speed, every reading taken
+from the pre-deploy timer.** This is the first dataset in this file large enough to determine
+the *shape* rather than merely fit two points and hope.
+
+| # | Target | To | Target type | Predicted | Reported | Actual |
+|---|---|---|---|---|---|---|
+| 17 | Player city (TC) | X:448 Y:756 | Enemy player city | — | `3:8` | **188 s** |
+| 18 | Player city (TC) | X:439 Y:761 | Enemy player city | — | `3:27` | **207 s** |
+| 19 | Player city (TC) | X:681 Y:991 | Enemy player city | — | `8:43` | **523 s** |
+| 20 | Player city (TC) | X:172 Y:730 | Enemy player city | — | `10:26` | **626 s** |
+| 21 | Player city (TC) | X:447 Y:1131 | Enemy player city | — | `11:07` | **667 s** |
+| 22 | Player city (TC) | X:398 Y:1160 | Enemy player city | — | `12:05` | **725 s** |
+| 23 | Player city (TC) | X:835 Y:1083 | Enemy player city | — | `12:21` | **741 s** |
+| 24 | Player city (TC) | X:673 Y:1182 | Enemy player city | — | `12:30` | **750 s** |
+| 25 | Player city (TC) | X:320 Y:1152 | Enemy player city | — | `12:33` | **753 s** |
+| 26 | Player city (TC) | X:70 Y:750 | Enemy player city | — | `12:34` | **754 s** |
+| 27 | Player city (TC) | X:681 Y:1194 | Enemy player city | — | `12:46` | **766 s** |
+| 28 | Player city (TC) | X:53 Y:868 | Enemy player city | — | `13:13` | **793 s** |
+| 29 | Player city (TC) | X:114 Y:1018 | Enemy player city | — | `13:19` | **799 s** |
+| 30 | Player city (TC) | X:184 Y:1119 | Enemy player city | — | `13:33` | **813 s** |
+| 31 | Player city (TC) | X:17 Y:793 | Enemy player city | — | `13:38` | **818 s** |
+| 32 | Player city (TC) | X:9 Y:772 | Enemy player city | — | `13:45` | **825 s** |
+| 33 | Player city (TC) | X:998 Y:1026 | Enemy player city | — | `14:02` | **842 s** |
+| 34 | Player city (TC) | X:518 Y:190 | Enemy player city | — | `14:09` | **849 s** |
+| 35 | Player city (TC) **(NE corner)** | X:712 Y:208 | Enemy player city | — | `20:40` | **1240 s** |
+| 36 | Player city (TC) | X:975 Y:391 | Enemy player city | — | `14:20` | **860 s** |
+| 37 | Player city (TC) | X:1119 Y:684 | Enemy player city | — | `14:46` | **886 s** |
+| 38 | Player city (TC) | X:250 Y:194 | Enemy player city | — | `15:18` | **918 s** |
+| 39 | Player city (TC) | X:1155 Y:831 | Enemy player city | — | `15:27` | **927 s** |
+| 40 | Player city (TC) | X:1155 Y:647 | Enemy player city | — | `15:27` | **927 s** |
+| 41 | Player city (TC) | X:1133 Y:1102 | Enemy player city | — | `16:37` | **997 s** |
+| 42 | Player city (TC) **(NE corner)** | X:854 Y:96 | Enemy player city | — | `24:12` | **1452 s** |
+| 43 | Player city (TC) **(NE corner)** | X:1027 Y:158 | Enemy player city | — | `22:27` | **1347 s** |
+
+## 3c. Table B3 — batch geometry
+
+| # | dx | dy | Euclidean | Manhattan | Chebyshev | Diagonality | Actual | Implied speed (d/t) | s per tile |
+|---|---|---|---|---|---|---|---|---|---|
+| 17 | −88 | +16 | 89.44 | 104 | 88 | 0.182 | 188 s | 0.476 t/s | 2.102 |
+| 18 | −97 | +21 | 99.25 | 118 | 97 | 0.216 | 207 s | 0.479 t/s | 2.086 |
+| 19 | +145 | +251 | 289.87 | 396 | 251 | 0.578 | 523 s | 0.554 t/s | 1.804 |
+| 20 | −364 | −10 | 364.14 | 374 | 364 | 0.027 | 626 s | 0.582 t/s | 1.719 |
+| 21 | −89 | +391 | 401.00 | 480 | 391 | 0.228 | 667 s | 0.601 t/s | 1.663 |
+| 22 | −138 | +420 | 442.09 | 558 | 420 | 0.329 | 725 s | 0.610 t/s | 1.640 |
+| 23 | +299 | +343 | 455.03 | 642 | 343 | 0.872 | 741 s | 0.614 t/s | 1.628 |
+| 24 | +137 | +442 | 462.75 | 579 | 442 | 0.310 | 750 s | 0.617 t/s | 1.621 |
+| 25 | −216 | +412 | 465.19 | 628 | 412 | 0.524 | 753 s | 0.618 t/s | 1.619 |
+| 26 | −466 | +10 | 466.11 | 476 | 466 | 0.021 | 754 s | 0.618 t/s | 1.618 |
+| 27 | +145 | +454 | 476.59 | 599 | 454 | 0.319 | 766 s | 0.622 t/s | 1.607 |
+| 28 | −483 | +128 | 499.67 | 611 | 483 | 0.265 | 793 s | 0.630 t/s | 1.587 |
+| 29 | −422 | +278 | 505.34 | 700 | 422 | 0.659 | 799 s | 0.632 t/s | 1.581 |
+| 30 | −352 | +379 | 517.25 | 731 | 379 | 0.929 | 813 s | 0.636 t/s | 1.572 |
+| 31 | −519 | +53 | 521.70 | 572 | 519 | 0.102 | 818 s | 0.638 t/s | 1.568 |
+| 32 | −527 | +32 | 527.97 | 559 | 527 | 0.061 | 825 s | 0.640 t/s | 1.563 |
+| 33 | +462 | +286 | 543.36 | 748 | 462 | 0.619 | 842 s | 0.645 t/s | 1.550 |
+| 34 | −18 | −550 | 550.29 | 568 | 550 | 0.033 | 849 s | 0.648 t/s | 1.543 |
+| 35 | +176 | −532 | 560.36 | 708 | 532 | 0.331 | 1240 s | 0.452 t/s | 2.213 |
+| 36 | +439 | −349 | 560.82 | 788 | 439 | 0.795 | 860 s | 0.652 t/s | 1.533 |
+| 37 | +583 | −56 | 585.68 | 639 | 583 | 0.096 | 886 s | 0.661 t/s | 1.513 |
+| 38 | −286 | −546 | 616.37 | 832 | 546 | 0.524 | 918 s | 0.671 t/s | 1.489 |
+| 39 | +619 | +91 | 625.65 | 710 | 619 | 0.147 | 927 s | 0.675 t/s | 1.482 |
+| 40 | +619 | −93 | 625.95 | 712 | 619 | 0.150 | 927 s | 0.675 t/s | 1.481 |
+| 41 | +597 | +362 | 698.18 | 959 | 597 | 0.606 | 997 s | 0.700 t/s | 1.428 |
+| 42 | +318 | −644 | 718.23 | 962 | 644 | 0.494 | 1452 s | 0.495 t/s | 2.022 |
+| 43 | +491 | −582 | 761.45 | 1073 | 582 | 0.844 | 1347 s | 0.565 t/s | 1.769 |
 
 ---
 
@@ -141,10 +211,10 @@ have to come from player structures reached by the coordinate jump.
 
 **No — and one pair of rows disproves it outright.**
 
-| march | distance | time |
-|---|---|---|
-| 3 | 14.4 tiles | 38 s |
-| 1 | 29.7 tiles | 34.5 s |
+| march | distance   | time   |
+| ----- | ---------- | ------ |
+| 3     | 14.4 tiles | 38 s   |
+| 1     | 29.7 tiles | 34.5 s |
 
 March 1 is **2.1x farther and 3.5 s faster**. `t = d/v` requires time to rise with distance,
 so no value of `v` — and no per-zone or per-target `v` either — can produce that pair.
@@ -152,24 +222,24 @@ Distance alone does not determine march time.
 
 Fitting a single best speed to all seven anyway gives 0.6035 tiles/s:
 
-| # | distance | actual | `d/v` predicts | error |
-|---|---|---|---|---|
-| 1 | 29.7 | 34 s | 49 s | +15 s |
-| 2 | 34.2 | 39 s | 57 s | +18 s |
-| 3 | 14.4 | 38 s | 24 s | −14 s |
-| 4 | 404.3 | 679 s | 670 s | −9 s |
-| 5 | 409.7 | 684 s | 679 s | −5 s |
-| 6 | 678.1 | 977 s | 1124 s | **+147 s** |
-| 7 | 756.3 | 1378 s | 1253 s | **−125 s** |
+| #   | distance | actual | `d/v` predicts | error      |
+| --- | -------- | ------ | -------------- | ---------- |
+| 1   | 29.7     | 34 s   | 49 s           | +15 s      |
+| 2   | 34.2     | 39 s   | 57 s           | +18 s      |
+| 3   | 14.4     | 38 s   | 24 s           | −14 s      |
+| 4   | 404.3    | 679 s  | 670 s          | −9 s       |
+| 5   | 409.7    | 684 s  | 679 s          | −5 s       |
+| 6   | 678.1    | 977 s  | 1124 s         | **+147 s** |
+| 7   | 756.3    | 1378 s | 1253 s         | **−125 s** |
 
 The implied speed `d/t` ranges from **0.380 to 0.876 tiles/s — a 2.31x spread**. Splitting by
 target type does not rescue it:
 
-| group | n | implied speeds | spread |
-|---|---|---|---|
-| open map | 2 | 0.862, 0.876 | 1.02x — consistent |
-| own HQ | 1 | 0.380 | — |
-| enemy HQ | 4 | 0.595, 0.599, 0.694, 0.549 | 1.26x — not consistent |
+| group    | n   | implied speeds             | spread                 |
+| -------- | --- | -------------------------- | ---------------------- |
+| open map | 2   | 0.862, 0.876               | 1.02x — consistent     |
+| own HQ   | 1   | 0.380                      | —                      |
+| enemy HQ | 4   | 0.595, 0.599, 0.694, 0.549 | 1.26x — not consistent |
 
 Open map is the only group pure physics describes well, and only because both of its marches
 happen to be about the same length.
@@ -178,32 +248,32 @@ happen to be about the same length.
 
 ## 5. What does fit: physics **plus a fixed startup cost**
 
-`t = rate × d / speedMultiplier + overhead`, where the overhead depends on the *action*:
+`t = rate × d / speedMultiplier + overhead`, where the overhead depends on the _action_:
 
-| zone | rate | overhead |
-|---|---|---|
-| open map (`general`) | 1.313 s/tile | 3.2 s |
-| enemy HQ attack (`hq`) | 1.3622 s/tile | **238 s** |
+| zone                        | rate          | overhead   |
+| --------------------------- | ------------- | ---------- |
+| open map (`general`)        | 1.313 s/tile  | 3.2 s      |
+| enemy HQ attack (`hq`)      | 1.3622 s/tile | **238 s**  |
 | own HQ reinforce (`hq_own`) | 1.3622 s/tile | **22.3 s** |
 
-| # | zone | distance | actual | predicted | error |
-|---|---|---|---|---|---|
-| 1 | general | 29.7 | 34.5 s | 34 s | <1 s |
-| 2 | general | 34.2 | 39 s | 39 s | <1 s |
-| 3 | hq_own | 14.4 | 38 s | 38 s | <1 s |
-| 4 | hq | 404.3 | 679 s | 679 s | <1 s |
-| 5 | hq | 409.7 | 684 s | 684 s | <1 s |
-| 6 | hq | 678.1 | 977 s | 977 s | <1 s |
-| 7 | hq | 756.3 | 1378 s | 1062 s | **−316 s** |
+| #   | zone    | distance | actual | predicted | error      |
+| --- | ------- | -------- | ------ | --------- | ---------- |
+| 1   | general | 29.7     | 34.5 s | 34 s      | <1 s       |
+| 2   | general | 34.2     | 39 s   | 39 s      | <1 s       |
+| 3   | hq_own  | 14.4     | 38 s   | 38 s      | <1 s       |
+| 4   | hq      | 404.3    | 679 s  | 679 s     | <1 s       |
+| 5   | hq      | 409.7    | 684 s  | 684 s     | <1 s       |
+| 6   | hq      | 678.1    | 977 s  | 977 s     | <1 s       |
+| 7   | hq      | 756.3    | 1378 s | 1062 s    | **−316 s** |
 
 **The overhead is not a fudge factor.** Solving the axis-aligned enemy-HQ marches pairwise
 for rate and intercept, without assuming either value:
 
-| pair | implied rate | implied overhead |
-|---|---|---|
-| 4 & 6 | 1.3602 s/tile | 239.1 s |
-| 5 & 6 | 1.3643 s/tile | 236.9 s |
-| 4 & 5 | 1.1575 s/tile | 304.7 s — *ill-conditioned* |
+| pair  | implied rate  | implied overhead            |
+| ----- | ------------- | --------------------------- |
+| 4 & 6 | 1.3602 s/tile | 239.1 s                     |
+| 5 & 6 | 1.3643 s/tile | 236.9 s                     |
+| 4 & 5 | 1.1575 s/tile | 304.7 s — _ill-conditioned_ |
 
 Two independent pairs recover ~1.362 s/tile and ~238 s without being told to. The third is
 unreliable and should not be read as disagreement: marches 4 and 5 are only 5 tiles apart in
@@ -211,7 +281,7 @@ distance, far too short a lever arm to separate a rate from an intercept.
 
 The physical reading: **an HQ rally spends about 4 minutes on something that is not travel**
 (assembly, gate animation), a reinforcement spends ~22 s, an open-map march ~3 s. Marching
-speed itself barely moves — 1.313 vs 1.362 s/tile. It is the *action* that costs, not the
+speed itself barely moves — 1.313 vs 1.362 s/tile. It is the _action_ that costs, not the
 terrain.
 
 ---
@@ -220,28 +290,28 @@ terrain.
 
 The only genuinely diagonal march is the only misfit, and it is slow by 316 s.
 
-| metric for march 7 | path length | predicts | vs actual 1378 s |
-|---|---|---|---|
-| Euclidean | 756.3 | 1062 s | −316 s |
-| Manhattan | 1061 | 1394 s | +16 s |
-| **implied by the observed time** | **1046** | — | — |
+| metric for march 7               | path length | predicts | vs actual 1378 s |
+| -------------------------------- | ----------- | -------- | ---------------- |
+| Euclidean                        | 756.3       | 1062 s   | −316 s           |
+| Manhattan                        | 1061        | 1394 s   | +16 s            |
+| **implied by the observed time** | **1046**    | —        | —                |
 
 The observed time implies a path of about 1046 tiles — **95% of the way from Euclidean to
 Manhattan**. The same test across every march:
 
-| # | diagonality | Euclidean | Manhattan | implied by time | matches |
-|---|---|---|---|---|---|
-| 1 | 0.357 | 30 | 38 | 30 | Euclidean |
-| 2 | 0.375 | 34 | 44 | 34 | Euclidean |
-| 3 | 0.667 | 14 | 20 | 14 | Euclidean |
-| 4 | 0.079 | 404 | 435 | 405 | Euclidean |
-| 5 | 0.387 | 410 | 530 | 409 | Euclidean |
-| 6 | 0.058 | 678 | 716 | 678 | Euclidean |
-| 7 | **0.774** | 756 | 1061 | **1046** | **Manhattan** |
+| #   | diagonality | Euclidean | Manhattan | implied by time | matches       |
+| --- | ----------- | --------- | --------- | --------------- | ------------- |
+| 1   | 0.357       | 30        | 38        | 30              | Euclidean     |
+| 2   | 0.375       | 34        | 44        | 34              | Euclidean     |
+| 3   | 0.667       | 14        | 20        | 14              | Euclidean     |
+| 4   | 0.079       | 404       | 435       | 405             | Euclidean     |
+| 5   | 0.387       | 410       | 530       | 409             | Euclidean     |
+| 6   | 0.058       | 678       | 716       | 678             | Euclidean     |
+| 7   | **0.774**   | 756       | 1061      | **1046**        | **Manhattan** |
 
 Six marches say Euclidean. The single strongly diagonal march says Manhattan. That is
 suggestive but **not settled** — it is one observation, and a march that long could equally
-have been routed around impassable terrain. The app therefore keeps Euclidean and *warns* on
+have been routed around impassable terrain. The app therefore keeps Euclidean and _warns_ on
 strongly diagonal marches rather than silently fitting a curve through one point.
 
 **This is the top open question.** One more march with diagonality above ~0.6 decides it.
@@ -256,8 +326,8 @@ time beside a timer icon at the bottom right. Backing out with the top-left arro
 nothing: no rally is created and no troops move.
 
 That number was initially ambiguous. In the first screenshots it read `00:03:33` on a
-5-minute window 82 s after the rally was held, and 300 - 87 = 213 s, so it fitted a *rally
-countdown draining* exactly as well as it fitted a march time.
+5-minute window 82 s after the rally was held, and 300 - 87 = 213 s, so it fitted a _rally
+countdown draining_ exactly as well as it fitted a march time.
 
 **It is the march time.** Re-opening the same target read `00:03:33` again, 8 s after holding
 the rally instead of 82 s. A countdown cannot show the same value at two different elapsed
@@ -270,12 +340,12 @@ committing troops, so the sample can grow much faster than one march at a time.
 
 March 8 is the first reading taken this way, and it does not fit:
 
-| | |
-|---|---|
-| Target | WHITESNAKE722, a player town at X:448 Y:756 |
-| Distance | 89.44 tiles from the lead at 536,740 |
-| Current model predicts | **97 s** |
-| Rally screen reads | **213 s** — 2.19x longer |
+|                        |                                             |
+| ---------------------- | ------------------------------------------- |
+| Target                 | WHITESNAKE722, a player town at X:448 Y:756 |
+| Distance               | 89.44 tiles from the lead at 536,740        |
+| Current model predicts | **97 s**                                    |
+| Rally screen reads     | **213 s** — 2.19x longer                    |
 
 The lead's coordinates were verified rather than assumed. A coordinate jump to 536,740
 rendered as empty grass, which looked like the city had been moved. It has not:
@@ -295,10 +365,10 @@ intercept of **-68.6 s**, which would make a short march finish before it starte
 **Two explanations survive, and they are the same trap as before** — an additive constant
 versus a multiplicative one:
 
-| hypothesis | fits march 8 by | predicts for a ~10-tile rally |
-|---|---|---|
-| A rally carries a large **fixed overhead** (~119 s) | 1.0504 x 89.44 + **119** | ~130 s |
-| A rally is **uniformly slower** (~2.19x) | 2.19 x (1.0504 x 89.44 + 3.2) | ~30 s |
+| hypothesis                                          | fits march 8 by               | predicts for a ~10-tile rally |
+| --------------------------------------------------- | ----------------------------- | ----------------------------- |
+| A rally carries a large **fixed overhead** (~119 s) | 1.0504 x 89.44 + **119**      | ~130 s                        |
+| A rally is **uniformly slower** (~2.19x)            | 2.19 x (1.0504 x 89.44 + 3.2) | ~30 s                         |
 
 The two differ by more than 4x at short range, so **one short-range rally reading decides
 it**. Until then neither is shipped, and the earlier seven marches are left untouched.
@@ -316,10 +386,10 @@ attack.
 and the screen read **1:12 (72 s)**, against 67 s from the shipped open-map line. A Terror is
 directly comparable to march 1, which was also a Terror and also a rally.
 
-| the two Terror rallies | distance | observed |
-|---|---|---|
-| march 1 (2026-09-02, earlier) | 29.73 t | 34.5 s |
-| march 9 (2026-09-02, rally screen) | 60.80 t | 72 s |
+| the two Terror rallies             | distance | observed |
+| ---------------------------------- | -------- | -------- |
+| march 1 (2026-09-02, earlier)      | 29.73 t  | 34.5 s   |
+| march 9 (2026-09-02, rally screen) | 60.80 t  | 72 s     |
 
 A line through both is `t = 1.207 x d - 1.4`, against the shipped `t = 1.050 x d + 3.2`. Close,
 with **no large constant** — so nothing global slowed down between the old set and today.
@@ -331,11 +401,11 @@ That kills the two hypotheses from 6b outright:
 
 What is left is the **target**. Measuring march 8's excess against both lines:
 
-| march | target | distance | observed | pure travel | overhead |
-|---|---|---|---|---|---|
-| 2 | friendly base | 34.18 t | 39 s | 39.1 s | **-0.1 s** |
-| 9 | Terror | 60.80 t | 72 s | ~72 s | **~0 s** |
-| 8 | **enemy** player town | 89.44 t | 213 s | 97-107 s | **+106 to +116 s** |
+| march | target                | distance | observed | pure travel | overhead           |
+| ----- | --------------------- | -------- | -------- | ----------- | ------------------ |
+| 2     | friendly base         | 34.18 t  | 39 s     | 39.1 s      | **-0.1 s**         |
+| 9     | Terror                | 60.80 t  | 72 s     | ~72 s       | **~0 s**           |
+| 8     | **enemy** player town | 89.44 t  | 213 s    | 97-107 s    | **+106 to +116 s** |
 
 March 2 was `T S - FUN base`, and the lead's own alliance is confirmed from the city panel as
 **[FUN]DirtyDevils** — so that march was **friendly**. March 8 was `[HZN]HORIZON`, an **enemy**.
@@ -347,13 +417,13 @@ That is the variable that was hiding: not town versus base, but **friendly versu
 
 with the overhead set by what you are doing, not how far:
 
-| action | overhead |
-|---|---|
-| rally a Terror or Beast | ~0 s |
-| march to a friendly base | ~3 s |
-| reinforce your **own** HQ | ~22 s (march 3) |
-| rally an **enemy** player city | **~110 s (march 8, new)** |
-| attack an **enemy** alliance HQ | ~238 s (marches 4-6) |
+| action                          | overhead                  |
+| ------------------------------- | ------------------------- |
+| rally a Terror or Beast         | ~0 s                      |
+| march to a friendly base        | ~3 s                      |
+| reinforce your **own** HQ       | ~22 s (march 3)           |
+| rally an **enemy** player city  | **~110 s (march 8, new)** |
+| attack an **enemy** alliance HQ | ~238 s (marches 4-6)      |
 
 The ordering is not arbitrary: the harder the target is to assault, the longer the fixed cost
 before the march clock effectively starts. It is the same shape as the attack-versus-reinforce
@@ -375,28 +445,28 @@ in 6b, the bottom-right figure is settled as the march time.
 **2026-09-02, later.** March 10 re-reads **the exact target of march 5** — the enemy alliance
 HQ at **X:154 Y:592**, 409.67 tiles out, same action, same lead.
 
-| | reading |
-|---|---|
-| march 5, from your set at +25% | **684 s** |
-| march 10, from the rally screen today | **777 s** |
-| difference | **+93 s, +13.6%** |
+|                                       | reading           |
+| ------------------------------------- | ----------------- |
+| march 5, from your set at +25%        | **684 s**         |
+| march 10, from the rally screen today | **777 s**         |
+| difference                            | **+93 s, +13.6%** |
 
 Identical coordinates, identical target, identical action, different answer. **Conditions
 changed between that set and today**, so the two are separate regimes and **must not be
 pooled**. Everything in Sections 5 and 6c that mixed them is suspect.
 
 This is the pooling trap again, in its purest form. The earlier sections were careful to
-separate Terror from base, and attack from reinforce, but assumed *time* was not a variable.
+separate Terror from base, and attack from reinforce, but assumed _time_ was not a variable.
 It is.
 
 ### A speed change alone does not explain it
 
 Solving each reading for the multiplier, holding the HQ model at 1.3622 s/tile and 238 s:
 
-| reading | implied multiplier |
-|---|---|
-| march 5 | 1.2512 — i.e. +25%, exactly as recorded |
-| march 10 | 1.0353 — i.e. +3.5% |
+| reading  | implied multiplier                      |
+| -------- | --------------------------------------- |
+| march 5  | 1.2512 — i.e. +25%, exactly as recorded |
+| march 10 | 1.0353 — i.e. +3.5%                     |
 
 Self-consistent, and a tidy story: the +25% buff lapsed. But **today's Terror refuses it**.
 March 9, at 60.80 tiles, took 72 s, implying a multiplier of **1.1604 (+16%)**. One march
@@ -407,7 +477,7 @@ an event modifier — is moving as well.
 ### What this costs, and what it buys
 
 **Costs:** today still has one reading per target type, so rate and overhead remain
-inseparable *within* today. Worse, the ~110 s enemy-city overhead in Section 6c was derived
+inseparable _within_ today. Worse, the ~110 s enemy-city overhead in Section 6c was derived
 by comparing a today reading against a line fitted to the older set. That comparison is now
 invalid: **it should not be trusted, and it is not shipped.**
 
@@ -418,11 +488,11 @@ holds conditions fixed by construction — which is the only way this was ever g
 
 Re-read the three remaining known enemy HQs **today**, back to back:
 
-| target | distance | earlier reading |
-|---|---|---|
-| X:504 Y:1143 | 404.27 t | 679 s |
-| X:497 Y:63 | 678.12 t | 977 s |
-| X:999 Y:142 | 756.29 t | 1378 s |
+| target       | distance | earlier reading |
+| ------------ | -------- | --------------- |
+| X:504 Y:1143 | 404.27 t | 679 s           |
+| X:497 Y:63   | 678.12 t | 977 s           |
+| X:999 Y:142  | 756.29 t | 1378 s          |
 
 With march 10 that gives **four enemy-HQ points spanning 404 to 756 tiles under identical
 conditions** — enough to fit rate and overhead properly for the first time, instead of
@@ -435,17 +505,17 @@ within a single regime, which the original pair never could.
 conditions**, and two of them are the same target type at very different ranges — the first
 time that has ever been true.
 
-| # | target | distance | observed | s/tile |
-|---|---|---|---|---|
-| 9 | Terror | 60.80 t | 72 s | 1.184 |
-| 8 | enemy city | 89.44 t | 213 s | 2.381 |
-| 11 | enemy city | 402.36 t | 767 s | 1.906 |
-| 10 | enemy HQ | 409.67 t | 777 s | 1.897 |
+| #   | target     | distance | observed | s/tile |
+| --- | ---------- | -------- | -------- | ------ |
+| 9   | Terror     | 60.80 t  | 72 s     | 1.184  |
+| 8   | enemy city | 89.44 t  | 213 s    | 2.381  |
+| 11  | enemy city | 402.36 t | 767 s    | 1.906  |
+| 10  | enemy HQ   | 409.67 t | 777 s    | 1.897  |
 
 ### The two cities fix the line
 
 Marches 8 and 11 are both **enemy player cities**, 313 tiles apart. They give the first
-affine fit that was ever actually *measured* rather than assumed:
+affine fit that was ever actually _measured_ rather than assumed:
 
 ```
 t = 1.7705 x distance + 54.6      (enemy player structures, this session)
@@ -475,10 +545,10 @@ Taken alone at zero overhead it implies **1.184 s/tile**, against 1.770 for play
 
 Two families, not five:
 
-| family | law |
-|---|---|
-| monsters (Terror, Beast) | fast — about **1.18 s/tile**, overhead ~0 |
-| player structures (city **and** HQ alike) | **t = 1.77 x d + 55** |
+| family                                    | law                                       |
+| ----------------------------------------- | ----------------------------------------- |
+| monsters (Terror, Beast)                  | fast — about **1.18 s/tile**, overhead ~0 |
+| player structures (city **and** HQ alike) | **t = 1.77 x d + 55**                     |
 
 That is much simpler than the five-tier overhead table in 6c, and unlike that table it is
 measured inside one regime and validated out of sample.
@@ -486,19 +556,19 @@ measured inside one regime and validated out of sample.
 **Still open:** only **one** Terror exists in this session, so its rate and overhead are not
 yet separated — the 1.184 s/tile assumes zero overhead. **One more Terror at long range
 closes the model.** The absolute constants are also specific to this session's conditions;
-what should transfer is the *shape*: two families, affine, Euclidean distance.
+what should transfer is the _shape_: two families, affine, Euclidean distance.
 
 ## 6f. The law, as measured
 
 **2026-09-02, one session, five readings, conditions fixed throughout.**
 
-| # | target | distance | observed |
-|---|---|---|---|
-| 9 | monster (Terror) | 60.80 t | 72 s |
-| 12 | monster (Beast) | 404.60 t | 356 s |
-| 8 | structure (enemy city) | 89.44 t | 213 s |
-| 11 | structure (enemy city) | 402.36 t | 767 s |
-| 10 | structure (enemy HQ) | 409.67 t | 777 s |
+| #   | target                 | distance | observed |
+| --- | ---------------------- | -------- | -------- |
+| 9   | monster (Terror)       | 60.80 t  | 72 s     |
+| 12  | monster (Beast)        | 404.60 t | 356 s    |
+| 8   | structure (enemy city) | 89.44 t  | 213 s    |
+| 11  | structure (enemy city) | 402.36 t | 767 s    |
+| 10  | structure (enemy HQ)   | 409.67 t | 777 s    |
 
 ### Two affine laws, split by what you are marching at
 
@@ -507,31 +577,31 @@ monsters    (Terror, Beast)        t = 0.8261 x d + 21.8
 structures  (player city, HQ)      t = 1.7705 x d + 54.6
 ```
 
-| # | distance | actual | predicted | error |
-|---|---|---|---|---|
-| 9 | 60.80 t | 72 s | 72.0 s | 0.0 s |
-| 12 | 404.60 t | 356 s | 356.0 s | 0.0 s |
-| 8 | 89.44 t | 213 s | 213.0 s | 0.0 s |
-| 11 | 402.36 t | 767 s | 767.0 s | 0.0 s |
+| #      | distance     | actual    | predicted   | error      |
+| ------ | ------------ | --------- | ----------- | ---------- |
+| 9      | 60.80 t      | 72 s      | 72.0 s      | 0.0 s      |
+| 12     | 404.60 t     | 356 s     | 356.0 s     | 0.0 s      |
+| 8      | 89.44 t      | 213 s     | 213.0 s     | 0.0 s      |
+| 11     | 402.36 t     | 767 s     | 767.0 s     | 0.0 s      |
 | **10** | **409.67 t** | **777 s** | **779.9 s** | **+2.9 s** |
 
 Be clear about what is and is not evidence here. Each line is fitted on two points, so those
 four zeros are **fitted, not predicted** — a line through two points always passes through
-them. **March 10 is the only genuine test**: the structure line was fitted on *cities*, and the
-*HQ* then landed on it within **2.9 s (0.4%)** without being used. That single out-of-sample
+them. **March 10 is the only genuine test**: the structure line was fitted on _cities_, and the
+_HQ_ then landed on it within **2.9 s (0.4%)** without being used. That single out-of-sample
 success is the whole basis for trusting the shape.
 
 ### The target sets the speed, and by a lot
 
 At the same distance, same troops, same session:
 
-| ~404 tiles | time |
-|---|---|
-| monster | 356 s |
+| ~404 tiles       | time  |
+| ---------------- | ----- |
+| monster          | 356 s |
 | player structure | 771 s |
 
 **2.14x slower per tile** for a player structure. That is not an overhead effect — it is the
-*rate* that differs. It is also not a constant multiple of the monster time (the ratio runs
+_rate_ that differs. It is also not a constant multiple of the monster time (the ratio runs
 2.16–2.23 across the readings), so these are two independent laws, not one law scaled.
 
 ### What this replaces
@@ -563,11 +633,11 @@ perfect 45 degrees.
 It is also a **solo attack, not a rally**: small Beasts offer only Attack. The screen read
 `00:03:21`, **201 s**, and was backed out of without deploying.
 
-| | |
-|---|---|
-| monster rally line predicts | 187.1 s |
-| observed (solo) | **201 s** |
-| difference | +13.9 s, **+7.4%** |
+|                             |                    |
+| --------------------------- | ------------------ |
+| monster rally line predicts | 187.1 s            |
+| observed (solo)             | **201 s**          |
+| difference                  | +13.9 s, **+7.4%** |
 
 Two readings of that 7%, and this measurement cannot separate them: either the line is
 slightly off at mid-range, or **a solo march is slightly slower than a rally**. It is the
@@ -577,18 +647,18 @@ first solo reading in this file, so there is nothing to compare it against yet.
 
 Back out the path length the time implies:
 
-| | tiles |
-|---|---|
-| Euclidean | 200 |
-| Manhattan | 283 |
+|                                  | tiles   |
+| -------------------------------- | ------- |
+| Euclidean                        | 200     |
+| Manhattan                        | 283     |
 | **implied by the observed time** | **217** |
 
 That is **20% of the way** from Euclidean to Manhattan. Now compare the original anomaly:
 
-| march | diagonality | implied path sits |
-|---|---|---|
-| 7 (756 t, enemy HQ) | 0.774 | **95% of the way to Manhattan** |
-| **13 (200 t, Beast)** | **0.979** | **20% of the way** |
+| march                 | diagonality | implied path sits               |
+| --------------------- | ----------- | ------------------------------- |
+| 7 (756 t, enemy HQ)   | 0.774       | **95% of the way to Manhattan** |
+| **13 (200 t, Beast)** | **0.979**   | **20% of the way**              |
 
 **March 13 is markedly more diagonal and behaves markedly better.** If diagonality caused the
 anomaly, a near-45-degree march should be the worst case available. It is close to the best.
@@ -611,15 +681,15 @@ player structure, measured today.**
 WHITESNAKE722, the enemy city at X:448 Y:756, offers both. Read one minute apart with the
 same troops loaded:
 
-| action | reading |
-|---|---|
-| Rally | **213 s** |
+| action        | reading   |
+| ------------- | --------- |
+| Rally         | **213 s** |
 | Attack (solo) | **213 s** |
 
 **Identical.** Whatever else varies, the action of rallying does not change travel time. This
 had been a live confound since march 13 and it is now closed.
 
-### And there is no drift *within* a session
+### And there is no drift _within_ a session
 
 The same city read **213 s at ~16:00** and **213 s at ~20:00** on the same day. So the regime
 shift recorded in 6d happened between the original set and today, **not** hour to hour. A
@@ -630,8 +700,8 @@ single day's readings can be pooled; readings from different days cannot.
 With solo ruled out, march 13's **+7.4%** is genuine error in the monster line, not an
 artefact. And the three monster readings are **not on one straight line**:
 
-| segment | slope |
-|---|---|
+| segment                         | slope        |
+| ------------------------------- | ------------ |
 | Terror 60.8 t → Cheetah 200.1 t | 0.926 s/tile |
 | Cheetah 200.1 t → Moose 404.6 t | 0.758 s/tile |
 
@@ -668,18 +738,18 @@ tiles out, read from the rally screen.
 The structure line was fitted on **two cities only**. Both HQ readings now test it without
 having been used:
 
-| out-of-sample test | distance | actual | predicted | error |
-|---|---|---|---|---|
-| Plains HQ | 93.90 t | 222 s | 220.9 s | **−1.1 s (−0.5%)** |
-| Badland HQ | 409.67 t | 777 s | 779.9 s | **+2.9 s (+0.4%)** |
+| out-of-sample test | distance | actual | predicted | error              |
+| ------------------ | -------- | ------ | --------- | ------------------ |
+| Plains HQ          | 93.90 t  | 222 s  | 220.9 s   | **−1.1 s (−0.5%)** |
+| Badland HQ         | 409.67 t | 777 s  | 779.9 s   | **+2.9 s (+0.4%)** |
 
 **A city and an alliance HQ march identically.** Two independent confirmations, at opposite
 ends of the range, both inside half a percent. This is the best-supported claim in the file.
 
 ### The caveat that stops this being a victory
 
-| | |
-|---|---|
+|                |                      |
+| -------------- | -------------------- |
 | line fitted at | 89.4 and 402.4 tiles |
 | line tested at | 93.9 and 409.7 tiles |
 
@@ -688,23 +758,100 @@ behave the same; they say **nothing** about the shape between 90 and 400 tiles.
 
 That is exactly the trap monsters fell into. The monster line looked healthy at both of its
 anchors too, and then missed by **7.4%** in the middle (6h). An affine fit through two
-far-apart points *cannot* fail at those points — it is fitted there.
+far-apart points _cannot_ fail at those points — it is fitted there.
 
 ### The one reading that would settle it
 
 A power curve through the same two cities is `t = 4.6307 x d^0.8520`, and it also passes
 through both exactly. The two models only separate in the middle:
 
-| distance | affine | power curve | difference |
-|---|---|---|---|
-| 150 t | 320.2 s | 330.9 s | 10.7 s |
+| distance  | affine      | power curve | difference |
+| --------- | ----------- | ----------- | ---------- |
+| 150 t     | 320.2 s     | 330.9 s     | 10.7 s     |
 | **200 t** | **408.7 s** | **422.8 s** | **14.1 s** |
-| 250 t | 497.2 s | 511.3 s | 14.1 s |
-| 300 t | 585.8 s | 597.3 s | 11.5 s |
+| 250 t     | 497.2 s     | 511.3 s     | 14.1 s     |
+| 300 t     | 585.8 s     | 597.3 s     | 11.5 s     |
 
 About **14 s at 200 tiles — 3.4%**, and readings are exact to the second, so a single
 **enemy city or HQ near 200 tiles** decides whether structures are affine or curved. Given
 what monsters did, the curve should not be assumed away.
+
+## 6j. The 27-city batch — three results at once
+
+**2026-09-04.** 27 player-city targets, one lead, one sitting, +25%, all pre-deploy timer.
+The first dataset here big enough to test *shape* rather than fit two points and hope.
+
+### 1. The relationship is CURVED, not affine
+
+Fitting the 24 non-outlier readings, spanning 89 to 698 tiles:
+
+| model | worst error | mean error | SSE |
+|---|---|---|---|
+| affine `1.3403 x d + 112.0` | 50.8 s | 17.97 s | 11,400 |
+| power `4.8817 x d^0.8182` | 39.5 s | 10.26 s | 4,307 |
+| **`21.03 x d^0.610 − 140`** | **7.3 s** | **1.88 s** | **147** |
+
+The affine residuals are not noise, they are a **systematic arc** — over-predicting by ~40 s at
+89 tiles, under-predicting through the middle, over-predicting by 51 s at 698 tiles. That is
+what a straight line does to a curve, and it is why every two-point affine fit in this file
+looked perfect and then failed in between.
+
+**The affine model is dead.** So is the 6f two-family affine law, for structures at least.
+
+The three-parameter form fits to a **mean of 1.9 s across 24 points**, but it goes negative
+below about 22 tiles, so it is an empirical curve over the measured range, **not a law**.
+Something with the right short-range behaviour is still missing.
+
+### 2. It is not a distance-metric artefact
+
+Refitting affine on each metric, in case the game measures the path differently:
+
+| metric | mean error | SSE |
+|---|---|---|
+| **Euclidean** | **17.97 s** | **11,400** |
+| Octile | 21.19 s | 18,757 |
+| Chebyshev | 51.31 s | 94,960 |
+| Manhattan | 63.84 s | 125,756 |
+
+Euclidean wins clearly. The curve is real, not a wrong ruler.
+
+### 3. The "diagonal anomaly" is a REGION, not a diagonal
+
+Four readings sit far off the trend, and they share a location, not a geometry:
+
+| target | distance | actual | trend says | slow by |
+|---|---|---|---|---|
+| 712,208 | 560.4 t | 1240 s | 863 s | **+44%** |
+| 854,96 | 718.2 t | 1452 s | 1074 s | **+35%** |
+| 1027,158 | 761.4 t | 1347 s | 1132 s | **+19%** |
+| 999,142 (march 7) | 756.3 t | 1378 s | 1125 s | **+22%** |
+
+All four are **high-X, low-Y — the north-east corner**. And the control is decisive: targets at
+the *same latitude* but lower X are dead on the trend — 518,190 is out by 0%, 250,194 by 2%.
+
+So march 7, the anomaly that has been open since the very first session, was never about being
+diagonal. **It is in a slow region of the map.** Both the Manhattan-path theory and the
+diagonality theory are dead, and 6g's monster-based argument — which I later half-retracted —
+reached the right conclusion for the wrong reason.
+
+### 4. And it resolves the 684 vs 777 dispute
+
+Two targets have now been read twice, by different people at different times:
+
+| target | distance | your reading | my Sep 2 reading | ratio |
+|---|---|---|---|---|
+| 448,756 (city) | 89.44 t | 188 s | 213 s | **1.133** |
+| 154,592 (HQ) | 409.67 t | 684 s | 777 s | **1.136** |
+
+**The ratio is the same at 89 tiles and at 410 tiles.** A fixed overhead would make it shrink
+with distance; it does not. So the speed buff scales the **whole** march time, overhead
+included: `t = (R x d + C) / (1 + buff)`.
+
+At +25% for these readings, mine were taken at about **+10%** — the buff was simply not +25%
+during marches 8–16. One fact explains both discrepancies, and **neither reading was wrong.**
+
+That also means **section 6d is withdrawn**: there was no mysterious regime change, just an
+unverified buff. And every "+25%" attached to marches 8–16 in this file is wrong.
 
 ## 7. Adding the next measurement
 
@@ -715,13 +862,13 @@ with reinforcement. Always record what varied.
 
 What to capture:
 
-| field | where to read it |
-|---|---|
-| From / To | the app's own `from` / `to` in the result row |
-| Target type | Terror, player base, enemy HQ, **own** HQ, Castle, Ruins, turret |
-| March Speed Up | the lead's buff at launch — **vary this** |
-| App predicted | the `march` figure the app showed |
-| Actual | **the march bar after troops depart**, not the rally countdown |
+| field          | where to read it                                                 |
+| -------------- | ---------------------------------------------------------------- |
+| From / To      | the app's own `from` / `to` in the result row                    |
+| Target type    | Terror, player base, enemy HQ, **own** HQ, Castle, Ruins, turret |
+| March Speed Up | the lead's buff at launch — **vary this**                        |
+| App predicted  | the `march` figure the app showed                                |
+| Actual         | **the march bar after troops depart**, not the rally countdown   |
 
 To re-check a prediction:
 
@@ -739,3 +886,5 @@ Still unmeasured, in priority order:
 - [ ] A second own-HQ reinforcement at longer range — separates its rate from its 22.3 s overhead, which one sample cannot.
 - [ ] Any march at all on a **Castle** or the **Ruins** — both constants are inferred from a community ratio and have never been measured.
 - [ ] A short enemy-HQ attack (~30 tiles) — confirms the 238 s overhead is flat rather than distance-dependent.
+
+---

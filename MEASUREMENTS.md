@@ -170,6 +170,10 @@ the *shape* rather than merely fit two points and hope.
 | 41 | Player city (TC) | X:1133 Y:1102 | Enemy player city | — | `16:37` | **997 s** |
 | 42 | Player city (TC) **(NE corner)** | X:854 Y:96 | Enemy player city | — | `24:12` | **1452 s** |
 | 43 | Player city (TC) **(NE corner)** | X:1027 Y:158 | Enemy player city | — | `22:27` | **1347 s** |
+| 44 | Player city (TC) | X:562 Y:753 | Enemy player city | — | `1:08` | **68 s** |
+| 45 | Player city (TC) | X:584 Y:759 | Enemy player city | — | `1:54` | **114 s** |
+| 46 | Player city (TC) | X:590 Y:754 | Enemy player city | — | `2:02` | **122 s** |
+| 47 | Player city (TC) | X:589 Y:759 | Enemy player city | — | `2:03` | **123 s** |
 
 ## 3c. Table B3 — batch geometry
 
@@ -202,6 +206,10 @@ the *shape* rather than merely fit two points and hope.
 | 41 | +597 | +362 | 698.18 | 959 | 597 | 0.606 | 997 s | 0.700 t/s | 1.428 |
 | 42 | +318 | −644 | 718.23 | 962 | 644 | 0.494 | 1452 s | 0.495 t/s | 2.022 |
 | 43 | +491 | −582 | 761.45 | 1073 | 582 | 0.844 | 1347 s | 0.565 t/s | 1.769 |
+| 44 | +26 | +13 | 29.07 | 39 | 26 | 0.500 | 68 s | 0.427 t/s | 2.339 |
+| 45 | +48 | +19 | 51.62 | 67 | 48 | 0.396 | 114 s | 0.453 t/s | 2.208 |
+| 46 | +54 | +14 | 55.79 | 68 | 54 | 0.259 | 122 s | 0.457 t/s | 2.187 |
+| 47 | +53 | +19 | 56.30 | 72 | 53 | 0.358 | 123 s | 0.458 t/s | 2.185 |
 
 ---
 

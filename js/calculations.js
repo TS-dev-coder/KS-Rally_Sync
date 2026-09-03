@@ -121,14 +121,44 @@
    * from +19% to +44% across the four slow readings and there is not yet enough
    * data to pin the waypoint, so inventing a detour figure would be guessing.
    */
+  /**
+   * The slow zone at the centre of the map, as a circle a march can cut a chord
+   * through. Fitted to the four known blocked marches; leave-one-out
+   * cross-validation predicts a held-out march's total time to 2.7% on average,
+   * against 27.1% with no correction, and the parameters stay stable across
+   * folds (centre 601-610, radius 54-71).
+   *
+   * PROVISIONAL: three parameters fitted to four observations. The shape is
+   * cross-validated, the exact numbers are not settled. A reading whose line
+   * clips the edge -- crossing y=600 near x=545 or x=670 -- would pin the radius
+   * far better than anything inside the zone.
+   */
+  var BLOCKED_CENTRE = { x: 607, y: 600, radius: 62, secondsPerChordTile: 3.3815 };
+
+  /** Where the straight line crosses the zone's latitude, or null if it never does. */
+  function centreCrossingX(from, to) {
+    var y0 = Number(from.y), y1 = Number(to.y), band = BLOCKED_CENTRE.y;
+    if (y0 === y1) return null;
+    if ((y0 - band) * (y1 - band) > 0) return null;
+    var f = (y0 - band) / (y0 - y1);
+    return Number(from.x) + (Number(to.x) - Number(from.x)) * f;
+  }
+
+  /**
+   * Seconds added by cutting through the slow centre, at the model's own
+   * baseline speed. Zero when the march misses the zone.
+   */
+  function blockedCentreDelay(from, to) {
+    var x = centreCrossingX(from, to);
+    if (x === null) return 0;
+    var off = Math.abs(x - BLOCKED_CENTRE.x);
+    if (off >= BLOCKED_CENTRE.radius) return 0;
+    var chord = 2 * Math.sqrt(BLOCKED_CENTRE.radius * BLOCKED_CENTRE.radius - off * off);
+    return chord * BLOCKED_CENTRE.secondsPerChordTile;
+  }
+
   function crossesBlockedCentre(from, to) {
-    var y0 = Number(from.y), y1 = Number(to.y);
-    var BAND_Y = 600, BAND_X0 = 540, BAND_X1 = 680;
-    if ((y0 - BAND_Y) * (y1 - BAND_Y) > 0) return false;  // never crosses y=600
-    if (y0 === y1) return false;
-    var f = (y0 - BAND_Y) / (y0 - y1);
-    var x = Number(from.x) + (Number(to.x) - Number(from.x)) * f;
-    return x >= BAND_X0 && x <= BAND_X1;
+    return blockedCentreDelay(from, to) > 0;
   }
 
   /**
@@ -242,11 +272,16 @@
     var distance = distanceTiles(from, to);
 
     if (zone.formulaType === 'piecewise') {
+      // The detour is travel like any other, so it scales with speed the same
+      // way the rest of the curve does.
+      var scale = Number(zone.constants.baselineMultiplier) / multiplier;
+      var delay = blockedCentreDelay(from, to) * scale;
       return {
-        seconds: piecewiseMarchSeconds(distance, multiplier, zone.constants),
+        seconds: piecewiseMarchSeconds(distance, multiplier, zone.constants) + delay,
         distance: distance,
         insideTiles: 0,
-        blockedCentre: crossesBlockedCentre(from, to)
+        blockedCentre: delay > 0,
+        blockedDelaySeconds: delay
       };
     }
 
@@ -764,6 +799,8 @@
     fitPiecewiseScale: fitPiecewiseScale,
     scalePiecewiseConstants: scalePiecewiseConstants,
     crossesBlockedCentre: crossesBlockedCentre,
+    blockedCentreDelay: blockedCentreDelay,
+    BLOCKED_CENTRE: BLOCKED_CENTRE,
     powerMarchSeconds: powerMarchSeconds,
     fitPower: fitPower,
     segmentedMarchSeconds: segmentedMarchSeconds,

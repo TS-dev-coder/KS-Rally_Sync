@@ -15,11 +15,37 @@ actually typed, not reconstructed from memory. Provenance is recorded per row.
 
 ## 1. Conditions common to every measurement
 
+### Lead A — marches 1 to 15
+
 | | |
 |---|---|
-| Rally lead | **X:536 Y:740** (Town Center) — the same lead every time |
-| March Speed Up | **+25%** on every single march |
-| Troops | "Same troops every time" (confirmed) |
+| Rally lead | **X:536 Y:740**, "TS", alliance [FUN]DirtyDevils, power 211,470,069 |
+| March Speed Up | **+25%** — stated for the original set, **never verified in game** |
+| Troops | "Same troops every time" (confirmed); Apex 86,105 / 34,442 / 51,663 |
+
+### Lead B — marches 16 onward
+
+**2026-09-03.** A second account, which is the first chance to vary the speed multiplier —
+the single biggest untested assumption in this file.
+
+| | |
+|---|---|
+| Rally lead | **X:973 Y:437**, "T S's", alliance [Uhh]Dueschbags, power 1,117,454 |
+| March Speed Up | **+5%** (stated) |
+| Kingdom | #1527, the same map as Lead A |
+
+Confirmed in game: jumping to X:833 Y:577 showed a **197km** bubble, and the Euclidean
+distance from 973,437 is 197.99 — so the origin is right and the metric is unchanged.
+
+**Lead B is a different player**, not just a different buff: different troops, heroes, power
+and alliance. So it is a **separate regime** by construction, exactly like the day boundary in
+6d. Its readings must be fitted on their own, and only *ratios* between the two leads mean
+anything.
+
+### Common to both
+
+| | |
+|---|---|
 | Time source | "The march bar after troops departed" (confirmed) — travel only, not the rally gather window |
 | Rally window used | 5m for alliance HQ; Terror options start at 3m |
 | Client | Kingshot in BlueStacks; the game clock runs on UTC |

@@ -121,12 +121,26 @@ into it. Distances below are measured from **973,437**, not 536,740.
 | #   | Target                 | To          | Target type         | Predicted | Reported                      | Actual   |
 | --- | ---------------------- | ----------- | ------------------- | --------- | ----------------------------- | -------- |
 | 16  | Gray Wolf (Lv.1 Beast) | X:976 Y:449 | Beast — solo attack | —         | attack screen read `00:00:24` | **24 s** |
+| 48 | Player city (TC) | X:935 Y:414 | Enemy player city | — | `1:57` | **117 s** |
+| 49 | Player city (TC) | X:1004 Y:365 | Enemy player city | — | `3:18` | **198 s** |
+| 50 | Player city (TC) | X:898 Y:507 | Enemy player city | — | `4:12` | **252 s** |
+| 51 | Player city (TC) | X:722 Y:654 | Enemy player city | — | `11:32` | **692 s** |
+| 52 | Player city (TC) | X:470 Y:274 | Enemy player city | — | `16:22` | **982 s** |
+| 53 | Player city (TC) | X:980 Y:1001 | Enemy player city | — | `17:07` | **1027 s** |
+| 54 | Player city (TC) | X:247 Y:420 | Enemy player city | — | `20:16` | **1216 s** |
 
 ## 3b. Table B2 — Lead B geometry
 
 | #   | dx  | dy  | Euclidean | Manhattan | Chebyshev | Diagonality | Actual | Implied speed (d/t) | s per tile |
 | --- | --- | --- | --------- | --------- | --------- | ----------- | ------ | ------------------- | ---------- |
 | 16  | +3  | +12 | 12.37     | 15        | 12        | 0.250       | 24 s   | 0.515 t/s           | 1.940      |
+| 48 | −38 | −23 | 44.42 | 61 | 38 | 0.605 | 117 s | 0.380 t/s | 2.634 |
+| 49 | +31 | −72 | 78.39 | 103 | 72 | 0.431 | 198 s | 0.396 t/s | 2.526 |
+| 50 | −75 | +70 | 102.59 | 145 | 75 | 0.933 | 252 s | 0.407 t/s | 2.456 |
+| 51 | −251 | +217 | 331.80 | 468 | 251 | 0.865 | 692 s | 0.479 t/s | 2.086 |
+| 52 | −503 | −163 | 528.75 | 666 | 503 | 0.324 | 982 s | 0.538 t/s | 1.857 |
+| 53 | +7 | +564 | 564.04 | 571 | 564 | 0.012 | 1027 s | 0.549 t/s | 1.821 |
+| 54 | −726 | −17 | 726.20 | 743 | 726 | 0.023 | 1216 s | 0.597 t/s | 1.674 |
 
 **Note on finding targets for Lead B.** The in-game monster search is **city-relative, not
 view-relative**: it always returns the nearest monster to your own city, however far away the
@@ -860,6 +874,46 @@ during marches 8–16. One fact explains both discrepancies, and **neither readi
 
 That also means **section 6d is withdrawn**: there was no mysterious regime change, just an
 unverified buff. And every "+25%" attached to marches 8–16 in this file is wrong.
+
+## 6k. The model transfers to another account with no calibration
+
+**2026-09-04.** Seven enemy-city marches from **Lead B (X:973 Y:437, +5%)** — a different
+account, different troops, different power, a fifth of Lead A's march buff.
+
+The curve was fitted entirely on Lead A at +25%. It was **not** refitted, rescaled, or
+calibrated for Lead B in any way:
+
+| target | distance | actual | model | actual / model |
+|---|---|---|---|---|
+| X:935 Y:414 | 44.4 t | 117 s | 118.1 s | 0.9910 |
+| X:1004 Y:365 | 78.4 t | 198 s | 197.9 s | **1.0005** |
+| X:898 Y:507 | 102.6 t | 252 s | 255.4 s | 0.9868 |
+| X:722 Y:654 | 331.8 t | 692 s | 697.7 s | 0.9918 |
+| X:470 Y:274 | 528.8 t | 982 s | 980.7 s | **1.0013** |
+| X:980 Y:1001 | 564.0 t | 1027 s | 1026.8 s | **1.0001** |
+| X:247 Y:420 | 726.2 t | 1216 s | 1226.9 s | 0.9912 |
+
+**Ratio spread 1.5%. Mean ratio 0.9947** — indistinguishable from 1, so no scale factor is
+wanted at all.
+
+### What this settles
+
+- **The speed multiplier is correct.** `baselineMultiplier / multiplier` carried +25% down to
+  +5% across the whole range. That was the largest untested assumption in this file from the
+  first session to the last, and it holds.
+- **The curve is a property of the game, not of an account.** Shape *and* constants transfer.
+  Troop tier, hero roster, power and alliance are all irrelevant, extending the user's own
+  finding that removing heroes and troops changed nothing.
+- **Per-lead calibration is unnecessary.** A calibration mechanism was built expecting each
+  lead to need its own scale. Lead B needed none. The mechanism stays, because it is what
+  makes an individual pair exact and it cost nothing, but it is not required for accuracy.
+
+### What it does not settle
+
+The one Lead B **monster** reading does not fit: the Lv.1 Gray Wolf is out by 1.208x. Monster
+constants are an inferred 0.465 ratio off the structure curve, and across Lead A's three
+monster readings plus this one the implied ratio ranges **0.45 to 0.56**. That 20% scatter
+suggests monster **type or level** matters, so monsters remain the one unsolved family.
 
 ## 7. Adding the next measurement
 

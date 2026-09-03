@@ -28,7 +28,7 @@ const DOC = fs.readFileSync(path.join(ROOT, 'MEASUREMENTS.md'), 'utf8');
 /** Each lead: where its tables are, and the origin its distances are from. */
 const LEADS = [
   { name: 'Lead A', a: '## 2. Table A', b: '## 3. Table B', origin: { x: 536, y: 740 }, min: 15 },
-  { name: 'Lead B', a: '## 2b. Table A2', b: '## 3b. Table B2', origin: { x: 973, y: 437 }, min: 1 },
+  { name: 'Lead B', a: '## 2b. Table A2', b: '## 3b. Table B2', origin: { x: 973, y: 437 }, min: 8 },
   // Lead A again, but a separate sitting: same origin, its own session.
   { name: 'Lead A batch', a: '## 2c. Table A3', b: '## 3c. Table B3', origin: { x: 536, y: 740 }, min: 31 }
 ];

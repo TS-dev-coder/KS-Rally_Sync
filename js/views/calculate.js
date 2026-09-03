@@ -1012,7 +1012,11 @@
     ]));
 
     node.appendChild(el('div.result-facts', {}, [
-      S.data.settings.multiTarget ? fact('on', row.targetName || '—') : null,
+      // Always name the target, not only in multi-target mode. A row that says
+      // only "to X:503 Y:1141" makes you cross-check the Targets tab to know
+      // what you are hitting.
+      fact('on', row.targetName || (target && target.name) || '—'),
+      target && target.type ? fact('type', Z.targetTypeLabel(target.type)) : null,
       fact('march', C.formatDuration(row.marchSeconds)),
       gathering ? fact('departs', d.utcClock(row.departMs)) : null,
       fact('lands', d.utcClock(row.landingMs)),
@@ -1041,6 +1045,9 @@
       el('button.btn.btn-ghost.btn-sm', {
         type: 'button', onclick: function (e) { shareSlot(slot, e.currentTarget); }
       }, [icon('share', 14), el('span', { text: 'Share link' })]),
+      el('button.btn.btn-ghost.btn-sm', {
+        type: 'button', onclick: function (e) { copyRow(row, lead, target, e.currentTarget); }
+      }, [icon('copy', 14), el('span', { text: 'Copy' })]),
       exact.button
     ]));
     node.appendChild(exact.panel);
@@ -1148,6 +1155,37 @@
       gatherSeconds: target ? Number(target.gatherSeconds) || 0 : 0,
       tier: row.tier
     };
+  }
+
+  /**
+   * Copies one row as plain text, for pasting into alliance chat. Deliberately
+   * one line per fact rather than a paragraph: it is read on a phone, at speed,
+   * by someone about to tap.
+   */
+  function copyRow(row, lead, target, button) {
+    var gathering = target && Number(target.gatherSeconds) > 0;
+    var lines = [
+      (row.name || 'Rally') + (row.targetName ? ' → ' + row.targetName : ''),
+      (gathering ? 'Tap rally at ' : 'March at ') + d.utcClock(row.rallyOpenMs) + ' UTC'
+    ];
+    if (gathering) lines.push('Departs ' + d.utcClock(row.departMs) + ' UTC');
+    lines.push('Lands ' + d.utcClock(row.landingMs) + ' UTC');
+    lines.push('March ' + C.formatDuration(row.marchSeconds));
+    if (lead && lead.x !== null && lead.y !== null) lines.push('From X:' + lead.x + ' Y:' + lead.y);
+    if (target && target.x !== null && target.y !== null) lines.push('To X:' + target.x + ' Y:' + target.y);
+    lines.push('Distance ' + d.km(row.distance));
+    if (lead && lead.marchSpeedUpPercent !== null) lines.push('Speed +' + lead.marchSpeedUpPercent + '%');
+    flashCopy(button, lines.join('\n'));
+  }
+
+  /** Copies text and says so on the button itself, then puts the label back. */
+  function flashCopy(button, text) {
+    var label = button.querySelector('span');
+    var original = label.textContent;
+    writeClipboard(text).then(function (ok) {
+      label.textContent = ok ? 'Copied' : 'Copy failed';
+      root.setTimeout(function () { label.textContent = original; }, 1800);
+    });
   }
 
   function shareSlot(slot, button) {

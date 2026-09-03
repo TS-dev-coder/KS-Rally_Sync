@@ -1109,3 +1109,36 @@ maybe('an exact time is dropped when the inputs behind it change', async () => {
     assert.ok(after.notes.join(' ').includes('ignored'));
   } finally { teardown(ctx); }
 });
+
+maybe('a result row names its target and can be copied on its own', async () => {
+  const ctx = await boot();
+  try {
+    const { state } = ctx.RS;
+    const target = state.upsertTarget({
+      name: 'WHITESNAKE722', x: 503, y: 1141, type: 'city', zoneKey: 'general', gatherSeconds: 300
+    });
+    const lead = state.upsertLead({ name: 'TS', x: 536, y: 740, marchSpeedUpPercent: 25 });
+    state.updateSettings({
+      selectedTargetId: target.id, selectedLeadIds: [lead.id],
+      mode: 'sync', startMs: Date.now() + 3600000
+    });
+    ctx.RS.app.go('calculate');
+    ctx.RS.app.refresh();
+
+    const row = ctx.window.document.querySelector('.result');
+    const facts = {};
+    row.querySelectorAll('.fact').forEach((f) => {
+      facts[f.querySelector('.fact-label').textContent] = f.querySelector('.fact-value').textContent;
+    });
+
+    // The row used to show only coordinates, which meant checking the Targets
+    // tab to find out what you were actually hitting.
+    assert.strictEqual(facts.on, 'WHITESNAKE722', 'the row must name its target');
+    assert.strictEqual(facts.type, 'Enemy player city', 'and say what kind of target it is');
+    assert.strictEqual(facts.to, 'X:503 Y:1141');
+
+    const copy = Array.from(row.querySelectorAll('.result-actions button'))
+      .find((b) => b.textContent.includes('Copy'));
+    assert.ok(copy, 'each row should be copyable on its own, not only the whole plan');
+  } finally { teardown(ctx); }
+});

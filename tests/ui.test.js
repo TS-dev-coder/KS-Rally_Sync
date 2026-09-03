@@ -687,10 +687,10 @@ maybe('a target type seeds the zone model and rally window but does not lock the
     // monster zone is now reserved for Terrors and Beasts, which run about
     // twice as fast; routing a structure there under-predicts it by ~2x.
     const outpost = state.addTargetOfType('outpost');
-    assert.strictEqual(outpost.zoneKey, 'city', 'a structure uses the structure curve');
+    assert.strictEqual(outpost.zoneKey, 'general', 'an Outpost marches on the open map');
 
     const monster = state.addTargetOfType('monster');
-    assert.strictEqual(monster.zoneKey, 'general', 'only monsters use the monster zone');
+    assert.strictEqual(monster.zoneKey, 'monster', 'only monsters leave the open-map curve');
 
     // Both stay editable afterwards.
     state.upsertTarget(Object.assign({}, outpost, { zoneKey: 'ruins', gatherSeconds: 0 }));
@@ -769,24 +769,24 @@ maybe('logging a march reports how far the shipped default was out', async () =>
     // A real reading from the rally screen: an enemy city 89.4 tiles out took
     // 188s. A city, not a monster: the structure curve is the fitted one.
     const target = state.upsertTarget({
-      name: 'Enemy city', x: 448, y: 756, zoneKey: 'city', gatherSeconds: 300
+      name: 'Enemy city', x: 448, y: 756, zoneKey: 'general', gatherSeconds: 300
     });
     const lead = state.upsertLead({ name: 'TS', x: 536, y: 740, marchSpeedUpPercent: 25 });
 
     // The shipped default is fitted to this very march, so logging it should
     // land where the model already sits rather than swinging it.
     const predictedBefore = ctx.RS.calc.marchSecondsForZone(
-      state.findZone('city'), state.findLead(lead.id), state.findTarget(target.id), 25
+      state.findZone('general'), state.findLead(lead.id), state.findTarget(target.id), 25
     ).seconds;
     assert.ok(Math.abs(predictedBefore - 188) < 2,
       'the shipped default should already be within a couple of seconds, got ' + predictedBefore);
 
     state.recordMeasurement(lead.id, target.id, 188);
-    const fit = state.recalibrateZone('city');
+    const fit = state.recalibrateZone('general');
     assert.strictEqual(fit.ok, true);
 
     const predictedAfter = ctx.RS.calc.marchSecondsForZone(
-      state.findZone('city'), state.findLead(lead.id), state.findTarget(target.id), 25
+      state.findZone('general'), state.findLead(lead.id), state.findTarget(target.id), 25
     ).seconds;
     assert.ok(Math.abs(predictedAfter - 188) < 2,
       'and it should still predict the march it was just given, got ' + predictedAfter);
@@ -949,7 +949,7 @@ maybe('the app admits when it is extrapolating past its own measurements', async
     // Inside the fitted range: the monster line was measured from 60.8 to
     // 404.6 tiles, so a target at ~90 tiles is interpolation, not extrapolation.
     const target = state.upsertTarget({
-      name: 'Base', x: 448, y: 756, zoneKey: 'city', gatherSeconds: 300
+      name: 'Base', x: 448, y: 756, zoneKey: 'general', gatherSeconds: 300
     });
 
     // +25% is the only speed the shipped curve was ever fitted at.

@@ -469,7 +469,7 @@ test('the shipped default reproduces every recorded field march', () => {
   // from three readings taken at a different buff, not fitted, so holding them
   // to a tolerance would be asserting a guess.
   const all = zones.defaultZoneFormulas();
-  const zone = zones.findZone(all, 'city');
+  const zone = zones.findZone(all, 'general');
   const at = (x, y) => calc.marchSecondsForZone(
     zone, { x: 536, y: 740 }, { x: x, y: y }, 25
   ).seconds;
@@ -499,7 +499,7 @@ test('the near and far branches meet exactly at the join', () => {
   // Fitted independently the two branches disagree by about 12s, and a march
   // crossing 100 tiles would jump backwards in time. The far branch is fitted
   // under a continuity constraint precisely to prevent that.
-  const zone = zones.findZone(zones.defaultZoneFormulas(), 'city');
+  const zone = zones.findZone(zones.defaultZoneFormulas(), 'general');
   const c = zone.constants;
   const below = calc.piecewiseMarchSeconds(c.join - 0.0001, 1.25, c);
   const above = calc.piecewiseMarchSeconds(c.join + 0.0001, 1.25, c);
@@ -568,9 +568,15 @@ test('the superseded community models are kept, and both are far too slow', () =
     return calc.marchSecondsForZone(zone, { x: 0, y: 0 }, { x: 36, y: 403 }, 25).seconds;
   };
 
+  // Measured against the OPEN-MAP curve, which is slower than the monster one
+  // the comparison used to run against, so the gap is smaller than it was --
+  // but both community models still overshoot badly at range.
   const measured = far('measured');
-  assert.ok(far('coefficient') / measured > 1.8, 'the coefficient model runs ~2x slow');
-  assert.ok(far('sixSecond') / measured > 3.5, 'the six-second model runs ~4x slow');
+  assert.ok(far('coefficient') / measured > 1.25,
+    'the coefficient model still runs well over the measured curve; got ' +
+    (far('coefficient') / measured).toFixed(2) + 'x');
+  assert.ok(far('sixSecond') / measured > 2.5,
+    'the six-second model runs far over; got ' + (far('sixSecond') / measured).toFixed(2) + 'x');
   assert.strictEqual(zones.DEFAULT_PRESET, 'measured');
 });
 
@@ -653,20 +659,20 @@ test('an unknown target type takes the well-measured curve, not the guessed one'
   const byKey = {};
   zones.TARGET_TYPES.forEach((t) => { byKey[t.key] = t.zoneKey; });
 
-  assert.strictEqual(byKey.other, 'city', 'an unclassified target uses the structure curve');
-  ['sanctuary', 'fortress', 'outpost'].forEach((k) => {
-    assert.strictEqual(byKey[k], 'city', k + ' is a structure and must use the structure curve');
+  assert.strictEqual(byKey.other, 'general', 'an unclassified target uses the open-map curve');
+  ['sanctuary', 'fortress', 'outpost', 'city', 'hq'].forEach((k) => {
+    assert.strictEqual(byKey[k], 'general', k + ' marches on the open-map curve');
   });
-  assert.strictEqual(byKey.monster, 'general', 'only Terrors and Beasts use the monster zone');
+  assert.strictEqual(byKey.monster, 'monster', 'only Terrors and Beasts leave the open-map curve');
 
   // And the two must actually differ, or none of this matters.
   const all = zones.defaultZoneFormulas();
   const at = (key) => calc.marchSecondsForZone(
     zones.findZone(all, key), { x: 536, y: 740 }, { x: 503, y: 1141 }, 25
   ).seconds;
-  assert.ok(at('city') / at('general') > 1.8,
-    'a structure march should be roughly twice a monster march; got ' +
-    (at('city') / at('general')).toFixed(2) + 'x');
-  assert.ok(Math.abs(at('city') - 676) < 8,
-    'the structure curve should reproduce the real 11:16 march; got ' + at('city').toFixed(0));
+  assert.ok(at('general') / at('monster') > 1.8,
+    'an open-map march should be roughly twice a monster march; got ' +
+    (at('general') / at('monster')).toFixed(2) + 'x');
+  assert.ok(Math.abs(at('general') - 676) < 8,
+    'the open-map curve should reproduce the real 11:16 march; got ' + at('general').toFixed(0));
 });

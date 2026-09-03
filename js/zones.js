@@ -15,38 +15,33 @@
   var ZONE_DEFS = [
     {
       key: 'general',
+      label: 'Open map',
+      blurb: 'The normal march. Player cities, alliance HQs, outposts, sanctuaries, fortresses, resource nodes \u2014 everything on the open map behaves the same way, so they all share one curve. Measured over 55 marches from three leads across two kingdoms.'
+    },
+    {
+      key: 'monster',
       label: 'Monster (Terror, Beast)',
-      blurb: 'ONLY for monsters. A rally on a Terror or Beast runs roughly half the time of one on a player structure, so using this for a city or an outpost under-predicts by about 2x. Everything that is a structure belongs on the player-structure curve instead.'
+      blurb: 'The one target that does NOT follow the open-map curve. A rally on a Terror or Beast runs roughly half the time. Inferred from four readings that scatter by about 20 percent, so it is the weakest part of the model.'
     },
     {
       key: 'castle_relic',
       label: 'Castle (Relic)',
-      blurb: 'Inside or near the King’s Castle Forbidden Zone, where the Relic slows marches.'
+      blurb: 'Inside or near the King\u2019s Castle Forbidden Zone, where the Relic slows marches. Never measured.'
     },
     {
       key: 'turret',
       label: 'Turret',
-      blurb: 'Path to a turret. Assumed to behave like open map — unverified.'
+      blurb: 'Path to a turret. Assumed to behave like the open map \u2014 unverified.'
     },
     {
       key: 'ruins',
       label: 'Ruins',
-      blurb: 'The Ruins chokepoint. Penalty is a placeholder — no source quantifies it.'
-    },
-    {
-      key: 'city',
-      label: 'Enemy player city',
-      blurb: 'A rally on another player’s city. Marches to player structures run about 2.1x slower per tile than marches to monsters — measured over two cities 313 tiles apart.'
-    },
-    {
-      key: 'hq',
-      label: 'Enemy HQ (attack)',
-      blurb: 'Attacking an enemy alliance headquarters. Measured to behave the same as an enemy player city: a city at 402 tiles took 767 s and an HQ at 410 tiles took 777 s.'
+      blurb: 'The Ruins chokepoint. Penalty is a placeholder \u2014 no source quantifies it.'
     },
     {
       key: 'hq_own',
       label: 'Own HQ (reinforce)',
-      blurb: 'Reinforcing your own alliance headquarters. Carries a far smaller overhead than attacking an enemy one — about 22 seconds. One sample, at short range.'
+      blurb: 'Reinforcing your own alliance headquarters. Never re-measured since the model changed, so it is assumed to match the open map.'
     }
   ];
 
@@ -57,17 +52,17 @@
    * three Sanctuaries with your own names for them is the normal case.
    */
   var TARGET_TYPES = [
-    { key: 'castle', label: 'King’s Castle', zoneKey: 'castle_relic', gatherSeconds: 300 },
+    { key: 'castle', label: 'King\u2019s Castle', zoneKey: 'castle_relic', gatherSeconds: 300 },
     { key: 'turret', label: 'Turret', zoneKey: 'turret', gatherSeconds: 300 },
-    { key: 'sanctuary', label: 'Sanctuary', zoneKey: 'city', gatherSeconds: 300 },
-    { key: 'fortress', label: 'Fortress', zoneKey: 'city', gatherSeconds: 300 },
-    { key: 'outpost', label: 'Outpost', zoneKey: 'city', gatherSeconds: 300 },
-    { key: 'monster', label: 'Terror or Beast', zoneKey: 'general', gatherSeconds: 180 },
-    { key: 'city', label: 'Enemy player city', zoneKey: 'city', gatherSeconds: 300 },
-    { key: 'hq', label: 'Enemy HQ', zoneKey: 'hq', gatherSeconds: 300 },
+    { key: 'sanctuary', label: 'Sanctuary', zoneKey: 'general', gatherSeconds: 300 },
+    { key: 'fortress', label: 'Fortress', zoneKey: 'general', gatherSeconds: 300 },
+    { key: 'outpost', label: 'Outpost', zoneKey: 'general', gatherSeconds: 300 },
+    { key: 'monster', label: 'Terror or Beast', zoneKey: 'monster', gatherSeconds: 180 },
+    { key: 'city', label: 'Enemy player city', zoneKey: 'general', gatherSeconds: 300 },
+    { key: 'hq', label: 'Enemy HQ', zoneKey: 'general', gatherSeconds: 300 },
     { key: 'hq_own', label: 'Own HQ (reinforce)', zoneKey: 'hq_own', gatherSeconds: 300 },
     { key: 'ruins', label: 'Ruins', zoneKey: 'ruins', gatherSeconds: 300 },
-    { key: 'other', label: 'Other', zoneKey: 'city', gatherSeconds: 300 }
+    { key: 'other', label: 'Other', zoneKey: 'general', gatherSeconds: 300 }
   ];
 
   function targetTypeDef(key) {
@@ -90,8 +85,6 @@
     if (target && target.zoneKey === 'castle_relic') return 'castle';
     if (target && target.zoneKey === 'turret') return 'turret';
     if (target && target.zoneKey === 'ruins') return 'ruins';
-    if (target && target.zoneKey === 'city') return 'city';
-    if (target && target.zoneKey === 'hq') return 'hq';
     if (target && target.zoneKey === 'hq_own') return 'hq_own';
     return 'other';
   }
@@ -117,39 +110,37 @@
     measured: {
       id: 'measured',
       label: 'Field-measured',
-      note: 'Fitted to 54 player-city marches from THREE leads across TWO kingdoms at +25 and +5 percent, spanning 29 to 726 tiles. Two branches joined continuously at 120 tiles: mean error 0.52 percent, worst 2.1 percent.',
+      note: 'One curve for the open map, fitted to 55 marches from three leads across two kingdoms at +25 and +5 percent, spanning 4 to 726 tiles. Mean error 0.5 percent, worst 2.2 percent. Monsters are the single exception and run about half that time.',
       formulaType: 'piecewise',
       rates: {
         /**
-         * PLAYER STRUCTURES. A city and an alliance HQ behave identically --
-         * confirmed twice out of sample, at 94 and 410 tiles, both inside 0.5%.
+         * THE open-map curve. Cities, alliance HQs, outposts, sanctuaries,
+         * fortresses and resource nodes all march identically -- a city and an
+         * HQ were confirmed equal out of sample at both 94 and 410 tiles -- so
+         * they share one set of constants rather than being split into zones
+         * that would only drift apart on no evidence.
          */
-        city: { shortJoin: 20, shortRate: 2.4084, shortSeconds: 51.3902, join: 120, nearRate: 1.9517, nearOffset: 12.3559, farRate: 0.29972, farSqrt: 37.7088, joinSeconds: 246.5616, baselineMultiplier: 1.25 },
-        hq: { shortJoin: 20, shortRate: 2.4084, shortSeconds: 51.3902, join: 120, nearRate: 1.9517, nearOffset: 12.3559, farRate: 0.29972, farSqrt: 37.7088, joinSeconds: 246.5616, baselineMultiplier: 1.25 },
+        general: { shortJoin: 20, shortRate: 2.4084, shortSeconds: 51.3902, join: 120, nearRate: 1.9517, nearOffset: 12.3559, farRate: 0.29972, farSqrt: 37.7088, joinSeconds: 246.5616, baselineMultiplier: 1.25 },
+        turret: { shortJoin: 20, shortRate: 2.4084, shortSeconds: 51.3902, join: 120, nearRate: 1.9517, nearOffset: 12.3559, farRate: 0.29972, farSqrt: 37.7088, joinSeconds: 246.5616, baselineMultiplier: 1.25 },
+        hq_own: { shortJoin: 20, shortRate: 2.4084, shortSeconds: 51.3902, join: 120, nearRate: 1.9517, nearOffset: 12.3559, farRate: 0.29972, farSqrt: 37.7088, joinSeconds: 246.5616, baselineMultiplier: 1.25 },
 
         /**
-         * MONSTERS run faster than player structures by roughly a constant
-         * factor across every distance measured. Only three monster readings
-         * exist and they were taken at a different march buff, so this scale is
-         * INFERRED from them, not fitted. Treat as provisional.
+         * MONSTERS are the exception, at roughly 0.465 of an open-map march.
+         * Inferred from four readings whose implied ratio ranges 0.45 to 0.56,
+         * which hints that monster type or level matters. Weakest part of the
+         * model.
          */
-        general: { shortJoin: 20, shortRate: 1.119906, shortSeconds: 23.896443, join: 120, nearRate: 0.907541, nearOffset: 5.745494, farRate: 0.13937, farSqrt: 17.534592, joinSeconds: 114.651144, baselineMultiplier: 1.25 },
-        turret: { shortJoin: 20, shortRate: 1.119906, shortSeconds: 23.896443, join: 120, nearRate: 0.907541, nearOffset: 5.745494, farRate: 0.13937, farSqrt: 17.534592, joinSeconds: 114.651144, baselineMultiplier: 1.25 },
-        hq_own: { shortJoin: 20, shortRate: 1.119906, shortSeconds: 23.896443, join: 120, nearRate: 0.907541, nearOffset: 5.745494, farRate: 0.13937, farSqrt: 17.534592, joinSeconds: 114.651144, baselineMultiplier: 1.25 },
+        monster: { shortJoin: 20, shortRate: 1.119906, shortSeconds: 23.896443, join: 120, nearRate: 0.907541, nearOffset: 5.745494, farRate: 0.13937, farSqrt: 17.534592, joinSeconds: 114.651144, baselineMultiplier: 1.25 },
 
-        /**
-         * The community's Forbidden Zone claim (1.95x slower) applied to the
-         * measured curve. Never measured here.
-         */
+        /** The Forbidden Zone claim applied to the measured curve. Untested. */
         castle_relic: { shortJoin: 20, shortRate: 0.574311, shortSeconds: 12.254586, join: 120, nearRate: 0.465405, nearOffset: 2.946407, farRate: 0.071472, farSqrt: 8.992098, joinSeconds: 58.795458, baselineMultiplier: 1.25 },
         ruins: { shortJoin: 20, shortRate: 0.574311, shortSeconds: 12.254586, join: 120, nearRate: 0.465405, nearOffset: 2.946407, farRate: 0.071472, farSqrt: 8.992098, joinSeconds: 58.795458, baselineMultiplier: 1.25 }
       },
       fittedFrom: {
-        city: { sampleCount: 55, minDistance: 4.2, maxDistance: 726.2, speedPercents: [5, 25] },
-        hq: { sampleCount: 55, minDistance: 4.2, maxDistance: 726.2, speedPercents: [5, 25] },
-        general: null,
+        general: { sampleCount: 55, minDistance: 4.2, maxDistance: 726.2, speedPercents: [5, 25] },
         turret: null,
         hq_own: null,
+        monster: null,
         castle_relic: null,
         ruins: null
       }
@@ -160,12 +151,11 @@
       note: 'kingshotguide.org: round(distance / speed + 3.2), normal 0.360 / red 0.185.',
       rates: {
         general: { secPerTile: 1 / 0.360, offset: 3.2 },
-        castle_relic: { secPerTile: 1 / 0.185, offset: 3.2 },
+        monster: { secPerTile: 1 / 0.360, offset: 3.2 },
         turret: { secPerTile: 1 / 0.360, offset: 3.2 },
-        ruins: { secPerTile: 1 / 0.185, offset: 3.2 },
-        city: { secPerTile: 1 / 0.360, offset: 3.2 },
-        hq: { secPerTile: 1 / 0.360, offset: 3.2 },
-        hq_own: { secPerTile: 1 / 0.360, offset: 3.2 }
+        hq_own: { secPerTile: 1 / 0.360, offset: 3.2 },
+        castle_relic: { secPerTile: 1 / 0.185, offset: 3.2 },
+        ruins: { secPerTile: 1 / 0.185, offset: 3.2 }
       }
     },
     sixSecond: {
@@ -174,12 +164,11 @@
       note: 'KingshotPro: roughly 6 seconds per tile at 100% speed, no fixed offset.',
       rates: {
         general: { secPerTile: 6, offset: 0 },
-        castle_relic: { secPerTile: 6 * (0.360 / 0.185), offset: 0 },
+        monster: { secPerTile: 6, offset: 0 },
         turret: { secPerTile: 6, offset: 0 },
-        ruins: { secPerTile: 6 * (0.360 / 0.185), offset: 0 },
-        city: { secPerTile: 6, offset: 0 },
-        hq: { secPerTile: 6, offset: 0 },
-        hq_own: { secPerTile: 6, offset: 0 }
+        hq_own: { secPerTile: 6, offset: 0 },
+        castle_relic: { secPerTile: 6 * (0.360 / 0.185), offset: 0 },
+        ruins: { secPerTile: 6 * (0.360 / 0.185), offset: 0 }
       }
     }
   };
@@ -191,15 +180,12 @@
    * 'guess' is deliberately harsher than 'unverified' — see RESEARCH-NOTES 5.
    */
   var DEFAULT_TRUST = {
-    // Still 'unverified' even under the measured preset: those marches came from
-    // one kingdom, and nothing here is your own data until you log a march.
     general: 'unverified',
-    castle_relic: 'unverified',
+    monster: 'guess',
     turret: 'unverified',
-    ruins: 'guess',
-    city: 'unverified',
-    hq: 'unverified',
-    hq_own: 'guess'
+    hq_own: 'guess',
+    castle_relic: 'unverified',
+    ruins: 'guess'
   };
 
   /** Default parameters for the optional geometric Relic model. All tunable. */

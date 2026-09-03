@@ -131,17 +131,20 @@
    * wrong for a march that crossed at x=683 but still clipped the zone -- it
    * under-predicted that march by 164 seconds.
    *
-   * PROVISIONAL. Fitted to six blocked and eighteen clear marches from one
-   * lead. Five of the six blocked predict within 3.3% when held out. The RADIUS
-   * however rests on a single reading: 916,380 passes 56.3 tiles from the
-   * centre and is slow, while 552,435 passes 60.5 and is not, so the boundary
-   * is pinned within four tiles by those two alone. Hold the radius loosely.
+   * Fitted to seven blocked and twelve clear marches across TWO KINGDOMS. The
+   * zone sits at the same map coordinates in both, so it is a fixed feature of
+   * the map rather than of a server or an account -- a Lead C march in a
+   * different kingdom lands within 2 seconds of the fit.
    *
-   * Note the zone is NOT centred exactly on the map centre (600,600): at that
-   * centre a clear march passes at 56.6 tiles and a blocked one at 57.6, which
-   * no circle can satisfy.
+   * The RADIUS is still the weak parameter: the nearest clear march passes at
+   * 54.3 tiles and the farthest blocked one at 50.2, so it is pinned within
+   * four tiles by two readings. Hold it loosely.
+   *
+   * Note the zone is NOT centred on the map centre (600,600): at that centre a
+   * clear march passes 56.6 tiles out and a blocked one 57.6, which no circle
+   * can satisfy.
    */
-  var BLOCKED_CENTRE = { x: 604, y: 598, radius: 60.4, secondsPerChordTile: 3.2901 };
+  var BLOCKED_CENTRE = { x: 597, y: 613, radius: 54.2, secondsPerChordTile: 3.6471 };
 
   /** Closest approach of the march line to a point, treating it as a segment. */
   function closestApproach(from, to, cx, cy) {

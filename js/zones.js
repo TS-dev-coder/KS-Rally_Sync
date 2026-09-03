@@ -117,15 +117,15 @@
     measured: {
       id: 'measured',
       label: 'Field-measured',
-      note: 'Fitted to 31 player-city marches from one lead in a single sitting at +25 percent, spanning 29 to 698 tiles. Two branches joined continuously at 100 tiles: mean error 1.8s, worst 7.5s, every reading inside 2 percent.',
+      note: 'Fitted to 54 player-city marches from THREE leads across TWO kingdoms at +25 and +5 percent, spanning 29 to 726 tiles. Two branches joined continuously at 120 tiles: mean error 0.52 percent, worst 2.1 percent.',
       formulaType: 'piecewise',
       rates: {
         /**
          * PLAYER STRUCTURES. A city and an alliance HQ behave identically --
          * confirmed twice out of sample, at 94 and 410 tiles, both inside 0.5%.
          */
-        city: { join: 100, nearRate: 1.9744, nearOffset: 11.47, farRate: 0.2943, farSqrt: 37.6066, joinSeconds: 208.91, baselineMultiplier: 1.25 },
-        hq: { join: 100, nearRate: 1.9744, nearOffset: 11.47, farRate: 0.2943, farSqrt: 37.6066, joinSeconds: 208.91, baselineMultiplier: 1.25 },
+        city: { join: 120, nearRate: 1.9517, nearOffset: 12.36, farRate: 0.29972, farSqrt: 37.7088, joinSeconds: 246.56, baselineMultiplier: 1.25 },
+        hq: { join: 120, nearRate: 1.9517, nearOffset: 12.36, farRate: 0.29972, farSqrt: 37.7088, joinSeconds: 246.56, baselineMultiplier: 1.25 },
 
         /**
          * MONSTERS run faster than player structures by roughly a constant
@@ -133,20 +133,20 @@
          * exist and they were taken at a different march buff, so this scale is
          * INFERRED from them, not fitted. Treat as provisional.
          */
-        general: { join: 100, nearRate: 0.918096, nearOffset: 5.33355, farRate: 0.13685, farSqrt: 17.487069, joinSeconds: 97.14315, baselineMultiplier: 1.25 },
-        turret: { join: 100, nearRate: 0.918096, nearOffset: 5.33355, farRate: 0.13685, farSqrt: 17.487069, joinSeconds: 97.14315, baselineMultiplier: 1.25 },
-        hq_own: { join: 100, nearRate: 0.918096, nearOffset: 5.33355, farRate: 0.13685, farSqrt: 17.487069, joinSeconds: 97.14315, baselineMultiplier: 1.25 },
+        general: { join: 120, nearRate: 0.907541, nearOffset: 5.7474, farRate: 0.13937, farSqrt: 17.534592, joinSeconds: 114.6504, baselineMultiplier: 1.25 },
+        turret: { join: 120, nearRate: 0.907541, nearOffset: 5.7474, farRate: 0.13937, farSqrt: 17.534592, joinSeconds: 114.6504, baselineMultiplier: 1.25 },
+        hq_own: { join: 120, nearRate: 0.907541, nearOffset: 5.7474, farRate: 0.13937, farSqrt: 17.534592, joinSeconds: 114.6504, baselineMultiplier: 1.25 },
 
         /**
          * The community's Forbidden Zone claim (1.95x slower) applied to the
          * measured curve. Never measured here.
          */
-        castle_relic: { join: 100, nearRate: 0.470818, nearOffset: 2.735154, farRate: 0.070179, farSqrt: 8.967728, joinSeconds: 49.817, baselineMultiplier: 1.25 },
-        ruins: { join: 100, nearRate: 0.470818, nearOffset: 2.735154, farRate: 0.070179, farSqrt: 8.967728, joinSeconds: 49.817, baselineMultiplier: 1.25 }
+        castle_relic: { join: 120, nearRate: 0.465405, nearOffset: 2.947385, farRate: 0.071472, farSqrt: 8.992098, joinSeconds: 58.795077, baselineMultiplier: 1.25 },
+        ruins: { join: 120, nearRate: 0.465405, nearOffset: 2.947385, farRate: 0.071472, farSqrt: 8.992098, joinSeconds: 58.795077, baselineMultiplier: 1.25 }
       },
       fittedFrom: {
-        city: { sampleCount: 31, minDistance: 29.1, maxDistance: 698.2, speedPercents: [25] },
-        hq: { sampleCount: 31, minDistance: 29.1, maxDistance: 698.2, speedPercents: [25] },
+        city: { sampleCount: 54, minDistance: 29.1, maxDistance: 726.2, speedPercents: [5, 25] },
+        hq: { sampleCount: 54, minDistance: 29.1, maxDistance: 726.2, speedPercents: [5, 25] },
         general: null,
         turret: null,
         hq_own: null,

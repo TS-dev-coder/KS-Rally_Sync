@@ -113,6 +113,28 @@ Euclidean column on every row, and the game's map bubble confirms 1 tile = 1 km,
 Diagonality is `min(|dx|,|dy|) / max(|dx|,|dy|)`: 0 is a straight line along an axis, 1 is a
 perfect 45°. March 7 is the only genuinely diagonal march in the whole set.
 
+## 2b. Table A2 — Lead B, from X:973 Y:437
+
+A second lead means a second origin, so these are kept apart from Table A rather than mixed
+into it. Distances below are measured from **973,437**, not 536,740.
+
+| # | Target | To | Target type | Predicted | Reported | Actual |
+|---|---|---|---|---|---|---|
+| 16 | Gray Wolf (Lv.1 Beast) | X:976 Y:449 | Beast — solo attack | — | attack screen read `00:00:24` | **24 s** |
+
+## 3b. Table B2 — Lead B geometry
+
+| # | dx | dy | Euclidean | Manhattan | Chebyshev | Diagonality | Actual | Implied speed (d/t) | s per tile |
+|---|---|---|---|---|---|---|---|---|---|
+| 16 | +3 | +12 | 12.37 | 15 | 12 | 0.250 | 24 s | 0.515 t/s | 1.940 |
+
+**Note on finding targets for Lead B.** The in-game monster search is **city-relative, not
+view-relative**: it always returns the nearest monster to your own city, however far away the
+map is scrolled. So it can only ever supply *short-range* monsters, and mid-range readings
+have to come from player structures reached by the coordinate jump.
+
+---
+
 ---
 
 ## 4. Does the plain physics formula `t = d / v` work?

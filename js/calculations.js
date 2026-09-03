@@ -80,13 +80,22 @@
 
   /** t = secPerTile * distance / speedMultiplier + offset */
   /**
-   * The measured law, from 31 player-city readings off one lead in one sitting
-   * (MEASUREMENTS.md 6j-6k). Two branches meeting exactly at `join` tiles:
+   * The measured law, from 55 player-city readings across three leads and two
+   * kingdoms (MEASUREMENTS.md 6j-6l). THREE branches, each meeting the next
+   * exactly:
    *
-   *   near  t = nearRate * d + nearOffset      -- exact to under a second
+   *   short t = shortRate * (d - shortJoin) + shortSeconds
+   *   near  t = nearRate * d + nearOffset
    *   far   t = farRate * (d - join)
-   *           + farSqrt * (sqrt(d) - sqrt(join))
-   *           + joinSeconds
+   *           + farSqrt * (sqrt(d) - sqrt(join)) + joinSeconds
+   *
+   * The short branch exists because a 4.24 tile march took 16s where the near
+   * branch demanded 24.6 -- a 54% miss. Seconds per tile keeps falling all the
+   * way down (3.17 at 4 tiles, 2.34 at 29, 2.10 at 89), so the near branch was
+   * only ever a local straight-line approximation to a curve.
+   *
+   * CAVEAT: the short branch rests on a SINGLE reading. It is the least
+   * supported part of this model. More marches under 30 tiles would settle it.
    *
    * The far branch is fitted UNDER a continuity constraint, so the two agree at
    * the join to the last decimal. Fitting them independently leaves a step, and
@@ -98,29 +107,19 @@
    * where a fixed overhead would have made it shrink with distance.
    */
   function piecewiseMarchSeconds(distance, multiplier, c) {
-    var join = Number(c.join);
     var seconds;
-    if (distance <= join) {
+    if (distance <= Number(c.shortJoin)) {
+      seconds = Number(c.shortRate) * (distance - Number(c.shortJoin)) + Number(c.shortSeconds);
+    } else if (distance <= Number(c.join)) {
       seconds = Number(c.nearRate) * distance + Number(c.nearOffset);
     } else {
-      seconds = Number(c.farRate) * (distance - join) +
-        Number(c.farSqrt) * (Math.sqrt(distance) - Math.sqrt(join)) +
+      seconds = Number(c.farRate) * (distance - Number(c.join)) +
+        Number(c.farSqrt) * (Math.sqrt(distance) - Math.sqrt(Number(c.join))) +
         Number(c.joinSeconds);
     }
     return seconds * Number(c.baselineMultiplier) / multiplier;
   }
 
-  /**
-   * Marches routed around the impassable centre of the map run far slower than
-   * the distance alone implies. Empirically the deciding test is where the
-   * straight line crosses y = 600: inside x in [540, 680] the march is slow, and
-   * outside it is on trend. That separated all seven known cases with no
-   * exceptions, including two that clear the band by only 9 and 32 tiles.
-   *
-   * Deliberately reported as a WARNING rather than modelled. The penalty ranges
-   * from +19% to +44% across the four slow readings and there is not yet enough
-   * data to pin the waypoint, so inventing a detour figure would be guessing.
-   */
   /**
    * The slow zone near the centre of the map, as a circle a march cuts a chord
    * through. The delay is proportional to the chord length.
@@ -159,14 +158,42 @@
   }
 
   /**
-   * Seconds added by cutting through the slow centre, at the model's baseline
-   * speed. Zero when the march misses the zone entirely.
+   * Length of the march that actually lies inside the circle.
+   *
+   * Not the same as a full chord. A march ENDING inside the zone only crosses
+   * part of it, and one STARTING inside crosses the rest. Charging a full chord
+   * in those cases would invent travel that never happens -- for a target at
+   * the dead centre it would double the penalty.
+   */
+  function segmentInsideCircle(from, to, cx, cy, radius) {
+    var ax = Number(from.x), ay = Number(from.y);
+    var dx = Number(to.x) - ax, dy = Number(to.y) - ay;
+    var a = dx * dx + dy * dy;
+    if (!(a > 0)) return 0;
+
+    var fx = ax - cx, fy = ay - cy;
+    var b = 2 * (fx * dx + fy * dy);
+    var c = fx * fx + fy * fy - radius * radius;
+    var disc = b * b - 4 * a * c;
+    if (disc <= 0) return 0;
+
+    var root = Math.sqrt(disc);
+    var t1 = (-b - root) / (2 * a);
+    var t2 = (-b + root) / (2 * a);
+    if (t1 < 0) t1 = 0; else if (t1 > 1) t1 = 1;
+    if (t2 < 0) t2 = 0; else if (t2 > 1) t2 = 1;
+    if (t2 <= t1) return 0;
+    return (t2 - t1) * Math.sqrt(a);
+  }
+
+  /**
+   * Seconds added by the part of the march that passes through the slow centre.
    */
   function blockedCentreDelay(from, to) {
-    var r = closestApproach(from, to, BLOCKED_CENTRE.x, BLOCKED_CENTRE.y);
-    if (r >= BLOCKED_CENTRE.radius) return 0;
-    var chord = 2 * Math.sqrt(BLOCKED_CENTRE.radius * BLOCKED_CENTRE.radius - r * r);
-    return chord * BLOCKED_CENTRE.secondsPerChordTile;
+    var inside = segmentInsideCircle(
+      from, to, BLOCKED_CENTRE.x, BLOCKED_CENTRE.y, BLOCKED_CENTRE.radius
+    );
+    return inside * BLOCKED_CENTRE.secondsPerChordTile;
   }
 
   function crossesBlockedCentre(from, to) {
@@ -813,6 +840,7 @@
     crossesBlockedCentre: crossesBlockedCentre,
     blockedCentreDelay: blockedCentreDelay,
     closestApproach: closestApproach,
+    segmentInsideCircle: segmentInsideCircle,
     BLOCKED_CENTRE: BLOCKED_CENTRE,
     powerMarchSeconds: powerMarchSeconds,
     fitPower: fitPower,

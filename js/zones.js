@@ -124,8 +124,8 @@
          * PLAYER STRUCTURES. A city and an alliance HQ behave identically --
          * confirmed twice out of sample, at 94 and 410 tiles, both inside 0.5%.
          */
-        city: { join: 120, nearRate: 1.9517, nearOffset: 12.36, farRate: 0.29972, farSqrt: 37.7088, joinSeconds: 246.56, baselineMultiplier: 1.25 },
-        hq: { join: 120, nearRate: 1.9517, nearOffset: 12.36, farRate: 0.29972, farSqrt: 37.7088, joinSeconds: 246.56, baselineMultiplier: 1.25 },
+        city: { shortJoin: 20, shortRate: 2.4084, shortSeconds: 51.3902, join: 120, nearRate: 1.9517, nearOffset: 12.3559, farRate: 0.29972, farSqrt: 37.7088, joinSeconds: 246.5616, baselineMultiplier: 1.25 },
+        hq: { shortJoin: 20, shortRate: 2.4084, shortSeconds: 51.3902, join: 120, nearRate: 1.9517, nearOffset: 12.3559, farRate: 0.29972, farSqrt: 37.7088, joinSeconds: 246.5616, baselineMultiplier: 1.25 },
 
         /**
          * MONSTERS run faster than player structures by roughly a constant
@@ -133,20 +133,20 @@
          * exist and they were taken at a different march buff, so this scale is
          * INFERRED from them, not fitted. Treat as provisional.
          */
-        general: { join: 120, nearRate: 0.907541, nearOffset: 5.7474, farRate: 0.13937, farSqrt: 17.534592, joinSeconds: 114.6504, baselineMultiplier: 1.25 },
-        turret: { join: 120, nearRate: 0.907541, nearOffset: 5.7474, farRate: 0.13937, farSqrt: 17.534592, joinSeconds: 114.6504, baselineMultiplier: 1.25 },
-        hq_own: { join: 120, nearRate: 0.907541, nearOffset: 5.7474, farRate: 0.13937, farSqrt: 17.534592, joinSeconds: 114.6504, baselineMultiplier: 1.25 },
+        general: { shortJoin: 20, shortRate: 1.119906, shortSeconds: 23.896443, join: 120, nearRate: 0.907541, nearOffset: 5.745494, farRate: 0.13937, farSqrt: 17.534592, joinSeconds: 114.651144, baselineMultiplier: 1.25 },
+        turret: { shortJoin: 20, shortRate: 1.119906, shortSeconds: 23.896443, join: 120, nearRate: 0.907541, nearOffset: 5.745494, farRate: 0.13937, farSqrt: 17.534592, joinSeconds: 114.651144, baselineMultiplier: 1.25 },
+        hq_own: { shortJoin: 20, shortRate: 1.119906, shortSeconds: 23.896443, join: 120, nearRate: 0.907541, nearOffset: 5.745494, farRate: 0.13937, farSqrt: 17.534592, joinSeconds: 114.651144, baselineMultiplier: 1.25 },
 
         /**
          * The community's Forbidden Zone claim (1.95x slower) applied to the
          * measured curve. Never measured here.
          */
-        castle_relic: { join: 120, nearRate: 0.465405, nearOffset: 2.947385, farRate: 0.071472, farSqrt: 8.992098, joinSeconds: 58.795077, baselineMultiplier: 1.25 },
-        ruins: { join: 120, nearRate: 0.465405, nearOffset: 2.947385, farRate: 0.071472, farSqrt: 8.992098, joinSeconds: 58.795077, baselineMultiplier: 1.25 }
+        castle_relic: { shortJoin: 20, shortRate: 0.574311, shortSeconds: 12.254586, join: 120, nearRate: 0.465405, nearOffset: 2.946407, farRate: 0.071472, farSqrt: 8.992098, joinSeconds: 58.795458, baselineMultiplier: 1.25 },
+        ruins: { shortJoin: 20, shortRate: 0.574311, shortSeconds: 12.254586, join: 120, nearRate: 0.465405, nearOffset: 2.946407, farRate: 0.071472, farSqrt: 8.992098, joinSeconds: 58.795458, baselineMultiplier: 1.25 }
       },
       fittedFrom: {
-        city: { sampleCount: 54, minDistance: 29.1, maxDistance: 726.2, speedPercents: [5, 25] },
-        hq: { sampleCount: 54, minDistance: 29.1, maxDistance: 726.2, speedPercents: [5, 25] },
+        city: { sampleCount: 55, minDistance: 4.2, maxDistance: 726.2, speedPercents: [5, 25] },
+        hq: { sampleCount: 55, minDistance: 4.2, maxDistance: 726.2, speedPercents: [5, 25] },
         general: null,
         turret: null,
         hq_own: null,
@@ -227,11 +227,12 @@
       } else if (formulaType === 'piecewise') {
         // Copied wholesale: a piecewise zone carries six numbers, not two, and
         // silently taking secPerTile/offset here produced NaN march times.
-        constants = {
-          join: rates.join, nearRate: rates.nearRate, nearOffset: rates.nearOffset,
-          farRate: rates.farRate, farSqrt: rates.farSqrt, joinSeconds: rates.joinSeconds,
-          baselineMultiplier: rates.baselineMultiplier
-        };
+        // Copy every key the preset defines rather than an explicit list: the
+        // list silently dropped the short branch when it was added, and a
+        // missing constant makes the comparison NaN, which fails quietly by
+        // falling through to the next branch.
+        constants = {};
+        Object.keys(rates).forEach(function (key) { constants[key] = rates[key]; });
       } else {
         constants = { secPerTile: rates.secPerTile, offset: rates.offset };
       }

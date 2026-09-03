@@ -46,7 +46,7 @@ anything.
 
 | | |
 |---|---|
-| Time source | "The march bar after troops departed" (confirmed) — travel only, not the rally gather window |
+| Time source | **The pre-deploy timer on the rally/hero screen**, for every reading. Verified by deploying once or twice and confirming the timer matched the real march. An earlier note in this file said these were read from the march bar after departure; that was wrong and is corrected here. |
 | Rally window used | 5m for alliance HQ; Terror options start at 3m |
 | Client | Kingshot in BlueStacks; the game clock runs on UTC |
 

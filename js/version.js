@@ -11,9 +11,17 @@
 ;(function (root) {
   'use strict';
 
-  var VERSION = '3.9';
+  var VERSION = '4.0';
 
   /** When the page this tab is running was published. */
+  /** Dictionary lookup that still works before i18n has loaded. */
+  function say(key, params, fallback) {
+    var T = root.RallySync && root.RallySync.i18n;
+    if (!T || !T.t) return fallback;
+    var out = T.t(key, params);
+    return out === key ? fallback : out;
+  }
+
   function buildMs() {
     var parsed = Date.parse(root.document.lastModified);
     return isFinite(parsed) ? parsed : null;
@@ -52,14 +60,20 @@
     return root.fetch(url + '?_v=' + Date.now(), { cache: 'no-store' })
       .then(function (response) {
         if (!response.ok) {
-          return { ok: false, stale: false, latestMs: null, reason: 'Server returned ' + response.status + '.' };
+          return {
+            ok: false, stale: false, latestMs: null,
+            // i18n-exempt: the trailing argument is the English fallback itself.
+            reason: say('set.serverReturned', { status: response.status },
+              'Server returned ' + response.status + '.')
+          };
         }
         var header = response.headers.get('last-modified');
         var latest = header ? Date.parse(header) : NaN;
         if (!isFinite(latest)) {
           return {
             ok: false, stale: false, latestMs: null,
-            reason: 'The server did not say when this was published.'
+            reason: say('set.noPublishDate', {},
+              'The server did not say when this was published.')
           };
         }
         var mine = buildMs();
@@ -68,7 +82,11 @@
         return { ok: true, stale: stale, latestMs: latest, reason: null };
       })
       .catch(function () {
-        return { ok: false, stale: false, latestMs: null, reason: 'Could not reach the server — you may be offline.' };
+        return {
+          ok: false, stale: false, latestMs: null,
+          reason: say('set.cannotReach', {},
+            'Could not reach the server — you may be offline.')
+        };
       });
   }
 

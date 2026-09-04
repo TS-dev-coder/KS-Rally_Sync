@@ -6,7 +6,8 @@
   "scripts": {
     "test": "node --test tests/",
     "stamp": "node tools/stamp.js",
-    "serve": "node tools/serve.js"
+    "serve": "node tools/serve.js",
+    "i18n": "node tools/i18n-report.js"
   },
   "devDependencies": {
     "jsdom": "^26.0.0"

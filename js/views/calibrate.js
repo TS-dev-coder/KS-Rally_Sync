@@ -9,6 +9,7 @@
   'use strict';
 
   var d = root.RallySync.dom;
+  var T = root.RallySync.i18n;
   var S = root.RallySync.state;
   var C = root.RallySync.calc;
   var Z = root.RallySync.zones;
@@ -26,8 +27,8 @@
 
     container.appendChild(el('div.view-head', {}, [
       el('div', {}, [
-        el('h2.view-title', { text: 'Calibrate' }),
-        el('p.view-sub', { text: 'Every march you log makes this tool more accurate.' })
+        el('h2.view-title', { text: T.t('cal.calibrate') }),
+        el('p.view-sub', { text: T.t('cal.everyMarchYouLog') })
       ])
     ]));
 
@@ -54,27 +55,27 @@
   function logSection() {
     var section = el('section.panel.panel-accent');
     section.appendChild(el('div.panel-head', {}, [
-      el('h2.panel-title', { text: 'Log a real march' }),
-      el('span.panel-hint', { text: 'exact' })
+      el('h2.panel-title', { text: T.t('cal.logARealMarch') }),
+      el('span.panel-hint', { text: T.t('cal.exact') })
     ]));
     section.appendChild(el('p.panel-note', {
-      text: 'Kingshot shows the true march duration once the rally departs. Read it off and enter it here — that pair becomes exact from then on.'
+      text: T.t('cal.kingshotShowsTheTrue')
     }));
 
     if (S.data.leads.length === 0 || S.data.targets.length === 0) {
       section.appendChild(el('p.muted', {
-        text: 'Add at least one rally lead and one target first.'
+        text: T.t('cal.addAtLeastOne')
       }));
       return section;
     }
 
-    section.appendChild(field('Rally lead', selectFrom(
-      S.data.leads, draft.leadId, 'Choose a lead',
+    section.appendChild(field(T.t('cal.rallyLead'), selectFrom(
+      S.data.leads, draft.leadId, T.t('btn.chooseLead'),
       function (value) { draft.leadId = value; }
     )));
 
-    section.appendChild(field('Target', selectFrom(
-      S.data.targets, draft.targetId, 'Choose a target',
+    section.appendChild(field(T.t('cal.targetField'), selectFrom(
+      S.data.targets, draft.targetId, T.t('btn.chooseTarget'),
       function (value) { draft.targetId = value; }
     )));
 
@@ -91,7 +92,7 @@
 
     section.appendChild(el('button.btn.btn-primary.btn-wide', {
       type: 'button', onclick: saveMeasurement
-    }, ['Save measurement']));
+    }, [T.t('btn.saveMeasurement')]));
 
     return section;
   }
@@ -105,13 +106,13 @@
       return fail('Pick both a rally lead and a target.');
     }
     if (seconds === null || seconds <= 0) {
-      return fail('That march time could not be read. Try 95, 95s, 1m35s or 1:35.');
+      return fail(T.t('cal.timeUnreadable'));
     }
     if (lead.x === null || lead.y === null || lead.marchSpeedUpPercent === null) {
-      return fail((lead.name || 'That lead') + ' is missing coordinates or March Speed Up % — fill those in first, or the sample cannot be fitted.');
+      return fail(T.t('cal.leadMissingData', { name: lead.name || T.t('common.thatLead') }));
     }
     if (target.x === null || target.y === null) {
-      return fail((target.name || 'That target') + ' has no coordinates yet.');
+      return fail(T.t('cal.targetNoCoords', { name: target.name || T.t('common.thatTarget') }));
     }
 
     // What the model thought, before this observation changes it.
@@ -127,7 +128,9 @@
     draft.observed = '';
     message = {
       kind: 'ok',
-      text: lead.name + ' → ' + target.name + ' is now exact at ' + C.formatDuration(seconds) + '.',
+      text: T.t('cal.pairNowExact', {
+        lead: lead.name, target: target.name, time: C.formatDuration(seconds)
+      }),
       detail: buildFitDetail(predicted, seconds, zoneKey, result)
     };
     root.RallySync.app.refresh();
@@ -144,23 +147,29 @@
     if (predicted !== null && predicted > 0 && observed > 0) {
       var ratio = predicted / observed;
       if (ratio >= 1.15 || ratio <= 0.87) {
-        parts.push('The model predicted ' + C.formatDuration(predicted) + ', so it was ' +
-          (ratio > 1 ? ratio.toFixed(2) + '× too slow' : (1 / ratio).toFixed(2) + '× too fast') +
-          '. That is the community default being wrong, not your reading.');
+        parts.push(T.t('cal.modelWasOff', {
+          time: C.formatDuration(predicted),
+          factor: ratio > 1
+            ? T.t('cal.tooSlow', { n: ratio.toFixed(2) })
+            : T.t('cal.tooFast', { n: (1 / ratio).toFixed(2) })
+        }));
       } else {
-        parts.push('The model predicted ' + C.formatDuration(predicted) + ' — close already.');
+        parts.push(T.t('cal.modelWasClose', { time: C.formatDuration(predicted) }));
       }
     }
 
     if (result.ok) {
       var refitted = S.findZone(zoneKey);
-      parts.push(Z.zoneLabel(zoneKey) + ' refitted to ' + summarise(refitted) +
-        ' from ' + result.fit.n + ' sample' + (result.fit.n === 1 ? '' : 's') + '.');
+      parts.push(T.t(result.fit.n === 1 ? 'cal.zoneRefittedOne' : 'cal.zoneRefittedMany', {
+        zone: Z.zoneLabel(zoneKey), summary: summarise(refitted), n: result.fit.n
+      }));
       if (result.fit.n < 2) {
-        parts.push('One sample can only fit a straight line. Log a second at a clearly different distance and the curve itself can be fitted.');
+        parts.push(T.t('cal.oneSampleOnly'));
       }
     } else {
-      parts.push(Z.zoneLabel(zoneKey) + ' not refitted: ' + result.reason);
+      parts.push(T.t('cal.zoneNotRefitted', {
+        zone: Z.zoneLabel(zoneKey), reason: result.reason
+      }));
     }
 
     return parts.join(' ');
@@ -176,10 +185,10 @@
   function zonesSection() {
     var section = el('section.panel');
     section.appendChild(el('div.panel-head', {}, [
-      el('h2.panel-title', { text: 'Zone models' })
+      el('h2.panel-title', { text: T.t('cal.zoneModels') })
     ]));
     section.appendChild(el('p.panel-note', {
-      text: 'Constants are editable config, never baked into the math. Reset any zone back to its research default at any time.'
+      text: T.t('cal.constantsAreEditableConfig')
     }));
 
     S.data.zones.forEach(function (zone) { section.appendChild(zoneCard(zone)); });
@@ -187,15 +196,15 @@
     section.appendChild(el('div.card-actions', {}, [
       el('button.btn.btn-ghost.btn-danger', {
         type: 'button',
-        title: 'Discard every fit and hand edit, and reload the shipped constants',
+        title: T.t('cal.discardEveryFitAnd'),
         onclick: function () {
-          if (root.confirm('Put every zone back on the shipped defaults? Fitted and hand-edited constants are discarded. Your logged marches and samples are kept, so you can refit.')) {
+          if (root.confirm(T.t('confirm.resetAllZones'))) {
             S.resetAllZones();
-            message = { kind: 'ok', text: 'All zones reset to the shipped defaults.' };
+            message = { kind: 'ok', text: T.t('cal.allZonesResetTo') };
             root.RallySync.app.refresh();
           }
         }
-      }, ['Reset all zones'])
+      }, [T.t('btn.resetZones')])
     ]));
     return section;
   }
@@ -221,7 +230,10 @@
         el('div.card-meta', {}, [
           el('span', { text: summarise(zone) }),
           el('span.dot', { text: '·' }),
-          el('span', { text: samples.length + ' sample' + (samples.length === 1 ? '' : 's') })
+          el('span', {
+            text: T.t(samples.length === 1 ? 'cal.nSamplesOne' : 'cal.nSamplesMany',
+              { n: samples.length })
+          })
         ])
       ]),
       el('span.chev', { text: isOpen ? '▾' : '▸' })
@@ -235,22 +247,22 @@
 
     if (zone.trust === 'guess') {
       body.appendChild(el('div.banner.banner-warn', {
-        text: 'No published source quantifies this zone at all. The numbers below are a placeholder copied from the red zone. Do not trust them until you have logged a real march here.'
+        text: T.t('cal.noPublishedSourceQuantifies')
       }));
     }
 
     if (zone.formulaType === 'power') {
       body.appendChild(el('div.grid-2', {}, [
-        field('Coefficient', constantInput(zone, 'coefficient', '0.00001')),
-        field('Exponent', constantInput(zone, 'exponent', '0.0001'))
+        field(T.t('cal.coefficient'), constantInput(zone, 'coefficient', '0.00001')),
+        field(T.t('cal.exponent'), constantInput(zone, 'exponent', '0.0001'))
       ]));
       body.appendChild(el('p.field-help', {
-        text: 'Real marches show time rising faster than distance, which a straight line cannot describe without going negative. An exponent above 1 bends the curve upward.'
+        text: T.t('cal.realMarchesShowTime')
       }));
     } else {
       body.appendChild(el('div.grid-2', {}, [
-        field('Seconds per tile', constantInput(zone, 'secPerTile', '0.001')),
-        field('Fixed offset (s)', constantInput(zone, 'offset', '0.1'))
+        field(T.t('cal.secondsPerTile'), constantInput(zone, 'secPerTile', '0.001')),
+        field(T.t('cal.fixedOffset'), constantInput(zone, 'offset', '0.1'))
       ]));
     }
 
@@ -258,20 +270,23 @@
 
     if (zone.fitQuality) {
       body.appendChild(el('div.fit-quality', {}, [
-        el('span', { text: 'Fitted to ' + zone.fitQuality.n + ' sample' + (zone.fitQuality.n === 1 ? '' : 's') }),
+        el('span', {
+          text: T.t(zone.fitQuality.n === 1 ? 'cal.fittedToOne' : 'cal.fittedToMany',
+            { n: zone.fitQuality.n })
+        }),
         el('span.dot', { text: '·' }),
-        el('span', { text: 'typical error ' + zone.fitQuality.rmse.toFixed(2) + 's' }),
+        el('span', { text: T.t('cal.typicalErrorOf', { value: zone.fitQuality.rmse.toFixed(2) }) }),
         el('span.dot', { text: '·' }),
-        el('span', { text: 'worst ' + zone.fitQuality.maxErrorSeconds.toFixed(2) + 's' }),
+        el('span', { text: T.t('cal.worstOf', { value: zone.fitQuality.maxErrorSeconds.toFixed(2) }) }),
         zone.fitQuality.fittedOffset ? null : el('span.fit-note', {
-          text: 'offset held fixed — needs samples at two different distances to fit it'
+          text: T.t('cal.offsetHeldFixedNeeds')
         })
       ]));
     }
 
     if (zone.lastFitISO) {
       body.appendChild(el('p.field-help', {
-        text: 'Last refitted ' + new Date(zone.lastFitISO).toLocaleString()
+        text: T.t('cal.lastRefittedOn', { date: new Date(zone.lastFitISO).toLocaleString() })
       }));
     }
 
@@ -285,19 +300,19 @@
         }
       }),
       el('span', {}, [
-        el('span.toggle-label', { text: 'Use the geometric Relic model' }),
-        el('span.toggle-help', { text: 'Charges only the tiles the route actually spends inside the Relic radius at the slow rate. Physically motivated, but unverified — calibrate before relying on it.' })
+        el('span.toggle-label', { text: T.t('cal.useTheGeometricRelic') }),
+        el('span.toggle-help', { text: T.t('cal.chargesOnlyTheTiles') })
       ])
     ]));
 
     if (zone.formulaType === 'segmented') {
       body.appendChild(el('div.grid-2', {}, [
-        segField(zone, 'relicX', 'Relic X', '1'),
-        segField(zone, 'relicY', 'Relic Y', '1')
+        segField(zone, 'relicX', T.t('cal.relicX'), '1'),
+        segField(zone, 'relicY', T.t('cal.relicY'), '1')
       ]));
       body.appendChild(el('div.grid-2', {}, [
-        segField(zone, 'relicRadius', 'Radius (tiles)', '1'),
-        segField(zone, 'secPerTileInside', 'Inside s/tile', '0.001')
+        segField(zone, 'relicRadius', T.t('cal.radiusTiles'), '1'),
+        segField(zone, 'secPerTileInside', T.t('cal.insidePerTile'), '0.001')
       ]));
     }
 
@@ -305,23 +320,26 @@
       el('button.btn.btn-ghost.btn-danger', {
         type: 'button',
         onclick: function () {
-          if (root.confirm('Reset ' + zone.label + ' to its research-phase default?')) {
+          if (root.confirm(T.t('confirm.resetZone', { zone: zone.label }))) {
             S.resetZone(zone.zoneKey);
-            message = { kind: 'ok', text: zone.label + ' reset to defaults.' };
+            message = { kind: 'ok', text: T.t('cal.zoneReset', { zone: zone.label }) };
             root.RallySync.app.refresh();
           }
         }
-      }, ['Reset to default']),
+      }, [T.t('btn.resetDefault')]),
       el('button.btn.btn-secondary', {
         type: 'button', disabled: samples.length === 0,
         onclick: function () {
           var result = S.recalibrateZone(zone.zoneKey);
           message = result.ok
-            ? { kind: 'ok', text: zone.label + ' refitted to ' + result.fit.n + ' sample' + (result.fit.n === 1 ? '' : 's') + '.' }
+            ? { kind: 'ok', text: T.t(
+                result.fit.n === 1 ? 'cal.zoneRefitOne' : 'cal.zoneRefitMany',
+                { zone: zone.label, n: result.fit.n }) }
             : { kind: 'error', text: result.reason };
           root.RallySync.app.refresh();
         }
-      }, ['Refit from ' + samples.length + ' sample' + (samples.length === 1 ? '' : 's')])
+      }, [T.t(samples.length === 1 ? 'btn.refitOne' : 'btn.refitMany',
+        { n: samples.length })])
     ]));
 
     card.appendChild(body);
@@ -341,24 +359,52 @@
     });
   }
 
+  // i18n-exempt: the strings below are mathematical notation, which reads the
+  // same in every language. Only the words inside it are keyed.
   /** One line describing a zone, whichever model it runs on. */
   function summarise(zone) {
     if (zone.formulaType === 'power') {
+      // i18n-exempt: notation
       return Number(zone.constants.coefficient).toFixed(3) + ' × dist^' +
         Number(zone.constants.exponent).toFixed(3);
+    }
+    if (zone.formulaType === 'piecewise') {
+      return T.t('cal.piecewiseSummary', {
+        near: Number(zone.constants.nearRate).toFixed(3),
+        join: Number(zone.constants.join),
+        far: Number(zone.constants.farRate).toFixed(3)
+      });
     }
     return Number(zone.constants.secPerTile).toFixed(3) + ' s/tile · ' +
       (zone.constants.offset >= 0 ? '+' : '') + Number(zone.constants.offset).toFixed(2) + 's';
   }
 
+  // i18n-exempt: mathematical notation. It reads identically in every
+  // language, and only the words inside it (cal.speedDivisor) are keyed.
   function formulaText(zone) {
+    var speed = ' ' + T.t('cal.speedDivisor');
     if (zone.formulaType === 'power') {
+      // i18n-exempt: notation
       return 'time = ' + Number(zone.constants.coefficient).toFixed(5) +
-        ' × distance^' + Number(zone.constants.exponent).toFixed(5) +
-        ' ÷ (1 + speed%/100)';
+        ' × distance^' + Number(zone.constants.exponent).toFixed(5) + speed;
     }
-    return 'time = ' + Number(zone.constants.secPerTile).toFixed(3) +
-      ' × distance ÷ (1 + speed%/100) ' +
+    if (zone.formulaType === 'piecewise') {
+      // Three branches joined at fixed distances. Written as notation rather
+      // than prose so it reads the same in every language.
+      var c = zone.constants;
+      var j = Number(c.join);
+      var sj = Number(c.shortJoin);
+      return 'd ≤ ' + sj + ':  ' + Number(c.shortRate).toFixed(4) + '·(d−' + sj + ') + ' +
+        Number(c.shortSeconds).toFixed(2) + '\n' +
+        'd ≤ ' + j + ':  ' + Number(c.nearRate).toFixed(4) + '·d + ' +
+        Number(c.nearOffset).toFixed(2) + '\n' +
+        'd > ' + j + ':  ' + Number(c.farRate).toFixed(4) + '·(d−' + j + ') + ' +
+        Number(c.farSqrt).toFixed(3) + '·(√d−√' + j + ') + ' +
+        Number(c.joinSeconds).toFixed(2) + '\n' +
+        '× ' + Number(c.baselineMultiplier).toFixed(2) + speed;
+    }
+    return 'time = ' + Number(zone.constants.secPerTile).toFixed(3) +  // i18n-exempt
+      ' × distance' + speed + ' ' +
       (zone.constants.offset >= 0 ? '+ ' : '− ') +
       Math.abs(Number(zone.constants.offset)).toFixed(2) + 's';
   }
@@ -377,10 +423,10 @@
   }
 
   function trustBadge(trust) {
-    if (trust === 'calibrated') return el('span.badge.badge-calibrated', { text: 'calibrated' });
-    if (trust === 'manual') return el('span.badge.badge-manual', { text: 'hand-tuned' });
-    if (trust === 'guess') return el('span.badge.badge-error', { text: 'guess' });
-    return el('span.badge.badge-estimated', { text: 'unverified' });
+    if (trust === 'calibrated') return el('span.badge.badge-calibrated', { text: T.t('cal.calibrated') });
+    if (trust === 'manual') return el('span.badge.badge-manual', { text: T.t('cal.handTuned') });
+    if (trust === 'guess') return el('span.badge.badge-error', { text: T.t('cal.guess') });
+    return el('span.badge.badge-estimated', { text: T.t('cal.unverified') });
   }
 
   // ------------------------------------------------------- saved exact pairs
@@ -389,13 +435,13 @@
     var keys = Object.keys(S.data.measurements);
     var section = el('section.panel');
     section.appendChild(el('div.panel-head', {}, [
-      el('h2.panel-title', { text: 'Exact pairs' }),
+      el('h2.panel-title', { text: T.t('cal.exactPairs') }),
       el('span.panel-hint', { text: String(keys.length) })
     ]));
 
     if (keys.length === 0) {
       section.appendChild(el('p.muted', {
-        text: 'None yet. Logged marches appear here and override the formula entirely.'
+        text: T.t('cal.noneYetLoggedMarches')
       }));
       return section;
     }
@@ -414,14 +460,17 @@
           el('div.row-title', { text: lead.name + ' → ' + target.name }),
           el('div.row-meta', {
             text: fresh
-              ? C.formatDuration(m.seconds) + ' · recorded ' + new Date(m.recordedISO).toLocaleDateString()
-              : C.formatDuration(m.seconds) + ' · stale, inputs changed since recording'
+              ? T.t('cal.recordedOn', {
+                  time: C.formatDuration(m.seconds),
+                  date: new Date(m.recordedISO).toLocaleDateString()
+                })
+              : T.t('cal.staleSince', { time: C.formatDuration(m.seconds) })
           })
         ]),
-        fresh ? el('span.badge.badge-measured', { text: 'exact' })
-              : el('span.badge.badge-error', { text: 'stale' }),
+        fresh ? el('span.badge.badge-measured', { text: T.t('cal.exact2') })
+              : el('span.badge.badge-error', { text: T.t('cal.stale') }),
         el('button.btn.btn-icon.btn-danger', {
-          type: 'button', 'aria-label': 'Delete measurement',
+          type: 'button', 'aria-label': T.t('cal.deleteMeasurement'),
           onclick: function () { S.deleteMeasurement(lead.id, target.id); }
         }, ['×'])
       ]));
@@ -435,12 +484,12 @@
   function samplesSection() {
     var section = el('section.panel');
     section.appendChild(el('div.panel-head', {}, [
-      el('h2.panel-title', { text: 'Calibration samples' }),
+      el('h2.panel-title', { text: T.t('cal.calibrationSamples') }),
       el('span.panel-hint', { text: String(S.data.samples.length) })
     ]));
 
     if (S.data.samples.length === 0) {
-      section.appendChild(el('p.muted', { text: 'No samples recorded yet.' }));
+      section.appendChild(el('p.muted', { text: T.t('cal.noSamplesRecordedYet') }));
       return section;
     }
 
@@ -452,12 +501,15 @@
             text: Z.zoneLabel(sample.zoneKey) + ' · ' + C.formatDuration(sample.observedTimeSeconds)
           }),
           el('div.row-meta', {
-            text: sample.distance.toFixed(1) + ' tiles at +' + sample.speedPercent + '% · ' +
-              new Date(sample.dateRecorded).toLocaleDateString()
+            text: T.t('cal.sampleMeta', {
+              tiles: sample.distance.toFixed(1),
+              speed: sample.speedPercent,
+              date: new Date(sample.dateRecorded).toLocaleDateString()
+            })
           })
         ]),
         el('button.btn.btn-icon.btn-danger', {
-          type: 'button', 'aria-label': 'Delete sample',
+          type: 'button', 'aria-label': T.t('cal.deleteSample'),
           onclick: function () { S.deleteSample(sample.id); }
         }, ['×'])
       ]));
@@ -471,10 +523,10 @@
   function presetSection() {
     var section = el('section.panel');
     section.appendChild(el('div.panel-head', {}, [
-      el('h2.panel-title', { text: 'Starting model' })
+      el('h2.panel-title', { text: T.t('cal.startingModel') })
     ]));
     section.appendChild(el('p.panel-note', {
-      text: 'Two community models disagree by roughly 2× on seconds per tile, and neither shows its data. Pick a starting point, then let real samples settle it. Switching discards every fit and hand-edit.'
+      text: T.t('cal.twoCommunityModelsDisagree')
     }));
 
     Object.keys(Z.MODEL_PRESETS).forEach(function (id) {
@@ -484,14 +536,14 @@
         type: 'button',
         onclick: function () {
           if (selected) return;
-          if (root.confirm('Switch to the ' + preset.label + '? All fitted and hand-edited constants are discarded. Your logged marches and samples are kept.')) {
+          if (root.confirm(T.t('confirm.switchModel', { model: preset.label }))) {
             S.applyPreset(id);
-            message = { kind: 'ok', text: 'Switched to the ' + preset.label + '. Refit each zone from your samples.' };
+            message = { kind: 'ok', text: T.t('cal.switchedToModel', { model: preset.label }) };
             root.RallySync.app.refresh();
           }
         }
       }, [
-        el('span.preset-label', {}, [preset.label, selected ? el('span.badge.badge-calibrated', { text: 'active' }) : null]),
+        el('span.preset-label', {}, [preset.label, selected ? el('span.badge.badge-calibrated', { text: T.t('cal.active') }) : null]),
         el('span.preset-note', { text: preset.note })
       ]));
     });

@@ -9,6 +9,7 @@
   'use strict';
 
   var d = root.RallySync.dom;
+  var T = root.RallySync.i18n;
   var S = root.RallySync.state;
   var G = root.RallySync.guide;
   var I = root.RallySync.icons;
@@ -29,19 +30,19 @@
 
     container.appendChild(el('div.view-head', {}, [
       el('div', {}, [
-        el('h2.view-title', { text: 'Rally leads' }),
+        el('h2.view-title', { text: T.t('ros.rallyLeads') }),
         el('p.view-sub', {
           text: leads.length
-            ? leads.length + (leads.length === 1 ? ' lead saved' : ' leads saved')
-            : 'Add everyone who opens rallies. Saved on this device.'
+            ? T.t(leads.length === 1 ? 'ros.nSavedOne' : 'ros.nSavedMany', { n: leads.length })
+            : T.t('ros.emptySub')
         })
       ]),
       el('button.btn.btn-secondary', {
         type: 'button',
         onclick: function () { pasteOpen = !pasteOpen; root.RallySync.app.refresh(); }
-      }, [icon('copy', 15), el('span', { text: 'Paste list' })]),
+      }, [icon('copy', 15), el('span', { text: T.t('ros.pasteList') })]),
       el('button.btn.btn-primary', { type: 'button', onclick: addLead }, [
-        icon('plus', 15), el('span', { text: 'Add' })
+        icon('plus', 15), el('span', { text: T.t('ros.add') })
       ])
     ]));
 
@@ -65,8 +66,8 @@
       container.appendChild(el('div.banner.banner-warn', {}, [
         icon('alert', 16),
         el('span', {}, [
-          el('strong', { text: duplicates + ' leads share a name. ' }),
-          'They will appear as identical rows with different launch times, which is how somebody taps at the wrong moment. Rename or delete the spares.'
+          el('strong', { text: T.t('ros.sharedNames', { n: duplicates }) + ' ' }),
+          T.t('ros.sharedNamesBody')
         ])
       ]));
     }
@@ -75,7 +76,7 @@
 
     var visible = leads.filter(matchesFilter);
     if (visible.length === 0) {
-      container.appendChild(el('p.muted', { text: 'No leads match this filter.' }));
+      container.appendChild(el('p.muted', { text: T.t('ros.noLeadsMatchThis') }));
       return;
     }
 
@@ -89,9 +90,9 @@
   function pastePanel() {
     var panel = el('section.panel.panel-accent');
     panel.appendChild(el('div.panel-head', {}, [
-      el('h2.panel-title', { text: 'Paste a roster' }),
+      el('h2.panel-title', { text: T.t('ros.pasteARoster') }),
       el('button.btn.btn-icon', {
-        type: 'button', 'aria-label': 'Close',
+        type: 'button', 'aria-label': T.t('ros.close'),
         onclick: function () { pasteOpen = false; pasteResult = null; root.RallySync.app.refresh(); }
       }, [icon('x', 16)])
     ]));
@@ -111,7 +112,7 @@
           pasteResult = RI.parseRoster(pasteText);
           root.RallySync.app.refresh();
         }
-      }, ['Preview']),
+      }, [T.t('btn.preview')]),
       el('button.btn.btn-ghost', {
         type: 'button',
         onclick: function () {
@@ -119,7 +120,7 @@
           pasteResult = RI.parseRoster(pasteText);
           root.RallySync.app.refresh();
         }
-      }, ['Use example'])
+      }, [T.t('btn.useExample')])
     ]));
 
     if (pasteResult) panel.appendChild(pastePreview());
@@ -130,9 +131,11 @@
     var wrap = el('div.paste-preview');
 
     wrap.appendChild(el('div.paste-summary', {}, [
-      el('span.badge.badge-measured', { text: pasteResult.okCount + ' ready' }),
+      el('span.badge.badge-measured', { text: T.t('ros.nReady', { n: pasteResult.okCount }) }),
       pasteResult.errorCount > 0
-        ? el('span.badge.badge-error', { text: pasteResult.errorCount + ' unreadable' })
+        ? el('span.badge.badge-error', {
+            text: T.t('ros.nUnreadable', { n: pasteResult.errorCount })
+          })
         : null
     ]));
 
@@ -157,7 +160,8 @@
     if (pasteResult.okCount > 0) {
       wrap.appendChild(el('button.btn.btn-primary.btn-wide', {
         type: 'button', onclick: importParsed
-      }, ['Import ' + pasteResult.okCount + ' lead' + (pasteResult.okCount === 1 ? '' : 's')]));
+      }, [T.t(pasteResult.okCount === 1 ? 'ros.importOne' : 'ros.importMany',
+        { n: pasteResult.okCount })]));
     }
     return wrap;
   }
@@ -194,8 +198,9 @@
     pasteOpen = false;
     message = {
       kind: 'ok',
-      text: 'Imported ' + added + ' new lead' + (added === 1 ? '' : 's') +
-        (updated ? ' and updated ' + updated + ' existing' : '') + '.'
+      text: updated
+        ? T.t('ros.importedAndUpdated', { added: added, updated: updated })
+        : T.t(added === 1 ? 'ros.importedOne' : 'ros.importedMany', { added: added })
     };
     root.RallySync.app.refresh();
   }
@@ -244,14 +249,14 @@
   function emptyState() {
     return el('div.empty', {}, [
       icon('users', 30),
-      el('h3', { text: 'No rally leads yet' }),
-      el('p', { text: 'Add each player who will open a rally, with their city coordinates and their March Speed Up %. Or paste your whole roster at once.' }),
+      el('h3', { text: T.t('ros.noRallyLeadsYet') }),
+      el('p', { text: T.t('ros.addEachPlayerWho') }),
       el('div.button-row', {}, [
-        el('button.btn.btn-primary', { type: 'button', onclick: addLead }, ['Add a lead']),
+        el('button.btn.btn-primary', { type: 'button', onclick: addLead }, [T.t('btn.addLead')]),
         el('button.btn.btn-secondary', {
           type: 'button',
           onclick: function () { pasteOpen = true; root.RallySync.app.refresh(); }
-        }, ['Paste a list'])
+        }, [T.t('ros.pasteList')])
       ])
     ]);
   }
@@ -280,19 +285,23 @@
           el('span', { text: lead.name || 'Unnamed lead' }),
           lead.alliance ? el('span.tag.tag-zone', { text: lead.alliance }) : null,
           lead.squad ? el('span.tag.tag-squad', { text: lead.squad }) : null,
-          isDuplicateName(lead) ? el('span.tag.tag-warn', { text: 'duplicate name' }) : null
+          isDuplicateName(lead) ? el('span.tag.tag-warn', { text: T.t('ros.duplicateName') }) : null
         ]),
         el('div.card-meta', {}, [
           el('span', { text: coordText(lead) }),
           el('span.dot', { text: '·' }),
           el('span', {
-            text: lead.marchSpeedUpPercent === null ? 'no speed %' : '+' + lead.marchSpeedUpPercent + '% speed'
+            text: lead.marchSpeedUpPercent === null
+              ? T.t('ros.noSpeed')
+              : T.t('ros.speedPercent', { n: lead.marchSpeedUpPercent })
           }),
           lead.power ? el('span.dot', { text: '·' }) : null,
-          lead.power ? el('span', { text: formatCompact(lead.power) + ' power' }) : null
+          lead.power
+            ? el('span', { text: T.t('ros.nPower', { n: formatCompact(lead.power) }) })
+            : null
         ])
       ]),
-      incomplete ? el('span.tag.tag-error', { text: 'incomplete' }) : null,
+      incomplete ? el('span.tag.tag-error', { text: T.t('ros.incomplete') }) : null,
       el('span.chev', {}, [icon(isOpen ? 'chevronDown' : 'chevronRight', 14)])
     ]));
 
@@ -300,18 +309,18 @@
 
     var body = el('div.card-body');
 
-    body.appendChild(field('Name', el('input.input', {
-      type: 'text', value: lead.name, placeholder: 'In-game name',
+    body.appendChild(field(T.t('ros.nameField'), el('input.input', {
+      type: 'text', value: lead.name, placeholder: T.t('ros.inGameName'),
       'data-focus': lead.id, autocomplete: 'off',
       onchange: function (e) { patch(lead, { name: e.target.value }); }
     })));
 
     body.appendChild(el('div.grid-2', {}, [
-      field('X', el('input.input', {
+      field(T.t('field.x'), el('input.input', {
         type: 'number', inputmode: 'numeric', value: valueOf(lead.x), placeholder: '—',
         onchange: function (e) { patch(lead, { x: e.target.value }); }
       })),
-      field('Y', el('input.input', {
+      field(T.t('field.y'), el('input.input', {
         type: 'number', inputmode: 'numeric', value: valueOf(lead.y), placeholder: '—',
         onchange: function (e) { patch(lead, { y: e.target.value }); }
       }))
@@ -330,13 +339,13 @@
     body.appendChild(G.helpBlock('marchSpeed'));
 
     body.appendChild(el('div.grid-2', {}, [
-      field('Alliance', el('input.input', {
-        type: 'text', value: lead.alliance, placeholder: 'e.g. VNG', autocomplete: 'off',
+      field(T.t('ros.allianceField'), el('input.input', {
+        type: 'text', value: lead.alliance, placeholder: T.t('ros.eGVng'), autocomplete: 'off',
         list: 'alliance-options',
         onchange: function (e) { patch(lead, { alliance: e.target.value }); }
       })),
-      field('Squad', el('input.input', {
-        type: 'text', value: lead.squad, placeholder: 'e.g. Wave 1', autocomplete: 'off',
+      field(T.t('ros.squadField'), el('input.input', {
+        type: 'text', value: lead.squad, placeholder: T.t('ros.eGWave1'), autocomplete: 'off',
         list: 'squad-options',
         onchange: function (e) { patch(lead, { squad: e.target.value }); }
       }))
@@ -345,12 +354,12 @@
     body.appendChild(datalist('squad-options', S.squads()));
 
     body.appendChild(el('div.grid-2', {}, [
-      field('Rally capacity', el('input.input', {
-        type: 'number', inputmode: 'numeric', value: valueOf(lead.rallyCapacity), placeholder: 'optional',
+      field(T.t('ros.rallyCapacity'), el('input.input', {
+        type: 'number', inputmode: 'numeric', value: valueOf(lead.rallyCapacity), placeholder: T.t('ros.optional'),
         onchange: function (e) { patch(lead, { rallyCapacity: e.target.value }); }
       })),
-      field('March power', el('input.input', {
-        type: 'number', inputmode: 'numeric', value: valueOf(lead.power), placeholder: 'optional',
+      field(T.t('ros.marchPower'), el('input.input', {
+        type: 'number', inputmode: 'numeric', value: valueOf(lead.power), placeholder: T.t('ros.optional2'),
         onchange: function (e) { patch(lead, { power: e.target.value }); }
       }))
     ]));
@@ -360,16 +369,18 @@
       el('button.btn.btn-ghost.btn-danger', {
         type: 'button',
         onclick: function () {
-          if (root.confirm('Delete ' + (lead.name || 'this lead') + '? Their saved measurements go too.')) {
+          if (root.confirm(T.t('confirm.deleteLead', {
+            name: lead.name || T.t('common.thisLead')
+          }))) {
             delete expanded[lead.id];
             S.deleteLead(lead.id);
           }
         }
-      }, [icon('trash', 15), el('span', { text: 'Delete' })]),
+      }, [icon('trash', 15), el('span', { text: T.t('ros.delete') })]),
       el('button.btn.btn-secondary', {
         type: 'button',
         onclick: function () { expanded[lead.id] = false; root.RallySync.app.refresh(); }
-      }, ['Done'])
+      }, [T.t('common.done')])
     ]));
 
     card.appendChild(body);

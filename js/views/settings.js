@@ -7,6 +7,7 @@
 
   var d = root.RallySync.dom;
   var S = root.RallySync.state;
+  var T = root.RallySync.i18n;
   var storage = root.RallySync.storage;
   var I = root.RallySync.icons;
   var el = d.el;
@@ -19,8 +20,8 @@
 
     container.appendChild(el('div.view-head', {}, [
       el('div', {}, [
-        el('h2.view-title', { text: 'Settings' }),
-        el('p.view-sub', { text: 'Everything stays on this device.' })
+        el('h2.view-title', { text: T.t('set.settings') }),
+        el('p.view-sub', { text: T.t('set.everythingStaysOnThis') })
       ])
     ]));
 
@@ -30,6 +31,7 @@
     }
 
     container.appendChild(versionSection());
+    container.appendChild(root.RallySync.howto.walkthrough());
     container.appendChild(languageSection());
     container.appendChild(themeSection());
     container.appendChild(clockSection());
@@ -49,23 +51,23 @@
     var section = el('section.panel');
 
     section.appendChild(el('div.panel-head', {}, [
-      el('h2.panel-title', { text: 'Version' }),
+      el('h2.panel-title', { text: T.t('set.version') }),
       el('span.panel-hint', { text: 'v' + V.VERSION })
     ]));
 
     section.appendChild(el('div.clock-compare', {}, [
       el('div.clock-block', {}, [
-        el('span.clock-label', { text: 'Release' }),
+        el('span.clock-label', { text: T.t('set.release') }),
         el('span.clock-value.clock-value-primary', { text: 'v' + V.VERSION })
       ]),
       el('div.clock-block', {}, [
-        el('span.clock-label', { text: 'Published' }),
+        el('span.clock-label', { text: T.t('set.published') }),
         el('span.clock-value.clock-value-small', { text: V.buildText() })
       ])
     ]));
 
     section.appendChild(el('p.panel-note', {
-      text: 'Published is when the copy you are looking at went live. Compare it against your last deploy to tell a slow build apart from a stale browser cache.'
+      text: T.t('set.publishedIsWhenThe')
     }));
 
     if (updateState && updateState !== 'checking') {
@@ -77,18 +79,19 @@
         section.appendChild(el('div.banner.banner-warn', {}, [
           icon('alert', 16),
           el('span', {}, [
-            el('strong', { text: 'A newer version is live. ' }),
-            'Published ' + d.utcDate(updateState.latestMs) + ' ' +
-              d.utcClock(updateState.latestMs) + ' UTC.'
+            el('strong', { text: T.t('set.aNewerVersionIs') }),
+            T.t('set.publishedAt', {
+              when: d.utcDate(updateState.latestMs) + ' ' + d.utcClock(updateState.latestMs)
+            })
           ])
         ]));
         section.appendChild(el('button.btn.btn-primary.btn-wide', {
           type: 'button', onclick: function () { V.reloadFresh(); }
-        }, ['Reload to update']));
+        }, [T.t('btn.reloadUpdate')]));
         return section;
       } else {
         section.appendChild(el('div.banner.banner-ok', {}, [
-          icon('check', 16), el('span', { text: 'This is the latest published version.' })
+          icon('check', 16), el('span', { text: T.t('set.thisIsTheLatest') })
         ]));
       }
     }
@@ -104,7 +107,7 @@
           root.RallySync.app.refresh();
         });
       }
-    }, [updateState === 'checking' ? 'Checking…' : 'Check for updates']));
+    }, [updateState === 'checking' ? T.t('btn.checking') : T.t('btn.checkUpdates')]));
 
     return section;
   }
@@ -120,48 +123,46 @@
    * for their language is scanning for how THEY write it, not for the English
    * word for it.
    */
+  function byCode(code) {
+    var found = null;
+    T.LANGUAGES.forEach(function (l) { if (l.code === code) found = l; });
+    return found;
+  }
+
   function languageSection() {
-    var T = root.RallySync.i18n;
     var chosen = S.data.settings.language;
     var section = el('section.panel');
     section.appendChild(el('div.panel-head', {}, [
       el('h2.panel-title', { text: T.t('head.language') })
     ]));
     section.appendChild(el('p.panel-note', {
-      text: 'These are the languages Kingshot itself supports. Partly translated ' +
-        'ones fall back to English for anything still missing, so nothing goes blank.'
+      text: T.t('set.languagesNote')
     }));
 
-    function pick(code) {
-      S.updateSettings({ language: code });
-      root.RallySync.app.applyLanguage();
-      root.RallySync.app.refresh();
-    }
+    // One list, in one place. This used to be a second grid of every language
+    // that had to be kept in step with the sheet the nav opens; two lists of
+    // seventeen languages is two chances to drift.
+    var active = chosen ? byCode(chosen) : null;
 
-    var buttons = [
-      el('button.lang-btn' + (!chosen ? ' is-selected' : ''), {
-        type: 'button', 'aria-pressed': !chosen ? 'true' : 'false',
-        onclick: function () { pick(null); }
-      }, [
-        el('span.lang-native', { text: 'Automatic' }),
-        el('span.lang-english', { text: T.LANGUAGES.filter(function (l) {
-          return l.code === T.detect();
-        })[0].native })
-      ])
-    ];
+    section.appendChild(el('div.lang-current', {}, [
+      el('div.lang-current-main', {}, [
+        el('span.lang-current-label', { text: T.t('head.language') }),
+        el('span.lang-current-value', {
+          lang: (active || byCode(T.detect()) || byCode('en')).code,
+          // Name the language either way, and say when it is following the
+          // device rather than a choice -- "Automatic" alone does not tell you
+          // which language you actually ended up in.
+          text: active
+            ? active.native + ' · ' + active.english
+            : (byCode(T.detect()) || byCode('en')).native + ' · ' + T.t('set.automatic')
+        })
+      ]),
+      el('button.btn.btn-secondary', {
+        type: 'button',
+        onclick: function (e) { root.RallySync.langPicker.open(e.currentTarget); }
+      }, [icon('globe', 15), el('span', { text: T.t('set.changeLanguage') })])
+    ]));
 
-    T.LANGUAGES.forEach(function (def) {
-      var pct = Math.round(T.coverage(def.code) * 100);
-      buttons.push(el('button.lang-btn' + (chosen === def.code ? ' is-selected' : ''), {
-        type: 'button', lang: def.code, 'aria-pressed': chosen === def.code ? 'true' : 'false',
-        onclick: function () { pick(def.code); }
-      }, [
-        el('span.lang-native', { text: def.native }),
-        el('span.lang-english', { text: def.english + (pct < 100 ? ' · ' + pct + '%' : '') })
-      ]));
-    });
-
-    section.appendChild(el('div.lang-grid', {}, buttons));
     return section;
   }
 
@@ -171,10 +172,10 @@
     var current = S.data.settings.theme || 'system';
     var section = el('section.panel');
     section.appendChild(el('div.panel-head', {}, [
-      el('h2.panel-title', { text: 'Appearance' })
+      el('h2.panel-title', { text: T.t('set.appearance') })
     ]));
     section.appendChild(el('p.panel-note', {
-      text: 'Follows your device by default. Dark uses layered dark greys rather than pure black, which is easier on the eyes during a long night event.'
+      text: T.t('set.followsYourDeviceBy')
     }));
 
     var options = [
@@ -207,26 +208,26 @@
     var settings = S.data.settings;
     var section = el('section.panel');
     section.appendChild(el('div.panel-head', {}, [
-      el('h2.panel-title', { text: 'Clock correction' })
+      el('h2.panel-title', { text: T.t('set.clockCorrection') })
     ]));
     section.appendChild(el('p.panel-note', {
-      text: 'Every launch time is only as good as this device’s clock. Compare the reading below against the in-game event timer; if they differ, correct it here.'
+      text: T.t('set.everyLaunchTimeIs')
     }));
 
     var deviceRow = el('div.clock-compare', {}, [
       el('div.clock-block', {}, [
-        el('span.clock-label', { text: 'Device UTC' }),
+        el('span.clock-label', { text: T.t('set.deviceUtc') }),
         el('span.clock-value', { text: d.utcClock(Date.now()) })
       ]),
       el('div.clock-block', {}, [
-        el('span.clock-label', { text: 'Corrected UTC' }),
+        el('span.clock-label', { text: T.t('set.correctedUtc') }),
         el('span.clock-value.clock-value-primary', { text: d.utcClock(S.now()) })
       ])
     ]);
     section.appendChild(deviceRow);
 
     section.appendChild(el('label.field', {}, [
-      el('span.field-label', { text: 'My clock is ahead by (seconds)' }),
+      el('span.field-label', { text: T.t('set.myClockIsAhead') }),
       el('div.stepper', {}, [
         el('button.btn.btn-step', {
           type: 'button', onclick: function () { bumpOffset(-1); }
@@ -244,7 +245,7 @@
         }, ['+'])
       ]),
       el('span.field-help', {
-        text: 'Use a negative number if this device is behind the game. The app subtracts this from every displayed time and countdown.'
+        text: T.t('set.useANegativeNumber')
       })
     ]));
 
@@ -265,10 +266,10 @@
 
     var section = el('section.panel');
     section.appendChild(el('div.panel-head', {}, [
-      el('h2.panel-title', { text: 'Launch alarm' })
+      el('h2.panel-title', { text: T.t('set.launchAlarm') })
     ]));
     section.appendChild(el('p.panel-note', {
-      text: 'On by default. Sounds and vibrates shortly before your launch, then again at the moment itself, so a locked screen does not cost you the hit.'
+      text: T.t('set.onByDefaultSounds')
     }));
 
     section.appendChild(el('label.toggle-row', {}, [
@@ -281,18 +282,18 @@
         }
       }),
       el('span', {}, [
-        el('span.toggle-label', { text: 'Sound and vibrate before a launch' }),
+        el('span.toggle-label', { text: T.t('set.soundAndVibrateBefore') }),
         el('span.toggle-help', {
           text: root.RallySync.alarm.supported()
-            ? 'Browsers only allow audio after you have tapped the page once, so the alarm arms itself on your first tap.'
-            : 'This browser does not support the audio API, so only vibration will be used.'
+            ? T.t('set.audioArmsOnTap')
+            : T.t('set.audioUnsupported')
         })
       ])
     ]));
 
     if (on) {
       section.appendChild(el('label.field', {}, [
-        el('span.field-label', { text: 'Warn this many seconds before' }),
+        el('span.field-label', { text: T.t('set.warnThisManySeconds') }),
         el('input.input', {
           type: 'number', min: '0', max: '120', step: '1', inputmode: 'numeric',
           value: String(settings.alarmLeadSeconds),
@@ -303,7 +304,7 @@
         })
       ]));
       section.appendChild(el('label.field', {}, [
-        el('span.field-label', { text: 'Volume' }),
+        el('span.field-label', { text: T.t('set.volume') }),
         el('input.input.volume-slider', {
           type: 'range', min: '0', max: '1', step: '0.05',
           value: String(settings.alarmVolume === undefined ? 0.8 : settings.alarmVolume),
@@ -326,11 +327,11 @@
           }
         }),
         el('span', {}, [
-          el('span.toggle-label', { text: 'Say it out loud' }),
+          el('span.toggle-label', { text: T.t('set.sayItOutLoud') }),
           el('span.toggle-help', {
             text: root.RallySync.alarm.speechSupported()
-              ? 'Calls each lead by name — “TS, rally in 30 seconds”, then “TS, go now” — at 60, 30 and 10 seconds. Uses your device’s own voice, so it works offline.'
-              : 'This browser has no speech support, so only the tones will play.'
+              ? T.t('set.speechHelp')
+              : T.t('set.speechUnsupported')
           })
         ])
       ]));
@@ -341,21 +342,23 @@
           onclick: function () {
             if (root.RallySync.alarm.prime()) root.RallySync.alarm.warn();
           }
-        }, ['Test warning']),
+        }, [T.t('btn.testWarning')]),
         speechOn ? el('button.btn.btn-secondary', {
           type: 'button',
           onclick: function () {
             root.RallySync.alarm.prime();
             var lead = S.data.leads[0];
-            root.RallySync.alarm.speak((lead && lead.name ? lead.name : 'TS') + ', rally in 30 seconds');
+            root.RallySync.alarm.speak(T.t('speech.rallyIn', {
+              name: lead && lead.name ? lead.name : 'TS', seconds: 30
+            }));
           }
-        }, ['Test voice']) : null,
+        }, [T.t('btn.testVoice')]) : null,
         el('button.btn.btn-secondary', {
           type: 'button',
           onclick: function () {
             if (root.RallySync.alarm.prime()) root.RallySync.alarm.go();
           }
-        }, ['Test launch alarm'])
+        }, [T.t('btn.testAlarm')])
       ]));
     }
 
@@ -371,10 +374,10 @@
 
     var section = el('section.panel');
     section.appendChild(el('div.panel-head', {}, [
-      el('h2.panel-title', { text: 'Keep running in the background' })
+      el('h2.panel-title', { text: T.t('set.keepRunningInThe') })
     ]));
     section.appendChild(el('p.panel-note', {
-      text: 'Browsers slow hidden tabs down to save power — after a few minutes Chrome runs their timers only once a minute, and may discard the tab entirely.'
+      text: T.t('set.browsersSlowHiddenTabs')
     }));
 
     section.appendChild(el('label.toggle-row', {}, [
@@ -387,28 +390,27 @@
         }
       }),
       el('span', {}, [
-        el('span.toggle-label', { text: 'Hold the tab awake while a launch is pending' }),
+        el('span.toggle-label', { text: T.t('set.holdTheTabAwake') }),
         el('span.toggle-help', {
-          text: 'Plays a silent track so the tab counts as active, and keeps the screen on while you are looking at it. Only while something is still to launch, and it does use extra battery.'
+          text: T.t('set.playsASilentTrack')
         })
       ])
     ]));
 
     section.appendChild(el('p.panel-note.muted', {
-      text: 'Either way, the alarm tones are booked on the audio clock up to ' +
-        'two minutes ahead, and that clock is never throttled — so they still ' +
-        'sound on time even if the tab is frozen. Spoken callouts cannot be ' +
-        'booked ahead and may be missed while hidden.'
+      text: T.t('set.alarmClockNote')
     }));
 
     if (on) {
       section.appendChild(el('div.fit-quality', {}, [
-        el('span', { text: status.running ? 'active now' : 'idle — no launch pending' }),
+        el('span', {
+          text: T.t(status.running ? 'set.bgActiveNow' : 'set.bgIdle')
+        }),
         el('span.dot', { text: '·' }),
         el('span', {
           text: status.wakeLockSupported
-            ? (status.wakeLock ? 'screen held on' : 'screen lock available')
-            : 'screen lock not supported here'
+            ? T.t(status.wakeLock ? 'set.screenHeld' : 'set.screenLockAvailable')
+            : T.t('set.screenLockUnsupported')
         })
       ]));
     }
@@ -422,13 +424,13 @@
     var settings = S.data.settings;
     var section = el('section.panel');
     section.appendChild(el('div.panel-head', {}, [
-      el('h2.panel-title', { text: 'Safety buffer' })
+      el('h2.panel-title', { text: T.t('set.safetyBuffer') })
     ]));
     section.appendChild(el('p.panel-note', {
-      text: 'Shown alongside estimated rows as the margin to keep. It does not shift any calculated time — it is advice, not a fudge factor.'
+      text: T.t('set.shownAlongsideEstimatedRows')
     }));
     section.appendChild(el('label.field', {}, [
-      el('span.field-label', { text: 'Recommended buffer (seconds)' }),
+      el('span.field-label', { text: T.t('set.recommendedBufferSeconds') }),
       el('input.input', {
         type: 'number', min: '0', step: '1', inputmode: 'numeric',
         value: String(settings.safetyBufferSeconds),
@@ -445,25 +447,25 @@
   function backupSection() {
     var section = el('section.panel');
     section.appendChild(el('div.panel-head', {}, [
-      el('h2.panel-title', { text: 'Backup' })
+      el('h2.panel-title', { text: T.t('set.backup') })
     ]));
 
     if (!storage.available()) {
       section.appendChild(el('div.banner.banner-error', {
-        text: 'This browser is blocking site storage, so nothing will survive a reload. Export a backup before you close the tab.'
+        text: T.t('set.thisBrowserIsBlocking')
       }));
     } else {
       section.appendChild(el('p.panel-note', {
-        text: 'iOS wipes website storage after 7 days without a visit — that hits every browser storage type, not just this one. Add RallySync to your Home Screen to be exempt, and keep an exported backup.'
+        text: T.t('set.iosWipesWebsiteStorage')
       }));
     }
 
     section.appendChild(el('div.button-row', {}, [
-      el('button.btn.btn-secondary', { type: 'button', onclick: exportBackup }, ['Export backup']),
+      el('button.btn.btn-secondary', { type: 'button', onclick: exportBackup }, [T.t('btn.exportBackup')]),
       el('button.btn.btn-secondary', {
         type: 'button',
         onclick: function () { d.$('#import-file').click(); }
-      }, ['Import backup'])
+      }, [T.t('btn.importBackup')])
     ]));
 
     section.appendChild(el('input', {
@@ -473,9 +475,9 @@
     }));
 
     section.appendChild(el('details.details', {}, [
-      el('summary', { text: 'Paste a backup instead' }),
+      el('summary', { text: T.t('set.pasteABackupInstead') }),
       el('textarea.input.textarea', {
-        id: 'import-paste', rows: '4', placeholder: 'Paste exported JSON here'
+        id: 'import-paste', rows: '4', placeholder: T.t('set.pasteExportedJsonHere')
       }),
       el('button.btn.btn-secondary', {
         type: 'button',
@@ -483,19 +485,19 @@
           var area = d.$('#import-paste');
           applyImport(area ? area.value : '');
         }
-      }, ['Import pasted JSON'])
+      }, [T.t('btn.importPasted')])
     ]));
 
     section.appendChild(el('div.card-actions', {}, [
       el('button.btn.btn-ghost.btn-danger', {
         type: 'button',
         onclick: function () {
-          if (root.confirm('Erase all leads, targets, measurements and calibration on this device? This cannot be undone.')) {
+          if (root.confirm(T.t('confirm.eraseAll'))) {
             storage.clearAll();
             root.location.reload();
           }
         }
-      }, ['Erase everything'])
+      }, [T.t('btn.eraseAll')])
     ]));
 
     return section;
@@ -513,9 +515,9 @@
       link.click();
       root.document.body.removeChild(link);
       root.setTimeout(function () { root.URL.revokeObjectURL(url); }, 1000);
-      message = { kind: 'ok', text: 'Backup exported as ' + name + '.' };
+      message = { kind: 'ok', text: T.t('set.backupExportedAsFile', { name: name }) };
     } catch (err) {
-      message = { kind: 'error', text: 'Download blocked. Open “Paste a backup instead” and copy the JSON out manually.' };
+      message = { kind: 'error', text: T.t('set.downloadBlockedOpenPaste') };
     }
     root.RallySync.app.refresh();
   }
@@ -525,7 +527,7 @@
     var reader = new root.FileReader();
     reader.onload = function () { applyImport(String(reader.result)); };
     reader.onerror = function () {
-      message = { kind: 'error', text: 'That file could not be read.' };
+      message = { kind: 'error', text: T.t('set.thatFileCouldNot') };
       root.RallySync.app.refresh();
     };
     reader.readAsText(file);
@@ -536,7 +538,7 @@
     try {
       payload = JSON.parse(text);
     } catch (err) {
-      message = { kind: 'error', text: 'That is not valid JSON.' };
+      message = { kind: 'error', text: T.t('set.thatIsNotValid') };
       return root.RallySync.app.refresh();
     }
     var result = storage.importAll(payload);
@@ -545,7 +547,7 @@
       return root.RallySync.app.refresh();
     }
     S.load();
-    message = { kind: 'ok', text: 'Backup restored (' + result.imported.join(', ') + ').' };
+    message = { kind: 'ok', text: T.t('set.backupRestoredWith', { list: result.imported.join(', ') }) };
     root.RallySync.app.refresh();
   }
 
@@ -554,21 +556,21 @@
   function aboutSection() {
     var section = el('section.panel');
     section.appendChild(el('div.panel-head', {}, [
-      el('h2.panel-title', { text: 'How accurate is this?' })
+      el('h2.panel-title', { text: T.t('set.howAccurateIsThis') })
     ]));
 
     section.appendChild(el('div.tier-legend', {}, [
-      legendRow('measured', 'Exact', 'The time the game itself gave for this exact lead and target. Read it from the rally screen without deploying, then set it on the result row. No formula involved.'),
-      legendRow('calibrated', 'Calibrated', 'Zone constants fitted to your own recorded samples.'),
-      legendRow('estimated', 'Estimated', 'Unverified community defaults. Keep a safety buffer.')
+      legendRow('measured', T.t('tier.exact'), T.t('tier.exactBody')),
+      legendRow('calibrated', T.t('tier.calibrated'), T.t('tier.calibratedBody')),
+      legendRow('estimated', T.t('tier.estimated'), T.t('tier.estimatedBody'))
     ]));
 
     section.appendChild(el('p.panel-note', {
-      text: 'The developer publishes no march formula. The two community models available disagree by roughly 2× on seconds per tile, and the “ceiling model” some sites cite for the red zone is never actually defined anywhere — so RallySync does not pretend to implement it. Log real marches and the estimates stop mattering.'
+      text: T.t('set.theDeveloperPublishesNo')
     }));
 
     section.appendChild(el('p.panel-note.muted', {
-      text: 'Full sourcing, disagreements and open questions are written up in RESEARCH-NOTES.md alongside this app.'
+      text: T.t('set.fullSourcingDisagreementsAnd')
     }));
 
     return section;

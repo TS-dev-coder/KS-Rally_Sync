@@ -81,7 +81,12 @@ maybe('the app boots and mounts its shell without errors', async () => {
   try {
     assert.strictEqual(ctx.errors.length, 0, 'unexpected runtime errors: ' + ctx.errors.join('; '));
     assert.ok(ctx.RS.app, 'app namespace missing');
-    assert.strictEqual(ctx.window.document.querySelectorAll('#nav .nav-btn').length, 5);
+    // Five sections. The language switcher also lives in the nav but is not a
+    // section, so it is excluded rather than folded into the count.
+    const doc = ctx.window.document;
+    assert.strictEqual(doc.querySelectorAll('#nav .nav-btn:not(.nav-lang)').length, 5);
+    assert.strictEqual(doc.querySelectorAll('#nav .nav-lang').length, 1,
+      'the language switcher must be reachable from every screen');
     assert.ok(ctx.window.document.querySelector('#main').children.length > 0, 'main is empty');
   } finally { teardown(ctx); }
 });
@@ -895,12 +900,19 @@ maybe('the chosen target shows its detail on the closed selector', async () => {
     assert.match(sub.textContent, /rally 5m/, 'rally window');
 
     // A target with nothing set says so rather than showing a blank line.
+    // Compared against the key rather than a copy of its text: this line used
+    // to spell out "no coordinates set" and broke when the call site was moved
+    // onto the existing tgt.noCoordinates key, which is the same message in
+    // slightly different words. The point is that it says something, from the
+    // dictionary — not which synonym the dictionary happens to hold.
     const blank = state.upsertTarget({ name: 'Terror', type: 'other' });
     state.updateSettings({ selectedTargetId: blank.id });
     ctx.RS.app.refresh();
-    assert.match(
+    const emptyMessage = ctx.RS.i18n.t('tgt.noCoordinates');
+    assert.ok(emptyMessage && emptyMessage.trim(), 'the empty-state key must have text');
+    assert.strictEqual(
       ctx.window.document.querySelector('.ss-label-sub').textContent,
-      /no coordinates set/
+      emptyMessage
     );
   } finally { teardown(ctx); }
 });
@@ -1140,5 +1152,119 @@ maybe('a result row names its target and can be copied on its own', async () => 
     const copy = Array.from(row.querySelectorAll('.result-actions button'))
       .find((b) => b.textContent.includes('Copy'));
     assert.ok(copy, 'each row should be copyable on its own, not only the whole plan');
+  } finally { teardown(ctx); }
+});
+
+maybe('the language sheet switches language from anywhere, and returns focus', async () => {
+  // The person who most needs this control is the one who cannot read the
+  // interface to find it, so it has to work from every screen and be operable
+  // without reading anything but the language names themselves.
+  const ctx = await boot();
+  try {
+    const doc = ctx.window.document;
+    const click = (node) => node.dispatchEvent(new ctx.window.Event('click', { bubbles: true }));
+
+    const openBtn = doc.querySelector('.nav-lang');
+    assert.ok(openBtn, 'the nav needs a language button');
+    assert.strictEqual(openBtn.getAttribute('aria-haspopup'), 'dialog');
+
+    click(openBtn);
+    const sheet = doc.querySelector('.lang-overlay');
+    assert.ok(sheet, 'the sheet did not open');
+
+    const rows = [...doc.querySelectorAll('.lang-row')];
+    // Automatic plus every shipped language.
+    assert.strictEqual(rows.length, ctx.RS.i18n.LANGUAGES.length + 1);
+
+    // Every row names its language in that language, not in English.
+    const natives = ctx.RS.i18n.LANGUAGES.map((l) => l.native);
+    const shown = [...doc.querySelectorAll('.lang-row-native')].map((n) => n.textContent);
+    natives.forEach((n) => assert.ok(shown.includes(n), 'missing native name: ' + n));
+
+    click(rows.find((r) => r.getAttribute('lang') === 'ja'));
+    assert.ok(!doc.querySelector('.lang-overlay'), 'choosing a language should close the sheet');
+    assert.strictEqual(ctx.RS.state.data.settings.language, 'ja');
+    assert.strictEqual(doc.querySelector('.nav-lang .nav-label').textContent, '日',
+      'the badge should show the language you are now on');
+    assert.strictEqual(doc.activeElement, doc.querySelector('.nav-lang'),
+      'focus must land on the rebuilt button, not on body');
+
+    // Escape closes without changing anything.
+    click(doc.querySelector('.nav-lang'));
+    assert.ok(doc.querySelector('.lang-overlay'), 'sheet should reopen');
+    const esc = new ctx.window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true });
+    doc.dispatchEvent(esc);
+    assert.ok(!doc.querySelector('.lang-overlay'), 'Escape should close the sheet');
+    assert.strictEqual(ctx.RS.state.data.settings.language, 'ja', 'Escape must not change language');
+  } finally { teardown(ctx); }
+});
+
+maybe('every language is reachable in one tap from every section', async () => {
+  const ctx = await boot();
+  try {
+    const doc = ctx.window.document;
+    const tabs = [...doc.querySelectorAll('#nav .nav-btn:not(.nav-lang)')];
+    tabs.forEach((tab) => {
+      tab.dispatchEvent(new ctx.window.Event('click', { bubbles: true }));
+      assert.ok(doc.querySelector('.nav-lang'),
+        'the language button vanished on one of the sections');
+    });
+  } finally { teardown(ctx); }
+});
+
+maybe('the language sheet keeps keyboard focus inside itself', async () => {
+  // aria-modal tells a screen reader the page behind is inert; it does nothing
+  // to Tab. Without a trap, Tab from the last row moves to a page the sheet is
+  // still covering, and the caret vanishes for a sighted keyboard user.
+  const ctx = await boot();
+  try {
+    const doc = ctx.window.document;
+    doc.querySelector('.nav-lang').dispatchEvent(new ctx.window.Event('click', { bubbles: true }));
+    const overlay = doc.querySelector('.lang-overlay');
+    assert.ok(overlay, 'sheet should be open');
+
+    const focusable = [...overlay.querySelectorAll('button')];
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+
+    last.focus();
+    doc.dispatchEvent(new ctx.window.KeyboardEvent('keydown', { key: 'Tab', bubbles: true }));
+    assert.strictEqual(doc.activeElement, first, 'Tab from the last control should wrap to the first');
+
+    first.focus();
+    doc.dispatchEvent(new ctx.window.KeyboardEvent('keydown', {
+      key: 'Tab', shiftKey: true, bubbles: true
+    }));
+    assert.strictEqual(doc.activeElement, last, 'Shift+Tab from the first should wrap to the last');
+
+    // Arrow keys move between languages without leaving the list.
+    const rows = [...overlay.querySelectorAll('.lang-row')];
+    rows[0].focus();
+    doc.dispatchEvent(new ctx.window.KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    assert.strictEqual(doc.activeElement, rows[1], 'ArrowDown should step to the next language');
+    doc.dispatchEvent(new ctx.window.KeyboardEvent('keydown', { key: 'End', bubbles: true }));
+    assert.strictEqual(doc.activeElement, rows[rows.length - 1], 'End should jump to the last');
+  } finally { teardown(ctx); }
+});
+
+maybe('the top bar spans the viewport rather than the content column', async () => {
+  // It used to live inside .app, which is capped at 1180px, so its translucent
+  // background stopped at the column edge and page content scrolled past bare
+  // gutters on either side. jsdom computes no layout, so assert the structure
+  // that makes the bar full-bleed: the bar outside the capped column, its
+  // contents inside a constrained inner wrapper.
+  const ctx = await boot();
+  try {
+    const doc = ctx.window.document;
+    const bar = doc.querySelector('.topbar');
+    const app = doc.querySelector('.app');
+    assert.ok(bar && app, 'expected both a top bar and an app column');
+    assert.ok(!app.contains(bar),
+      '.topbar must not be inside .app, or its background stops at the column edge');
+
+    const inner = bar.querySelector('.topbar-inner');
+    assert.ok(inner, 'the bar needs an inner wrapper to keep its contents on the column');
+    assert.ok(inner.querySelector('.brand') && inner.querySelector('.clock'),
+      'brand and clock belong inside the constrained wrapper, not the full-bleed bar');
   } finally { teardown(ctx); }
 });

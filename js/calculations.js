@@ -530,15 +530,33 @@
   }
 
   /** Formats seconds as "1m 35s" / "2h 04m 09s" / "45s". */
+  /**
+   * A whole pattern per shape rather than three unit suffixes, because the
+   * separator is part of the translation: English wants "3m 33s", Japanese
+   * wants "3分33秒" with no space at all. Falls back to English when i18n
+   * has not loaded, so calculations.js still works standalone in Node.
+   */
+  function durationPattern(key, params, fallback) {
+    var T = root.RallySync && root.RallySync.i18n;
+    if (!T || !T.t) return fallback;
+    var out = T.t(key, params);
+    return out === key ? fallback : out;
+  }
+
   function formatDuration(seconds) {
     var total = Math.round(Math.abs(Number(seconds) || 0));
     var sign = Number(seconds) < 0 ? '-' : '';
     var h = Math.floor(total / 3600);
     var m = Math.floor((total % 3600) / 60);
     var s = total % 60;
-    if (h > 0) return sign + h + 'h ' + pad2(m) + 'm ' + pad2(s) + 's';
-    if (m > 0) return sign + m + 'm ' + pad2(s) + 's';
-    return sign + s + 's';
+    if (h > 0) {
+      return sign + durationPattern('dur.hms', { h: h, m: pad2(m), s: pad2(s) },
+        h + 'h ' + pad2(m) + 'm ' + pad2(s) + 's');
+    }
+    if (m > 0) {
+      return sign + durationPattern('dur.ms', { m: m, s: pad2(s) }, m + 'm ' + pad2(s) + 's');
+    }
+    return sign + durationPattern('dur.s', { s: s }, s + 's');
   }
 
   function pad2(n) { return (n < 10 ? '0' : '') + n; }
@@ -608,7 +626,11 @@
     var zoneKeyUsed = target.zoneKey;
 
     var zone = root.RallySync.zones.findZone(zones, zoneKeyUsed);
-    if (!zone) errors.push('Unknown zone "' + zoneKeyUsed + '".');
+    if (!zone) {
+      // i18n-exempt: the trailing argument is the English fallback itself.
+      errors.push(durationPattern('calc.unknownZone', { key: zoneKeyUsed },
+        'Unknown zone "' + zoneKeyUsed + '".'));
+    }
 
     if (errors.length > 0) {
       return {
@@ -774,7 +796,10 @@
     });
 
     if (groups.length === 0) {
-      return { rows: [], ok: false, blockers: ['No rally leads selected.'], landingMs: null };
+      return {
+        rows: [], ok: false, landingMs: null,
+        blockers: [durationPattern('calc.noLeadsSelected', {}, 'No rally leads selected.')]
+      };
     }
 
     // Anchored to when rallies open: the landing time is whatever the slowest

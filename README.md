@@ -127,6 +127,46 @@ converting anything.
   uploaded anywhere and the recipient needs no setup.
 - **Drag to reorder** — sequence order by drag handle or arrow keys.
 - **Light and dark** — follows your system by default.
+- **17 languages** — every language Kingshot itself ships in, switched from a globe in the
+  nav on any screen. Text, spoken callouts and the in-app guide all follow instantly, including
+  the labels drawn inside the walkthrough figures. Arabic flips the whole document to RTL.
+  The switcher is in the nav rather than buried in settings on purpose: the person who most
+  needs it is the one who cannot read their way to a settings page.
+- **Illustrated walkthrough** — More opens a seven-step guide to reading a march time out
+  of Kingshot without deploying, each step drawn with the button to tap ringed and Deploy
+  crossed out.
+
+## Languages
+
+Seventeen: the exact set Kingshot lists on the App Store. English lives in `js/i18n.js`;
+each other language is one self-contained file under `js/locale/`, registered at load and
+merged over English, so a missing key falls back rather than rendering blank.
+
+```
+node tools/i18n-report.js            coverage for every language
+node tools/i18n-report.js de         the keys German is missing
+node tools/i18n-report.js de --json  the same, as a translator's worklist
+node tools/i18n-report.js --audit    placeholder mismatches and English leftovers
+```
+
+Two rules the tests enforce, both learned the hard way:
+
+**A key holds a whole sentence, never a fragment.** `T.t('cal.fittedTo') + n + ' samples'`
+translates the prefix and leaves the tail in English, and no amount of translation fixes a
+language that puts the number first. Use one key with a `{placeholder}` the translator can
+move. Seventeen sites shipped broken this way before a test started rejecting the shape.
+
+**Every rendered string goes through the dictionary.** `js/focus.js` and `js/timepicker.js`
+— the full-screen countdown and the time picker — were fully English long after the rest
+was translated, because the original extraction only walked `js/views/`. Worse, `focus.js`
+built its spoken callouts inline even though `speech.rallyIn` and `speech.goNow` were
+translated in all sixteen locales, so every non-English player heard English. The tests now
+scan every module and every `speak()` call site.
+
+`tests/i18n-sweep.test.js` renders all five tabs in all seventeen languages and fails on a
+leaked `{placeholder}`, a raw key name, or a `NaN` reaching the screen. It found a real one:
+the Tune tab had been printing `NaN s/tile · NaNs` for every zone, in every language
+including English, because the code knew only two older model shapes.
 
 ## Running in the background
 
@@ -242,6 +282,28 @@ npm test
 `tests/calculations.test.js` and `tests/time.test.js` cover the math and time handling with
 no dependencies. `tests/ui.test.js` boots the real `index.html` in jsdom and drives the
 actual app; it skips cleanly if jsdom is not installed.
+
+`tests/i18n-sweep.test.js` boots once and switches language in place, rendering all five
+tabs in all seventeen languages. It asserts on what a player would actually see — no leaked
+`{placeholder}`, no raw key name on a button, no `NaN` — rather than on dictionary
+bookkeeping, which is how it caught a Tune tab that had been printing `NaN` in English for
+as long as the piecewise model had existed.
+
+It also guards the two places where a translation can be correct and still break the layout:
+the walkthrough figures, where SVG text neither wraps nor clips, so a long caption runs
+across the button beside it; and the shareable plan block, a monospace table whose column
+budgets it reads straight from the call site.
+
+The last of these is the one worth knowing about. **Every late bug in the translation work
+lived in a seam, not in a string** — a value that was perfectly good on its own and wrong
+once composed with its neighbours. A Polish `{badge}` that stacked two adjectives, a Thai
+`{buffer}` that repeated the frame's own verb, a Russian clause carrying the same semicolon
+used to join it, an ASCII comma between two Japanese sentences. So the sweep composes those
+frames with arguments they can really receive and checks the joins: doubled punctuation,
+leaked placeholders, Latin marks inside non-Latin prose.
+
+`tests/measurements.test.js` re-derives every distance in `MEASUREMENTS.md` from the raw
+coordinates, so a mistyped reading fails the suite rather than quietly bending the next fit.
 
 ## Not in scope
 

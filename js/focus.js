@@ -12,6 +12,7 @@
   'use strict';
 
   var d = root.RallySync.dom;
+  var T = root.RallySync.i18n;
   var I = root.RallySync.icons;
   var A = root.RallySync.alarm;
   var C = root.RallySync.calc;
@@ -61,7 +62,7 @@
     var gathering = Number(slot.gatherSeconds) > 0;
 
     var big = el('div.focus-count', { text: '—' });
-    var state = el('div.focus-state', { text: 'waiting' });
+    var state = el('div.focus-state', { text: T.t('focus.waiting') });
     // Alarms default to on; this only exists to silence them, or to re-arm if
     // the browser has not yet allowed audio on this page.
     var alarmOn = true;
@@ -71,43 +72,47 @@
         alarmOn = !alarmOn;
         if (alarmOn && A.prime()) A.beep(880, 0.07);
         alarmBtn.classList.toggle('is-armed', alarmOn);
-        alarmBtn.querySelector('span').textContent = alarmOn ? 'Alarm on' : 'Alarm off';
+        alarmBtn.querySelector('span').textContent =
+          alarmOn ? T.t('focus.alarmOn') : T.t('focus.alarmOff');
       }
-    }, [icon('bell', 16), el('span', { text: 'Alarm on' })]);
+    }, [icon('bell', 16), el('span', { text: T.t('focus.alarmOn') })]);
 
     var node = el('div.focus', {}, [
       el('div.focus-head', {}, [
         el('div.focus-head-main', {}, [
-          el('div.focus-name', { text: slot.name || 'Your rally' }),
-          el('div.focus-target', { text: slot.targetName ? 'on ' + slot.targetName : '' })
+          el('div.focus-name', { text: slot.name || T.t('focus.yourRally') }),
+          el('div.focus-target', {
+            text: slot.targetName ? T.t('focus.onTarget', { name: slot.targetName }) : ''
+          })
         ]),
         onClose ? el('button.btn.btn-icon', {
-          type: 'button', 'aria-label': 'Close', onclick: onClose
+          type: 'button', 'aria-label': T.t('focus.close'), onclick: onClose
         }, [icon('x', 20)]) : null
       ]),
 
-      el('div.focus-label', { text: gathering ? 'TAP RALLY IN' : 'MARCH IN' }),
+      el('div.focus-label', { text: T.t(gathering ? 'focus.tapRallyIn' : 'focus.marchIn') }),
       big,
       state,
 
       el('div.focus-times', {}, [
-        focusFact(gathering ? 'Tap at' : 'March at', d.utcClock(slot.rallyOpenMs) + ' UTC'),
-        focusFact('Local', d.localClock(slot.rallyOpenMs) + ' ' + d.localZoneName()),
-        gathering ? focusFact('Departs', d.utcClock(slot.departMs) + ' UTC') : null,
-        focusFact('Lands', d.utcClock(slot.landingMs) + ' UTC'),
-        focusFact('March', C.formatDuration(slot.marchSeconds))
+        focusFact(T.t(gathering ? 'focus.tapAt' : 'focus.marchAt'),
+          d.utcClock(slot.rallyOpenMs) + ' UTC'),
+        focusFact(T.t('focus.local'), d.localClock(slot.rallyOpenMs) + ' ' + d.localZoneName()),
+        gathering ? focusFact(T.t('focus.departs'), d.utcClock(slot.departMs) + ' UTC') : null,
+        focusFact(T.t('focus.lands'), d.utcClock(slot.landingMs) + ' UTC'),
+        focusFact(T.t('focus.march'), C.formatDuration(slot.marchSeconds))
       ]),
 
       alarmBtn,
 
       slot.tier === C.TIER.MEASURED
         ? el('p.focus-note', {}, [
-            el('span.badge.badge-measured', { text: 'measured' }),
-            ' This came from a real march, so it is exact.'
+            el('span.badge.badge-measured', { text: T.t('focus.measured') }),
+            ' ' + T.t('focus.measuredNote')
           ])
         : el('p.focus-note', {}, [
-            el('span.badge.badge-estimated', { text: 'estimated' }),
-            ' Community-estimated. Keep a couple of seconds spare and trust the in-game timer.'
+            el('span.badge.badge-estimated', { text: T.t('focus.estimated') }),
+            ' ' + T.t('focus.estimatedNote')
           ])
     ]);
 
@@ -119,10 +124,10 @@
       node.classList.toggle('is-now', seconds <= 0 && seconds > -15);
       node.classList.toggle('is-past', seconds <= -15);
 
-      if (seconds > 30) state.textContent = 'waiting';
-      else if (seconds > 0) state.textContent = 'get ready';
-      else if (seconds > -15) state.textContent = 'GO NOW';
-      else state.textContent = 'launch window passed';
+      if (seconds > 30) state.textContent = T.t('focus.waiting');
+      else if (seconds > 0) state.textContent = T.t('focus.getReady');
+      else if (seconds > -15) state.textContent = T.t('focus.goNow');
+      else state.textContent = T.t('focus.windowPassed');
 
       if (alarmOn && A.isPrimed()) {
         if (seconds <= 10 && seconds > 0 && !fired.warn) { fired.warn = true; A.warn(); }
@@ -132,16 +137,16 @@
         }
         if (seconds <= 0 && seconds > -3 && !fired.go) { fired.go = true; A.go(); }
 
-        var who = slot.name || 'Rally';
+        var who = slot.name || T.t('focus.rallyFallback');
         [60, 30, 10].forEach(function (mark) {
           if (seconds <= mark && seconds > mark - 2 && !fired['say' + mark]) {
             fired['say' + mark] = true;
-            A.speak(who + ', rally in ' + Math.round(seconds) + ' seconds');
+            A.speak(T.t('speech.rallyIn', { name: who, seconds: Math.round(seconds) }));
           }
         });
         if (seconds <= 0 && seconds > -3 && !fired.sayGo) {
           fired.sayGo = true;
-          A.speak(who + ', go now');
+          A.speak(T.t('speech.goNow', { name: who }));
         }
       }
     }

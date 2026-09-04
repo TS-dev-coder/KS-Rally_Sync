@@ -71,13 +71,17 @@
         el('span.mission-chip', {}, [
           icon('crosshair', 15),
           el('span.mission-chip-text', {
-            text: settings.multiTarget ? 'Multi-target' : (target ? (target.name || 'Unnamed') : 'No target')
+            text: settings.multiTarget
+              ? T.t('calc.multiTarget')
+              : (target ? (target.name || T.t('calc.unnamedTarget')) : T.t('calc.noTarget'))
           })
         ]),
         el('span.mission-chip', {}, [
           icon('swap', 15),
           el('span.mission-chip-text', {
-            text: settings.mode === 'sync' ? T.t('mode.sync') : settings.gapSeconds + 's gap'
+            text: settings.mode === 'sync'
+              ? T.t('mode.sync')
+              : T.t('calc.gapChip', { n: settings.gapSeconds })
           })
         ]),
         el('span.mission-chip', {}, [
@@ -86,11 +90,15 @@
         ])
       ]),
       el('div.mission-row.mission-sub', {}, [
-        el('span', { text: leadCount + (leadCount === 1 ? ' lead' : ' leads') }),
+        el('span', {
+          text: T.t(leadCount === 1 ? 'calc.nLeadsOne' : 'calc.nLeadsMany', { n: leadCount })
+        }),
         el('span.dot', { text: '·' }),
-        nextGoNode = el('span.mission-next', { text: 'no plan yet' }),
+        nextGoNode = el('span.mission-next', { text: T.t('calc.noPlanYet') }),
         el('span.mission-toggle', {}, [
-          el('span.mission-toggle-text', { text: controlsOpen ? 'Hide setup' : 'Setup' }),
+          el('span.mission-toggle-text', {
+            text: T.t(controlsOpen ? 'calc.hideSetup' : 'calc.setup')
+          }),
           icon(controlsOpen ? 'chevronDown' : 'chevronRight', 14)
         ])
       ])
@@ -133,16 +141,18 @@
         chips.appendChild(el('span.preset-chip', {}, [
           el('button.preset-chip-main', {
             type: 'button',
-            title: 'Saved ' + new Date(preset.savedISO).toLocaleDateString(),
+            title: T.t('calc.savedOn', { date: new Date(preset.savedISO).toLocaleDateString() }),
             onclick: function () {
               S.applyPresetSetup(preset.id);
               root.RallySync.app.refresh();
             }
           }, [preset.name]),
           el('button.preset-chip-x', {
-            type: 'button', 'aria-label': 'Delete ' + preset.name,
+            type: 'button', 'aria-label': T.t('calc.deleteNamed', { name: preset.name }),
             onclick: function () {
-              if (root.confirm('Delete the setup "' + preset.name + '"?')) S.deletePreset(preset.id);
+              if (root.confirm(T.t('confirm.deleteSetup', { name: preset.name }))) {
+                S.deletePreset(preset.id);
+              }
             }
           }, [icon('x', 12)])
         ]));
@@ -150,14 +160,14 @@
       children.push(chips);
     } else {
       children.push(el('p.group-note', {
-        text: 'Save the current target, roster and mode as a named setup you can reload next event.'
+        text: T.t('calc.saveTheCurrentTarget')
       }));
     }
 
     if (savingPreset) {
       children.push(el('div.preset-save', {}, [
         el('input.input', {
-          type: 'text', value: presetName, placeholder: 'e.g. Weekly Castle Battle',
+          type: 'text', value: presetName, placeholder: T.t('calc.eGWeeklyCastle'),
           autocomplete: 'off',
           oninput: function (e) { presetName = e.target.value; },
           onkeydown: function (e) { if (e.key === 'Enter') commitPreset(); }
@@ -166,22 +176,46 @@
           el('button.btn.btn-ghost', {
             type: 'button',
             onclick: function () { savingPreset = false; root.RallySync.app.refresh(); }
-          }, ['Cancel']),
-          el('button.btn.btn-primary', { type: 'button', onclick: commitPreset }, ['Save'])
+          }, [T.t('common.cancel')]),
+          el('button.btn.btn-primary', { type: 'button', onclick: commitPreset }, [T.t('common.save')])
         ])
       ]));
     } else {
       children.push(el('button.btn.btn-secondary.btn-wide', {
         type: 'button',
         onclick: function () { savingPreset = true; presetName = ''; root.RallySync.app.refresh(); }
-      }, ['Save current setup']));
+      }, [T.t('btn.saveSetup')]));
     }
 
     return group(T.t('head.eventSetups'), children, presets.length ? String(presets.length) : null);
   }
 
+  /**
+   * Splices nodes into a translated sentence.
+   *
+   * The alternative is chopping the sentence into fragments around each styled
+   * span, which is how seventeen strings ended up half-translated earlier in
+   * this project: a translator cannot move a word past a fragment boundary, and
+   * many languages need to. This keeps the sentence whole and lets the
+   * placeholders land wherever the grammar puts them.
+   */
+  function richText(key, nodes) {
+    var text = T.t(key);
+    var out = [];
+    var pattern = /\{(\w+)\}/g;
+    var last = 0;
+    var match;
+    while ((match = pattern.exec(text)) !== null) {
+      if (match.index > last) out.push(text.slice(last, match.index));
+      if (nodes[match[1]]) out.push(nodes[match[1]]);
+      last = match.index + match[0].length;
+    }
+    if (last < text.length) out.push(text.slice(last));
+    return out;
+  }
+
   function commitPreset() {
-    S.savePreset(presetName || 'Setup ' + (S.data.presets.length + 1));
+    S.savePreset(presetName || T.t('calc.setupN', { n: S.data.presets.length + 1 }));
     savingPreset = false;
     presetName = '';
     root.RallySync.app.refresh();
@@ -196,11 +230,11 @@
       return group(T.t('head.target'), [
         el('div.empty.empty-inline', {}, [
           icon('pin', 26),
-          el('h3', { text: 'No targets yet' }),
-          el('p', { text: 'Add the Castle, a turret, a Sanctuary — whatever you are hitting.' }),
+          el('h3', { text: T.t('calc.noTargetsYet') }),
+          el('p', { text: T.t('calc.addTheCastleA') }),
           el('button.btn.btn-primary', {
             type: 'button', onclick: function () { root.RallySync.app.go('targets'); }
-          }, ['Add a target'])
+          }, [T.t('btn.addTarget')])
         ])
       ]);
     }
@@ -211,9 +245,9 @@
 
     var picker = SS.create({
       value: target ? target.id : null,
-      placeholder: 'Choose a target',
-      searchPlaceholder: 'Search your targets…',
-      emptyText: 'No target matches that.',
+      placeholder: T.t('calc.chooseATarget'),
+      searchPlaceholder: T.t('calc.searchTargets'),
+      emptyText: T.t('calc.noTargetMatches'),
       options: S.data.targets.map(function (t) {
         var incomplete = t.x === null || t.y === null;
         var typeLabel = Z.targetTypeLabel(t.type);
@@ -224,21 +258,23 @@
           // Don't repeat the type when the name already is it.
           badge: name.toLowerCase() === typeLabel.toLowerCase() ? null : typeLabel,
           sub: incomplete
-            ? 'no coordinates set'
-            : t.x + ',' + t.y + ' · ' + Z.zoneLabel(t.zoneKey) +
-              ' · rally ' + C.formatDuration(t.gatherSeconds),
-          warn: incomplete ? 'set X/Y' : null
+            ? T.t('tgt.noCoordinates')
+            : t.x + ',' + t.y + ' · ' + Z.zoneLabel(t.zoneKey) + ' · ' +
+              (Number(t.gatherSeconds) > 0
+                ? T.t('tgt.rallyWindowOf', { window: C.formatDuration(t.gatherSeconds) })
+                : T.t('tgt.noRallyWindow')),
+          warn: incomplete ? T.t('tgt.setXY') : null
         };
       }),
       footer: needsCoords > 0
         ? el('div.ss-footer', {}, [
             icon('alert', 14),
             el('span', {
-              text: needsCoords + ' of these still need coordinates.'
+              text: T.t('calc.someNeedCoords', { n: needsCoords })
             }),
             el('button.btn.btn-link', {
               type: 'button', onclick: function () { root.RallySync.app.go('targets'); }
-            }, ['Fix'])
+            }, [T.t('btn.fix')])
           ])
         : null,
       onSelect: function (id) {
@@ -253,7 +289,7 @@
       if (target.x === null || target.y === null) {
         children.push(el('div.banner.banner-error', {}, [
           icon('alert', 16),
-          el('span', { text: 'Set this target’s coordinates on the Targets tab before calculating.' })
+          el('span', { text: T.t('calc.setThisTargetS') })
         ]));
       }
     }
@@ -267,9 +303,9 @@
         }
       }),
       el('span', {}, [
-        el('span.toggle-label', { text: 'Split across multiple targets' }),
+        el('span.toggle-label', { text: T.t('calc.splitAcrossMultipleTargets') }),
         el('span.toggle-help', {
-          text: 'Send part of the roster somewhere else in the same run — Castle and a turret together. Assign each lead below; the target above stays the default.'
+          text: T.t('calc.sendPartOfThe')
         })
       ])
     ]));
@@ -296,7 +332,7 @@
 
     if (settings.mode === 'sequence') {
       children.push(el('div.gap-row', {}, [
-        el('span.gap-label', { text: 'Gap' }),
+        el('span.gap-label', { text: T.t('calc.gap') }),
         el('div.stepper', {}, [
           el('button.btn.btn-step', { type: 'button', onclick: function () { bumpGap(-1); } }, ['−']),
           el('input.input.input-num', {
@@ -308,10 +344,10 @@
           }),
           el('button.btn.btn-step', { type: 'button', onclick: function () { bumpGap(1); } }, ['+'])
         ]),
-        el('span.unit', { text: 'seconds apart' })
+        el('span.unit', { text: T.t('calc.secondsApart') })
       ]));
       children.push(el('p.group-note', {
-        text: 'Sanctuary and Fortress pushes are usually staggered 10–15s so the first rally softens the garrison.'
+        text: T.t('calc.sanctuaryAndFortressPushes')
       }));
     }
     return group(T.t('head.mode'), children);
@@ -337,30 +373,30 @@
     var children = [];
 
     children.push(el('p.group-note', {
-      text: 'Set when rallies open. The slowest lead taps then, everyone else follows, and the app works out when it all lands.'
+      text: T.t('calc.setWhenRalliesOpen')
     }));
 
     children.push(el('div.anchor-row', {}, [
       el('div.anchor-main', {}, [
-        el('span.anchor-label', {}, [el('span', { text: 'START RALLIES AT' })]),
+        el('span.anchor-label', {}, [el('span', { text: T.t('calc.startRalliesAt') })]),
         el('button.anchor-value', {
           type: 'button',
-          title: 'Set when rallies open',
+          title: T.t('calc.setWhenRalliesOpen2'),
           onclick: openStartPicker
         }, [
           el('span.anchor-time', { text: d.utcClock(S.startMs()) }),
           el('span.anchor-zone', { text: 'UTC' })
         ]),
-        el('span.anchor-hint', { text: 'when the first person taps their rally button' })
+        el('span.anchor-hint', { text: T.t('calc.whenTheFirstPerson') })
       ]),
       el('button.btn.btn-ghost.btn-sm', {
         type: 'button',
-        title: 'Open rallies right now',
+        title: T.t('calc.openRalliesRightNow'),
         onclick: function () {
           S.updateSettings({ startMs: S.now() });
           root.RallySync.app.refresh();
         }
-      }, ['Now'])
+      }, [T.t('tp.now')])
     ]));
 
     children.push(el('div.quick-row', {}, [1, 5, 10, 15, 30].map(function (mins) {
@@ -370,12 +406,12 @@
           S.updateSettings({ startMs: S.now() + mins * 60000 });
           root.RallySync.app.refresh();
         }
-      }, ['in ' + mins + 'm']);
+      }, [T.t('calc.inMinutes', { n: mins })]);
     })));
 
     if (!S.startIsExplicit()) {
       children.push(el('p.group-note', {
-        text: 'No start set, so rallies are treated as opening now.'
+        text: T.t('calc.noStartSetSo')
       }));
     }
 
@@ -384,7 +420,7 @@
     children.push(el('div.lands-row', {}, [
       el('span.anchor-label', {}, [
         el('span.anchor-op', { text: '=' }),
-        el('span', { text: 'TROOPS LAND AT' })
+        el('span', { text: T.t('calc.troopsLandAt') })
       ]),
       landing
         ? el('span.lands-value', { text: d.utcClock(landing) })
@@ -394,18 +430,19 @@
         ? el('span.lands-local', {
             text: d.localClock(landing) + ' ' + d.localZoneName() + ' · ' + d.utcDate(landing)
           })
-        : el('span.lands-local', { text: 'pick a target and some leads' }),
+        : el('span.lands-local', { text: T.t('calc.pickATargetAnd') }),
       el('span.anchor-hint', {
         text: landing
-          ? 'as early as the slowest lead can make it'
-          : 'worked out from the slowest march once a plan exists'
+          ? T.t('calc.anchorEarliest')
+          : T.t('calc.anchorFromPlan')
       })
     ]));
 
     if (target && Number(target.gatherSeconds) > 0) {
       children.push(el('p.group-note.group-note-accent', {
-        text: 'The ' + C.formatDuration(target.gatherSeconds) +
-          ' rally window is already included — times below are when to TAP the rally button.'
+        text: T.t('calc.rallyWindowIncluded', {
+          window: C.formatDuration(target.gatherSeconds)
+        })
       }));
     }
 
@@ -415,7 +452,7 @@
 
   function openStartPicker() {
     TP.open({
-      title: 'Start rallies at',
+      title: T.t('calc.startRalliesAt2'),
       valueMs: S.startMs(),
       nowMs: S.now,
       onPick: function (ms) {
@@ -441,7 +478,7 @@
 
     if (S.data.leads.length === 0) {
       return group('Who is marching', [
-        el('p.muted', { text: 'No rally leads yet — add them on the Leads tab.' })
+        el('p.muted', { text: T.t('calc.noRallyLeadsYet') })
       ]);
     }
 
@@ -453,14 +490,14 @@
             S.updateSettings({ selectedLeadIds: S.data.leads.map(function (l) { return l.id; }) });
             root.RallySync.app.refresh();
           }
-        }, ['Select all']),
+        }, [T.t('btn.selectAll')]),
         el('button.btn.btn-link', {
           type: 'button',
           onclick: function () {
             S.updateSettings({ selectedLeadIds: [] });
             root.RallySync.app.refresh();
           }
-        }, ['Clear'])
+        }, [T.t('btn.clear')])
       ])
     ];
 
@@ -476,7 +513,8 @@
         var allIn = members.every(function (l) { return selectedIds.indexOf(l.id) !== -1; });
         quick.appendChild(el('button.chip.chip-sm' + (allIn ? ' is-selected' : ''), {
           type: 'button',
-          title: (allIn ? 'Remove' : 'Add') + ' all ' + members.length + ' in ' + g.name,
+          title: T.t(allIn ? 'calc.removeAllIn' : 'calc.addAllIn',
+            { n: members.length, group: g.name }),
           onclick: function () { toggleGroupSelection(members, allIn); }
         }, [
           g.wrap[0] + g.name + g.wrap[1],
@@ -499,9 +537,11 @@
         reach = ' · ' + d.km(C.distanceTiles(lead, target));
       }
       var detail = missing
-        ? 'no coordinates'
+        ? T.t('tgt.noCoordinates')
         : lead.x + ',' + lead.y +
-          (lead.marchSpeedUpPercent === null ? ' · no speed' : ' · +' + lead.marchSpeedUpPercent + '%') +
+          ' · ' + (lead.marchSpeedUpPercent === null
+            ? T.t('calc.noSpeedShort')
+            : '+' + lead.marchSpeedUpPercent + '%') +
           reach;
 
       chips.appendChild(el('button.chip.chip-stacked' +
@@ -536,7 +576,7 @@
           }, targetOptionsGrouped(assigned))
         ]));
       });
-      children.push(el('p.group-note', { text: 'Each lead marches on:' }));
+      children.push(el('p.group-note', { text: T.t('calc.eachLeadMarchesOn') }));
       children.push(assignList);
     }
 
@@ -545,17 +585,17 @@
       selected.forEach(function (lead, index) {
         orderList.appendChild(el('li.order-item', { dataset: { index: String(index) } }, [
           el('span.drag-handle', {
-            'aria-hidden': 'true', title: 'Drag to reorder'
+            'aria-hidden': 'true', title: T.t('calc.dragToReorder')
           }, [icon('menu', 14)]),
           el('span.order-rank', { text: String(index + 1) }),
           el('span.order-name', { text: lead.name || 'Unnamed' }),
           el('button.btn.btn-icon', {
-            type: 'button', 'aria-label': 'Move ' + (lead.name || 'lead') + ' earlier',
+            type: 'button', 'aria-label': T.t('calc.moveEarlier', { name: lead.name || 'lead' }),
             disabled: index === 0,
             onclick: function () { moveLead(index, -1); }
           }, ['↑']),
           el('button.btn.btn-icon', {
-            type: 'button', 'aria-label': 'Move ' + (lead.name || 'lead') + ' later',
+            type: 'button', 'aria-label': T.t('calc.moveLater', { name: lead.name || 'lead' }),
             disabled: index === selected.length - 1,
             onclick: function () { moveLead(index, 1); }
           }, ['↓'])
@@ -568,7 +608,7 @@
         onReorder: reorderLead
       });
 
-      children.push(el('p.group-note', { text: 'Lands in this order — drag the handle or use the arrows.' }));
+      children.push(el('p.group-note', { text: T.t('calc.landsInThisOrder') }));
       children.push(orderList);
     }
 
@@ -635,11 +675,11 @@
     var haveCoords = S.data.targets.some(function (t) { return t.x !== null && t.y !== null; });
 
     return el('section.group.quickstart', {}, [
-      el('div.group-head', {}, [el('h2.group-title', { text: 'Set up once, reuse every event' })]),
+      el('div.group-head', {}, [el('h2.group-title', { text: T.t('calc.setUpOnceReuse') })]),
       el('ol.steps', {}, [
-        stepRow(1, 'Add your rally leads', 'Name, city X/Y, March Speed Up %. You can paste a whole list.', haveLeads, 'roster'),
-        stepRow(2, 'Set target coordinates', 'Castle, turrets, Sanctuary, Outpost — whatever you hit.', haveCoords, 'targets'),
-        stepRow(3, 'Log a real march', 'Optional. Makes that lead exact instead of estimated.', false, 'calibrate')
+        stepRow(1, T.t('qs.leads'), T.t('qs.leadsBody'), haveLeads, 'roster'),
+        stepRow(2, T.t('qs.targets'), T.t('qs.targetsBody'), haveCoords, 'targets'),
+        stepRow(3, T.t('qs.march'), T.t('qs.marchBody'), false, 'calibrate')
       ]),
       G.guideCard('marchSpeed'),
       G.guideCard('targetCoords')
@@ -655,7 +695,7 @@
       ]),
       el('button.btn.btn-secondary.btn-sm', {
         type: 'button', onclick: function () { root.RallySync.app.go(tab); }
-      }, [done ? 'Edit' : 'Open'])
+      }, [done ? T.t('common.edit') : T.t('btn.open')])
     ]);
   }
 
@@ -690,11 +730,9 @@
       lastPlan = null;
       resultsHost.appendChild(el('div.empty.empty-live', {}, [
         icon('crosshair', 30),
-        el('h3', { text: !primary ? 'Pick a target' : 'Select who is marching' }),
+        el('h3', { text: T.t(!primary ? 'calc.pickATarget' : 'calc.selectMarching') }),
         el('p', {
-          text: !primary
-            ? 'Open Setup and choose what you are hitting.'
-            : 'Open Setup and tap the leads joining this hit.'
+          text: T.t(!primary ? 'calc.openSetupTarget' : 'calc.openSetupLeads')
         })
       ]));
       return;
@@ -743,12 +781,13 @@
     }
 
     resultsHost.appendChild(el('p.disclaimer', {}, [
-      el('strong', { text: 'Estimates, not guarantees. ' }),
-      'Rows marked ', el('span.badge.badge-measured', { text: T.t('badge.measured') }),
-      ' come from a real march you logged and are exact. Everything else should carry a ',
-      el('strong', { text: (settings.safetyBufferSeconds || 2) + 's buffer' }),
-      ' — the in-game countdown is the final word.'
-    ]));
+      el('strong', { text: T.t('calc.estimatesNotGuarantees') })
+    ].concat(richText('calc.estimatesNote', {
+      badge: el('span.badge.badge-measured', { text: T.t('badge.measured') }),
+      buffer: el('strong', {
+        text: T.t('calc.bufferSeconds', { n: settings.safetyBufferSeconds || 2 })
+      })
+    }))));
 
     tick(S.now());
     updateKeepAlive();
@@ -827,23 +866,21 @@
 
     var notes = [];
     if (diagonal > 0) {
-      notes.push(diagonal + (diagonal === 1 ? ' march runs' : ' marches run') +
-        ' close to 45 degrees, and the one such march measured took about 30% ' +
-        'longer than its straight-line distance implies');
+      notes.push(T.t(diagonal === 1 ? 'calc.diagonalOne' : 'calc.diagonalMany',
+        { n: diagonal }));
     }
     if (offSpeed > 0) {
-      notes.push(offSpeed + (offSpeed === 1 ? ' lead marches' : ' leads march') +
-        ' at a speed the model has never been measured at (it was fitted only at +' +
-        range.speedPercents.join('/+') + '%)');
+      notes.push(T.t(offSpeed === 1 ? 'calc.offSpeedOne' : 'calc.offSpeedMany',
+        { n: offSpeed, speeds: range.speedPercents.join('/+') }));
     }
     if (beyond > 0) {
-      notes.push(beyond + (beyond === 1 ? ' march is' : ' marches are') +
-        ' well outside the distance its zone was measured over');
+      notes.push(T.t(beyond === 1 ? 'calc.beyondOne' : 'calc.beyondMany', { n: beyond }));
     }
     if (notes.length === 0) return null;
 
-    return 'Extrapolating: ' + notes.join(', ') +
-      '. Log a real march for those and they become exact.';
+    // Joined from the dictionary: an ASCII comma-space reads as a foreign
+    // body between two Japanese or Chinese clauses, which want 、.
+    return T.t('calc.extrapolating', { list: notes.join(T.t('calc.listJoiner')) });
   }
 
   // ------------------------------------------------------------- row grouping
@@ -884,9 +921,16 @@
     var totals = totalsFor(section.rows);
     return el('div.section-head', {}, [
       el('span.section-label', { text: section.label }),
-      el('span.section-count', { text: section.rows.length + (section.rows.length === 1 ? ' rally' : ' rallies') }),
-      totals.power ? el('span.section-total', { text: compact(totals.power) + ' power' }) : null,
-      totals.capacity ? el('span.section-total', { text: compact(totals.capacity) + ' troops' }) : null
+      el('span.section-count', {
+        text: T.t(section.rows.length === 1 ? 'calc.nRallyOne' : 'calc.nRallyMany',
+          { n: section.rows.length })
+      }),
+      totals.power
+        ? el('span.section-total', { text: T.t('calc.nPower', { n: compact(totals.power) }) })
+        : null,
+      totals.capacity
+        ? el('span.section-total', { text: T.t('calc.nTroops', { n: compact(totals.capacity) }) })
+        : null
     ]);
   }
 
@@ -922,9 +966,7 @@
     var alarmOn = settings.alarmEnabled !== false;
     var alarmBtn = el('button.btn.btn-secondary.btn-copy' + (alarmOn ? ' is-armed' : ''), {
       type: 'button',
-      title: alarmOn
-        ? 'Sound and vibration before each launch — tap to turn off'
-        : 'Turn on sound and vibration before each launch',
+      title: T.t(alarmOn ? 'calc.alarmOnTitle' : 'calc.alarmOffTitle'),
       onclick: function () {
         var next = !alarmOn;
         S.updateSettings({ alarmEnabled: next });
@@ -938,13 +980,21 @@
         el('h2.results-title', { text: T.t('head.launchOrder') }),
         el('p.results-sub', {
           text: (settings.mode === 'sync'
-            ? 'All ' + plan.rows.length + ' land ' + d.utcClock(landing) + ' UTC'
-            : plan.rows.length + ' landings ' + settings.gapSeconds + 's apart from ' + d.utcClock(landing) + ' UTC') +
-            (totals.power ? ' · ' + compact(totals.power) + ' power' : '')
+            ? T.t('calc.allLandAt', { n: plan.rows.length, time: d.utcClock(landing) })
+            : T.t('calc.landingsApart', {
+                n: plan.rows.length, gap: settings.gapSeconds, time: d.utcClock(landing)
+              })) +
+            (totals.power
+              ? ' · ' + T.t('calc.nPower', { n: compact(totals.power) })
+              : '')
         })
       ]),
-      problems > 0 ? el('span.tag.tag-error', { text: problems + ' blocked' }) : null,
-      late > 0 ? el('span.tag.tag-warn', { text: late + ' too late' }) : null,
+      problems > 0
+        ? el('span.tag.tag-error', { text: T.t('calc.countIncomplete', { n: problems }) })
+        : null,
+      late > 0
+        ? el('span.tag.tag-warn', { text: T.t('calc.countTooLate', { n: late }) })
+        : null,
       groupBySelect(),
       alarmBtn,
       el('button.btn.btn-secondary.btn-copy', {
@@ -959,7 +1009,7 @@
       ['squad', 'By squad'], ['target', 'By target']
     ];
     return el('select.input.group-select', {
-      'aria-label': 'Group results by',
+      'aria-label': T.t('calc.groupResultsBy'),
       onchange: function (e) {
         S.updateSettings({ groupBy: e.target.value });
         root.RallySync.app.refresh();
@@ -1075,9 +1125,9 @@
     var key = row.leadId + '|' + row.targetId;
 
     var input = el('input.input.exact-input', {
-      type: 'text', inputmode: 'text', placeholder: '3:33, or 213 for seconds',
+      type: 'text', inputmode: 'text', placeholder: T.t('calc.333Or213'),
       value: existing ? C.formatDuration(existing.seconds) : '',
-      'aria-label': 'Exact march time as the game states it'
+      'aria-label': T.t('calc.exactMarchTimeAs')
     });
     var feedback = el('div.exact-feedback');
 
@@ -1097,15 +1147,16 @@
       // someone needs them, and sending them to another screen to find out how
       // to get the number is how a feature goes unused.
       el('div.exact-help', {}, [
-        el('div.exact-help-title', { text: 'Get this from the game without marching' }),
+        el('div.exact-help-title', { text: T.t('calc.getThisFromThe') }),
+        el('p.exact-what', { text: T.t('exact.what') }),
         el('ol.exact-steps', {}, [
-          el('li', { text: 'Tap the target on the map, then Rally.' }),
-          el('li', { text: 'Pick any rally window, then Hold a rally.' }),
-          el('li', { text: 'Read the time beside the timer icon, left of Deploy.' }),
-          el('li', { text: 'Back out with the arrow. Nothing deploys, no stamina is spent.' })
+          el('li', { text: T.t('calc.tapTheTargetOn') }),
+          el('li', { text: T.t('calc.pickAnyRallyWindow') }),
+          el('li', { text: T.t('calc.readTheTimeBeside') }),
+          el('li', { text: T.t('calc.backOutWithThe') })
         ]),
         el('div.exact-help-note', {
-          text: 'Small monsters show Attack instead of Rally — that screen gives the same number.'
+          text: T.t('calc.smallMonstersShowAttack')
         })
       ]),
       el('div.exact-row', {}, [
@@ -1137,21 +1188,30 @@
         var off = predicted - Number(existing.seconds);
         feedback.className = 'exact-feedback';
         feedback.textContent = Math.abs(off) < 1
-          ? 'The formula agreed with this to within a second.'
-          : 'Using this. The formula was ' + C.formatDuration(Math.abs(off)) +
-            (off > 0 ? ' too slow.' : ' too fast.');
+          ? T.t('calc.formulaAgreed')
+          : T.t(off > 0 ? 'calc.formulaWasSlow' : 'calc.formulaWasFast',
+              { time: C.formatDuration(Math.abs(off)) });
       }
     }
 
-    var button = el('button.btn.btn-ghost.btn-sm' + (existing ? ' is-exact' : ''), {
+    // Styled as the row's primary action while the row is still a guess, and as
+    // a quiet confirmation once it is not. Every other button here is optional;
+    // this is the one that turns an estimate into a fact, so it should not look
+    // like a sibling of Copy.
+    var button = el('button.btn.btn-sm' +
+      (existing ? '.btn-ghost is-exact' : '.btn-exact-call'), {
       type: 'button',
-      title: existing ? 'Exact time set from the game' : 'Set the exact march time the game states',
+      title: existing ? T.t('exact.tipSet') : T.t('exact.tipUnset'),
       onclick: function () {
         panel.hidden = !panel.hidden;
         exactOpenKey = panel.hidden ? null : key;
         if (!panel.hidden) input.focus();
       }
-    }, [icon('clock', 14), el('span', { text: existing ? T.t('btn.exactSet') : T.t('btn.exactTime') })]);
+    }, [
+      icon('clock', 14),
+      el('span', { text: existing ? T.t('btn.exactSet') : T.t('btn.exactTime') }),
+      existing ? null : el('span.exact-dot', { 'aria-hidden': 'true' })
+    ]);
 
     return { button: button, panel: panel };
   }
@@ -1177,16 +1237,23 @@
   function copyRow(row, lead, target, button) {
     var gathering = target && Number(target.gatherSeconds) > 0;
     var lines = [
-      (row.name || 'Rally') + (row.targetName ? ' → ' + row.targetName : ''),
-      (gathering ? 'Tap rally at ' : 'March at ') + d.utcClock(row.rallyOpenMs) + ' UTC'
+      (row.name || T.t('copy.unnamedRally')) +
+        (row.targetName ? ' → ' + row.targetName : ''),
+      T.t(gathering ? 'copy.tapRallyAt' : 'copy.marchAt', { time: d.utcClock(row.rallyOpenMs) })
     ];
-    if (gathering) lines.push('Departs ' + d.utcClock(row.departMs) + ' UTC');
-    lines.push('Lands ' + d.utcClock(row.landingMs) + ' UTC');
-    lines.push('March ' + C.formatDuration(row.marchSeconds));
-    if (lead && lead.x !== null && lead.y !== null) lines.push('From X:' + lead.x + ' Y:' + lead.y);
-    if (target && target.x !== null && target.y !== null) lines.push('To X:' + target.x + ' Y:' + target.y);
-    lines.push('Distance ' + d.km(row.distance));
-    if (lead && lead.marchSpeedUpPercent !== null) lines.push('Speed +' + lead.marchSpeedUpPercent + '%');
+    if (gathering) lines.push(T.t('copy.departs', { time: d.utcClock(row.departMs) }));
+    lines.push(T.t('copy.lands', { time: d.utcClock(row.landingMs) }));
+    lines.push(T.t('copy.march', { time: C.formatDuration(row.marchSeconds) }));
+    if (lead && lead.x !== null && lead.y !== null) {
+      lines.push(T.t('copy.from', { x: lead.x, y: lead.y }));
+    }
+    if (target && target.x !== null && target.y !== null) {
+      lines.push(T.t('copy.to', { x: target.x, y: target.y }));
+    }
+    lines.push(T.t('copy.distance', { distance: d.km(row.distance) }));
+    if (lead && lead.marchSpeedUpPercent !== null) {
+      lines.push(T.t('copy.speed', { n: lead.marchSpeedUpPercent }));
+    }
     flashCopy(button, lines.join('\n'));
   }
 
@@ -1250,9 +1317,9 @@
     }
 
     if (nextGoNode) {
-      if (live.length === 0) nextGoNode.textContent = 'no plan yet';
-      else if (soonest === null) nextGoNode.textContent = 'all launched';
-      else nextGoNode.textContent = 'first go in ' + d.countdown(soonest);
+      if (live.length === 0) nextGoNode.textContent = T.t('calc.noPlanYet');
+      else if (soonest === null) nextGoNode.textContent = T.t('calc.allLaunched');
+      else nextGoNode.textContent = T.t('calc.firstGoIn', { time: d.countdown(soonest) });
     }
   }
 
@@ -1301,35 +1368,59 @@
     var multi = settings.multiTarget;
 
     var lines = [];
-    lines.push('**RallySync — ' + (multi ? 'multi-target' : (lastPlan.primary.name || 'Target')) + '**');
-    lines.push('Rallies open ' + d.utcClock(S.startMs()) + ' UTC');
+    // i18n-exempt: the product name and markdown bold, neither translated.
+    lines.push('**RallySync — ' +
+      (multi ? T.t('share.multiTarget') : (lastPlan.primary.name || T.t('share.target'))) + '**');
+    lines.push(T.t('share.ralliesOpen', { time: d.utcClock(S.startMs()) }));
     lines.push(settings.mode === 'sync'
-      ? 'Sync: everyone lands ' + d.utcClock(plan.landingMs) + ' UTC'
-      : 'Sequence: ' + settings.gapSeconds + 's apart from ' + d.utcClock(plan.landingMs) + ' UTC');
+      ? T.t('share.syncLine', { time: d.utcClock(plan.landingMs) })
+      : T.t('share.sequenceLine', {
+          gap: settings.gapSeconds, time: d.utcClock(plan.landingMs)
+        }));
     lines.push('');
     lines.push('```');
-    lines.push(padRight('TAP AT', 11) + padRight('NAME', 16) +
-      (multi ? padRight('TARGET', 14) : '') + padRight('MARCH', 9) + 'LANDS');
 
-    plan.rows.forEach(function (row) {
-      if (row.errors.length > 0) {
-        lines.push(padRight('--:--:--', 11) + padRight(trim(row.name, 15), 16) +
-          'BLOCKED: ' + row.errors[0]);
+    /**
+     * Forces one table line to lay out left-to-right.
+     *
+     * The block is a fixed-width table, but the bidi algorithm decides a line's
+     * direction from its first strong character -- so in Arabic the whole row
+     * reorders and the columns scramble, however carefully each header was
+     * sized. U+200E is an invisible strong LTR character: putting one at the
+     * head of each line pins the layout while Arabic names and headers inside
+     * it still render right-to-left as runs, which is what should happen.
+     */
+    function row(text) {
+      lines.push(T.isRtl() ? '‎' + text : text);
+    }
+
+    // Column headers are trimmed to their own width: this is a monospace table
+    // pasted into chat, and a longer translation would shift every row under it.
+    row(padRight(trim(T.t('share.colTapAt'), 10), 11) +
+      padRight(trim(T.t('share.colName'), 15), 16) +
+      (multi ? padRight(trim(T.t('share.colTarget'), 13), 14) : '') +
+      padRight(trim(T.t('share.colMarch'), 8), 9) + trim(T.t('share.colLands'), 8));
+
+    plan.rows.forEach(function (planRow) {
+      if (planRow.errors.length > 0) {
+        row(padRight('--:--:--', 11) + padRight(trim(planRow.name, 15), 16) +
+          T.t('share.blocked', { reason: planRow.errors[0] }));
         return;
       }
-      lines.push(
-        padRight(d.utcClock(row.rallyOpenMs), 11) +
-        padRight(trim(row.name || 'Unnamed', 15), 16) +
-        (multi ? padRight(trim(row.targetName || '', 13), 14) : '') +
-        padRight(C.formatDuration(row.marchSeconds), 9) +
-        d.utcClock(row.landingMs) +
-        (row.tier === C.TIER.MEASURED ? '  *exact' : '')
+      row(
+        padRight(d.utcClock(planRow.rallyOpenMs), 11) +
+        padRight(trim(planRow.name || T.t('share.unnamed'), 15), 16) +
+        (multi ? padRight(trim(planRow.targetName || '', 13), 14) : '') +
+        padRight(C.formatDuration(planRow.marchSeconds), 9) +
+        d.utcClock(planRow.landingMs) +
+        // i18n-exempt: a marker in the table, referenced verbatim by
+        // share.bufferNote, so both must stay the same literal.
+        (planRow.tier === C.TIER.MEASURED ? '  *exact' : '')
       );
     });
     lines.push('```');
-    lines.push('All times UTC. Rally window already subtracted.');
-    lines.push('Rows without `*exact` are estimates — keep a ' +
-      (settings.safetyBufferSeconds || 2) + 's buffer.');
+    lines.push(T.t('share.allTimesUtc'));
+    lines.push(T.t('share.bufferNote', { n: settings.safetyBufferSeconds || 2 }));
     return lines.join('\n');
   }
 
@@ -1340,7 +1431,7 @@
     var original = label ? label.textContent : '';
     writeClipboard(text).then(function (ok) {
       if (!label) return;
-      label.textContent = ok ? 'Copied' : 'Press Ctrl+C';
+      label.textContent = ok ? T.t('btn.copied') : T.t('btn.pressCtrlC');
       root.setTimeout(function () { label.textContent = original; }, 1800);
     });
   }
@@ -1369,15 +1460,77 @@
     } catch (err) { return false; }
   }
 
+  /**
+   * Monospace display width, not string length.
+   *
+   * A CJK glyph occupies TWO columns in a monospace font but counts as one
+   * UTF-16 unit, so padding by .length made every Chinese, Japanese and Korean
+   * header render about twice as wide as the column it was padding to fill --
+   * silently scrambling a table that is pasted into chat. Counting the wide
+   * ranges makes the block align in every language instead of forcing CJK
+   * locales to leave their headers in English.
+   */
+  function displayWidth(text) {
+    var width = 0;
+    var str = String(text);
+    for (var i = 0; i < str.length; i++) {
+      var code = str.charCodeAt(i);
+      // Surrogate pair: one character, and in these planes almost always wide.
+      if (code >= 0xd800 && code <= 0xdbff) { width += 2; i++; continue; }
+      width += isWide(code) ? 2 : 1;
+    }
+    return width;
+  }
+
+  /** The East Asian Wide and Fullwidth ranges this app can actually produce. */
+  function isWide(code) {
+    return (code >= 0x1100 && code <= 0x115f) ||    // Hangul Jamo
+      (code >= 0x2e80 && code <= 0x303e) ||         // CJK radicals, punctuation
+      (code >= 0x3041 && code <= 0x33ff) ||         // kana, CJK compatibility
+      (code >= 0x3400 && code <= 0x4dbf) ||         // CJK ext A
+      (code >= 0x4e00 && code <= 0x9fff) ||         // CJK unified
+      (code >= 0xa000 && code <= 0xa4cf) ||         // Yi
+      (code >= 0xac00 && code <= 0xd7a3) ||         // Hangul syllables
+      (code >= 0xf900 && code <= 0xfaff) ||         // CJK compatibility ideographs
+      (code >= 0xfe30 && code <= 0xfe6f) ||         // CJK compatibility forms
+      (code >= 0xff00 && code <= 0xff60) ||         // fullwidth forms
+      (code >= 0xffe0 && code <= 0xffe6);
+  }
+
   function padRight(text, width) {
     var out = String(text);
-    while (out.length < width) out += ' ';
+    var used = displayWidth(out);
+    while (used < width) { out += ' '; used++; }
     return out;
   }
 
+  /**
+   * Truncates to a monospace COLUMN budget, matching padRight.
+   *
+   * These two are a pair: padRight fills a field to N columns and trim keeps a
+   * string inside it. Measuring one in display columns and the other in UTF-16
+   * units meant a six-glyph Japanese header passed a budget of eight and then
+   * rendered twelve columns wide -- the same silent misalignment padRight used
+   * to cause, surviving in its other half.
+   */
   function trim(text, max) {
     var out = String(text || '');
-    return out.length > max ? out.slice(0, max - 1) + '…' : out;
+    if (displayWidth(out) <= max) return out;
+    var kept = '';
+    var used = 0;
+    for (var i = 0; i < out.length; i++) {
+      var ch = out.charAt(i);
+      var code = out.charCodeAt(i);
+      if (code >= 0xd800 && code <= 0xdbff && i + 1 < out.length) {
+        ch = out.slice(i, i + 2);
+        i++;
+      }
+      var w = displayWidth(ch);
+      if (used + w > max - 1) break;   // leave a column for the ellipsis
+      kept += ch;
+      used += w;
+    }
+    return kept + '…';
   }
 
   root.RallySync.views = root.RallySync.views || {};

@@ -76,12 +76,24 @@
    * Replaces stored data from an export payload.
    * @returns {{ok:boolean, error:string|null, imported:string[]}}
    */
+  /**
+   * Dictionary lookup that still works when this module is used on its own --
+   * it is required directly by the tests and by Node scripts, where i18n has
+   * not necessarily been loaded.
+   */
+  function say(key, fallback) {
+    var T = root.RallySync && root.RallySync.i18n;
+    if (!T || !T.t) return fallback;
+    var out = T.t(key);
+    return out === key ? fallback : out;
+  }
+
   function importAll(payload) {
     if (!payload || typeof payload !== 'object' || !payload.data) {
-      return { ok: false, error: 'That file is not a RallySync backup.', imported: [] };
+      return { ok: false, error: say('store.notBackup', 'That file is not a RallySync backup.'), imported: [] };
     }
     if (payload.app && payload.app !== 'RallySync') {
-      return { ok: false, error: 'That backup came from a different app.', imported: [] };
+      return { ok: false, error: say('store.differentApp', 'That backup came from a different app.'), imported: [] };
     }
     var imported = [];
     KEYS.forEach(function (key) {
@@ -91,7 +103,7 @@
       }
     });
     if (imported.length === 0) {
-      return { ok: false, error: 'That backup contained no RallySync data.', imported: [] };
+      return { ok: false, error: say('store.noData', 'That backup contained no RallySync data.'), imported: [] };
     }
     return { ok: true, error: null, imported: imported };
   }

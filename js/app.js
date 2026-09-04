@@ -44,7 +44,9 @@
     var versionNode = d.$('#brand-version');
     if (versionNode) {
       versionNode.textContent = 'v' + root.RallySync.version.VERSION;
-      versionNode.title = 'Published ' + root.RallySync.version.buildText();
+      versionNode.title = T.t('set.publishedAt', {
+        when: root.RallySync.version.buildText()
+      });
     }
 
     clockNode = d.$('#clock-utc');
@@ -95,6 +97,23 @@
         el('span.nav-label', { text: T.t(tab.labelKey) })
       ]));
     });
+
+    // Not a section, so it sits apart from the five tabs -- but it lives here
+    // rather than only in Settings because someone who has the app in a
+    // language they cannot read has to be able to find this without reading.
+    // The badge shows the current language so it is a status as well as a door.
+    var L = root.RallySync.langPicker;
+    var langBtn = el('button.nav-btn.nav-lang', {
+      type: 'button',
+      'aria-label': T.t('nav.language'),
+      'aria-haspopup': 'dialog',
+      title: T.t('head.language'),
+      onclick: function () { L.open(langBtn); }
+    }, [
+      el('span.nav-icon', {}, [I.icon('globe', 21)]),
+      el('span.nav-label', { text: L.currentShort() })
+    ]);
+    nav.appendChild(langBtn);
   }
 
   /**

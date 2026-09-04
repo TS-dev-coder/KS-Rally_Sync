@@ -15,6 +15,7 @@
   'use strict';
 
   var d = root.RallySync.dom;
+  var T = root.RallySync.i18n;
   var I = root.RallySync.icons;
   var el = d.el;
   var icon = I.icon;
@@ -119,9 +120,9 @@
       segments[unit] = input;
 
       return el('div.tp-seg', {}, [
-        stepper('Increase ' + label, 'up', function () { bump(unit, 1); }),
+        stepper(T.t('tp.increase', { unit: label }), 'up', function () { bump(unit, 1); }),
         input,
-        stepper('Decrease ' + label, 'down', function () { bump(unit, -1); }),
+        stepper(T.t('tp.decrease', { unit: label }), 'down', function () { bump(unit, -1); }),
         el('span.tp-seg-label', { text: label })
       ]);
     }
@@ -141,51 +142,53 @@
     var body = el('div.tp-dialog', {}, [
       el('div.tp-head', {}, [
         el('div.tp-head-main', {}, [
-          el('h2.tp-title', { text: options.title || 'Set time' }),
-          el('p.tp-sub', { text: 'Entered and stored in UTC — the clock the game runs on.' })
+          el('h2.tp-title', { text: options.title || T.t('tp.setTime') }),
+          el('p.tp-sub', { text: T.t('tp.utcNote') })
         ]),
-        el('button.btn.btn-icon', { type: 'button', 'aria-label': 'Close', onclick: close }, [icon('x', 18)])
+        el('button.btn.btn-icon', {
+          type: 'button', 'aria-label': T.t('tp.close'), onclick: close
+        }, [icon('x', 18)])
       ]),
 
       el('div.tp-clockrow', {}, [
-        segment('h', 'HH', 23),
+        segment('h', T.t('tp.hh'), 23),
         el('span.tp-colon', { text: ':' }),
-        segment('mi', 'MM', 59),
+        segment('mi', T.t('tp.mm'), 59),
         el('span.tp-colon', { text: ':' }),
-        segment('s', 'SS', 59)
+        segment('s', T.t('tp.ss'), 59)
       ]),
 
       el('div.tp-quick', {}, [
-        quick('Now', function () { sync(nowOf(options)); }),
-        quick('Next :00', function () { sync(nextBoundary(nowOf(options), 3600)); }),
-        quick('Next :15', function () { sync(nextBoundary(nowOf(options), 900)); }),
-        quick('Next :30', function () { sync(nextBoundary(nowOf(options), 1800)); }),
-        quick('Zero secs', function () { parts.s = 0; sync(currentMs()); })
+        quick(T.t('tp.now'), function () { sync(nowOf(options)); }),
+        quick(T.t('tp.next00'), function () { sync(nextBoundary(nowOf(options), 3600)); }),
+        quick(T.t('tp.next15'), function () { sync(nextBoundary(nowOf(options), 900)); }),
+        quick(T.t('tp.next30'), function () { sync(nextBoundary(nowOf(options), 1800)); }),
+        quick(T.t('tp.zeroSecs'), function () { parts.s = 0; sync(currentMs()); })
       ]),
 
       el('div.tp-daterow', {}, [
         el('button.btn.btn-icon', {
-          type: 'button', 'aria-label': 'Previous day', onclick: function () { bump('day', -1); }
+          type: 'button', 'aria-label': T.t('tp.prevDay'), onclick: function () { bump('day', -1); }
         }, [icon('chevronRight', 15)]),
         el('div.tp-date-main', {}, [
-          el('span.tp-date-label', { text: 'DATE (UTC)' }),
+          el('span.tp-date-label', { text: T.t('tp.dateLabel') }),
           dateLabel
         ]),
         el('button.btn.btn-icon', {
-          type: 'button', 'aria-label': 'Next day', onclick: function () { bump('day', 1); }
+          type: 'button', 'aria-label': T.t('tp.nextDay'), onclick: function () { bump('day', 1); }
         }, [icon('chevronRight', 15)])
       ]),
 
       el('div.tp-quick', {}, [
-        quick('Today', function () { sync(sameClockOn(nowOf(options), 0, parts)); }),
-        quick('Tomorrow', function () { sync(sameClockOn(nowOf(options), 1, parts)); })
+        quick(T.t('tp.today'), function () { sync(sameClockOn(nowOf(options), 0, parts)); }),
+        quick(T.t('tp.tomorrow'), function () { sync(sameClockOn(nowOf(options), 1, parts)); })
       ]),
 
       el('div.tp-echo', {}, [echoUtc, echoLocal, relative]),
 
       el('div.tp-actions', {}, [
-        el('button.btn.btn-ghost', { type: 'button', onclick: close }, ['Cancel']),
-        el('button.btn.btn-primary', { type: 'button', onclick: commit }, ['Set time'])
+        el('button.btn.btn-ghost', { type: 'button', onclick: close }, [T.t('common.cancel')]),
+        el('button.btn.btn-primary', { type: 'button', onclick: commit }, [T.t('tp.setTime')])
       ])
     ]);
 
@@ -277,14 +280,24 @@
 
   function describeOffset(deltaMs) {
     var seconds = Math.round(deltaMs / 1000);
-    if (Math.abs(seconds) < 5) return 'right now';
-    var sign = seconds < 0 ? 'ago' : 'from now';
-    return d.countdown(Math.abs(seconds)) + ' ' + sign;
+    if (Math.abs(seconds) < 5) return T.t('tp.rightNow');
+    return T.t(seconds < 0 ? 'tp.ago' : 'tp.fromNow',
+      { time: d.countdown(Math.abs(seconds)) });
   }
 
   function weekday(ms) {
-    var names = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    return names[new Date(ms).getUTCDay()];
+    // Intl ships every locale's weekday names, so translating an array by
+    // hand would be 16 chances to get a calendar wrong for no benefit.
+    try {
+      return new Intl.DateTimeFormat(T.speechTag(), {
+        weekday: 'short', timeZone: 'UTC'
+      }).format(new Date(ms));
+    } catch (err) {
+      // i18n-exempt: only reached if Intl is unavailable, which is the one
+      // case where no locale data exists to translate these from anyway.
+      var names = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      return names[new Date(ms).getUTCDay()];
+    }
   }
 
   function pad(n) { return (n < 10 ? '0' : '') + n; }

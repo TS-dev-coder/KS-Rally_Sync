@@ -9,7 +9,19 @@
   'use strict';
 
   var d = root.RallySync.dom;
+  var T = root.RallySync.i18n;
   var el = d.el;
+
+
+  /**
+   * Dictionary lookup that keeps the inline English as its fallback. A guide
+   * whose translation has not landed yet still renders a usable instruction
+   * rather than a key or a blank step.
+   */
+  function g(key, fallback) {
+    var out = T.t(key);
+    return out === key ? fallback : out;
+  }
 
   var GUIDES = {
     marchSpeed: {
@@ -126,31 +138,47 @@
     var details = el('details.guide');
     details.appendChild(el('summary.guide-summary', {}, [
       el('span.guide-icon', { text: '?' }),
-      el('span', { text: guide.title })
+      el('span', { text: g('guide.' + key + '.title', guide.title) })
     ]));
 
     var body = el('div.guide-body');
     var list = el('ol.guide-steps');
-    guide.steps.forEach(function (step) {
-      list.appendChild(el('li', { text: step }));
+    guide.steps.forEach(function (step, index) {
+      list.appendChild(el('li', { text: g('guide.' + key + '.step' + index, step) }));
     });
     body.appendChild(list);
-    if (guide.note) body.appendChild(el('p.guide-note', { text: guide.note }));
+    if (guide.note) {
+      body.appendChild(el('p.guide-note', { text: g('guide.' + key + '.note', guide.note) }));
+    }
 
     details.appendChild(body);
     return details;
   }
 
-  /** Full-width card version, for the first-run quick start. */
+  /**
+   * Full-width card version, for the first-run quick start.
+   *
+   * Resolves through g() exactly as helpBlock() does. It did not, which meant
+   * the same guide content was translated in one render path and raw English in
+   * the other -- and this is the path used on the first screen a new player
+   * sees, directly below a translated checklist. The strings were already
+   * translated in all sixteen locales and simply never asked for.
+   */
   function guideCard(key) {
     var guide = GUIDES[key];
     if (!guide) return null;
     var card = el('div.guide-card');
-    card.appendChild(el('h3.guide-card-title', { text: guide.title }));
+    card.appendChild(el('h3.guide-card-title', {
+      text: g('guide.' + key + '.title', guide.title)
+    }));
     var list = el('ol.guide-steps');
-    guide.steps.forEach(function (step) { list.appendChild(el('li', { text: step })); });
+    guide.steps.forEach(function (step, index) {
+      list.appendChild(el('li', { text: g('guide.' + key + '.step' + index, step) }));
+    });
     card.appendChild(list);
-    if (guide.note) card.appendChild(el('p.guide-note', { text: guide.note }));
+    if (guide.note) {
+      card.appendChild(el('p.guide-note', { text: g('guide.' + key + '.note', guide.note) }));
+    }
     return card;
   }
 

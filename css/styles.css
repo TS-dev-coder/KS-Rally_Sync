@@ -232,13 +232,23 @@ body::before {
   position: sticky;
   top: 0;
   z-index: 20;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: calc(env(safe-area-inset-top, 0px) + 12px) 4px 12px;
+  padding: calc(env(safe-area-inset-top, 0px) + 12px) 0 12px;
   background: color-mix(in srgb, var(--bg) 92%, transparent);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
+}
+
+/* The bar bleeds to both edges; this keeps the brand and clock on the same
+   column as the content below them. */
+.topbar-inner {
+  max-width: 1180px;
+  margin: 0 auto;
+  /* Matches .app's own horizontal padding so the brand lines up with the left
+     edge of the cards below it rather than sitting a few pixels inside them. */
+  padding: 0 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .brand { display: flex; align-items: baseline; gap: 7px; flex: 1; min-width: 0; }
@@ -1739,3 +1749,235 @@ body.is-solo .app { padding-bottom: 30px; }
 }
 .exact-steps li { margin-bottom: 2px; }
 .exact-help-note { margin-top: 6px; font-size: 11px; color: var(--text-3); font-style: italic; }
+
+/* The walkthrough. Figure beside text on a wide screen, stacked on a phone —
+   the figure is the point, so it never shrinks below readable. */
+.howto-list { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 16px; }
+.howto-step { display: grid; grid-template-columns: 1fr; gap: 10px; }
+@media (min-width: 620px) {
+  .howto-step { grid-template-columns: 260px 1fr; align-items: start; gap: 16px; }
+}
+.howto-fig {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  padding: 6px;
+}
+.howto-svg { display: block; width: 100%; height: auto; }
+.howto-step-title { display: flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 650; }
+.howto-num {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: var(--accent-soft); color: var(--accent);
+  font-size: 11px; font-weight: 700; flex: none;
+}
+.howto-body { margin: 6px 0 0; font-size: 12px; line-height: 1.5; color: var(--text-3); }
+
+/* Exact time is the one action that turns an estimate into a fact, so while the
+   row is still a guess it reads as the primary action rather than a sibling of
+   Copy. Once set it steps back to a quiet green confirmation. */
+.btn-exact-call {
+  position: relative;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  font-weight: 600;
+  /* Breathes rather than flashes. A hard blink is read as an error and gets
+     ignored on the second look; a slow glow keeps pulling the eye back without
+     becoming something you want to make stop. */
+  animation: exact-breathe 2.6s ease-in-out infinite;
+}
+.btn-exact-call:hover,
+.btn-exact-call:focus-visible {
+  background: var(--accent);
+  color: var(--accent-ink);
+  animation: none;             /* found it — stop asking */
+}
+@keyframes exact-breathe {
+  0%, 100% { box-shadow: 0 0 0 0 var(--accent-soft); border-color: var(--accent); }
+  50%      { box-shadow: 0 0 12px 2px var(--accent-soft); border-color: var(--accent); }
+}
+.exact-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 0 var(--accent);
+  animation: exact-pulse 2.4s ease-out infinite;
+}
+.btn-exact-call:hover .exact-dot { background: var(--accent-ink); }
+@keyframes exact-pulse {
+  0%   { box-shadow: 0 0 0 0 var(--accent-soft); }
+  70%  { box-shadow: 0 0 0 6px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+/* Respect a reduced-motion preference: the dot still marks the button. */
+@media (prefers-reduced-motion: reduce) {
+  .exact-dot, .btn-exact-call { animation: none; }
+  /* Still unmistakably the primary action, just without movement. */
+  .btn-exact-call { box-shadow: 0 0 0 2px var(--accent-soft); }
+}
+
+.exact-what {
+  margin: 6px 0 0;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--text-2);
+}
+
+/* ------------------------------------------------------- language switcher */
+
+/* Set apart from the five section tabs: it changes how the app reads, not
+   where you are in it. On the phone it takes only the width it needs so the
+   sections keep their equal share; on the desktop rail it drops to the bottom,
+   away from the navigation proper. */
+.nav-lang {
+  flex: 0 0 auto;
+  min-width: 46px;
+  margin-left: 4px;
+  padding-left: 8px;
+  border-left: 1px solid var(--line);
+  color: var(--text-3);
+}
+.nav-lang .nav-label {
+  font-size: 10px;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.nav-lang:hover { color: var(--text-2); }
+.nav-lang:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+.lang-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 240;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0;
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: lang-fade 0.14s ease;
+}
+@keyframes lang-fade { from { opacity: 0; } }
+
+/* A bottom sheet on the phone: the list is reachable by thumb, which matters
+   when there are seventeen rows and the person opening it may be scanning an
+   unfamiliar script. */
+.lang-sheet {
+  width: 100%;
+  max-height: 82vh;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 14px calc(env(safe-area-inset-bottom, 0px) + 14px);
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-bottom: none;
+  border-radius: var(--radius) var(--radius) 0 0;
+  box-shadow: 0 -24px 60px var(--shadow);
+  animation: lang-rise 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes lang-rise { from { transform: translateY(14px); opacity: 0; } }
+
+.lang-head { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 12px; }
+.lang-head-main { flex: 1; min-width: 0; }
+.lang-title { margin: 0; font-size: 16px; font-weight: 700; }
+.lang-sub { margin: 3px 0 0; font-size: 11.5px; color: var(--text-3); line-height: 1.45; }
+
+.lang-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: 0 -4px;
+  padding: 0 4px;
+}
+
+.lang-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 12px;
+  font-family: var(--sans);
+  text-align: left;
+  color: var(--text);
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.lang-row + .lang-row { margin-top: 2px; }
+.lang-row:hover { background: var(--sunk); }
+.lang-row:focus-visible { outline: none; border-color: var(--accent); background: var(--sunk); }
+.lang-row.is-on { background: var(--accent-soft); border-color: var(--accent-line); }
+
+.lang-row-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+/* The player's own language name leads: someone who cannot read the current
+   interface language is scanning for their script, not for an English word. */
+.lang-row-native { font-size: 14px; font-weight: 600; }
+.lang-row-english { font-size: 11px; color: var(--text-3); }
+.lang-row.is-on .lang-row-native { color: var(--accent); }
+.lang-row-check { display: flex; color: var(--accent); }
+/* Each name renders in its own direction without dragging the row's layout
+   with it -- Arabic beside Japanese beside English, all correct, tick always
+   on the same side. */
+.lang-row-native, .lang-row-english { unicode-bidi: isolate; }
+
+@media (min-width: 900px) {
+  /* The rail has room below the sections, which is where a setting belongs. */
+  .nav-lang {
+    margin-top: auto;
+    margin-left: 0;
+    padding-left: 4px;
+    border-left: none;
+    border-top: 1px solid var(--line);
+    padding-top: 12px;
+  }
+  .lang-overlay { align-items: center; padding: 20px; }
+  .lang-sheet {
+    max-width: 400px;
+    max-height: 76vh;
+    border-bottom: 1px solid var(--line-strong);
+    border-radius: var(--radius);
+    box-shadow: 0 24px 60px var(--shadow);
+    animation: lang-pop 0.16s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  @keyframes lang-pop { from { transform: scale(0.97); opacity: 0; } }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lang-overlay, .lang-sheet { animation: none; }
+}
+
+.lang-current {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: var(--sunk);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.lang-current-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.lang-current-label {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--text-3);
+}
+.lang-current-value { font-size: 13.5px; font-weight: 600; }
+
+/* Prose takes its direction from its own first strong character, not from the
+   page. An Arabic reader on a key that has not been translated yet sees the
+   English fallback, and inside an RTL paragraph its full stop renders at the
+   LEFT end of the sentence — ".Text, voice and the guide all follow". plaintext
+   makes each block lay out in the direction of the text actually in it, so a
+   mixed or not-yet-translated string still reads correctly. */
+.panel-note,
+.guide-note,
+.focus-note,
+.lang-sub,
+.howto-body,
+.guide-list li {
+  unicode-bidi: plaintext;
+}

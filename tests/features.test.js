@@ -6,9 +6,13 @@
 
 const test = require('node:test');
 const assert = require('node:assert');
+const fs = require('node:fs');
+const path = require('node:path');
 
 require('../js/zones.js');
 require('../js/i18n.js');
+['ar','de','es','fr','id','it','ja','ko','pl','pt','ru','th','tr','vi','zh-Hans','zh-Hant']
+  .forEach((c) => require('../js/locale/' + c + '.js'));
 require('../js/calculations.js');
 require('../js/roster-import.js');
 require('../js/share.js');
@@ -746,9 +750,31 @@ test('setting a language flips text direction for Arabic', () => {
 test('spoken callouts are localised and tagged for the right voice', () => {
   // A callout you must react to in seconds is useless read in the wrong accent,
   // so the utterance carries a language tag as well as translated words.
+  //
+  // What matters here is that the callout is localised, carries the name and
+  // the count, and is tagged for the right voice. It used to assert the exact
+  // Japanese wording, which tested nothing about any of that and did real harm:
+  // a native reviewer found 今すぐ出撃 means "sortie now" when the instruction is
+  // "tap the button now", and could not correct it because this line pinned it.
+  i18n.setLanguage('en');
+  var english = {
+    rallyIn: i18n.t('speech.rallyIn', { name: 'TS', seconds: 30 }),
+    goNow: i18n.t('speech.goNow', { name: 'TS' })
+  };
+
+  ['ja', 'ko', 'ru', 'ar'].forEach(function (code) {
+    i18n.setLanguage(code);
+    var rallyIn = i18n.t('speech.rallyIn', { name: 'TS', seconds: 30 });
+    var goNow = i18n.t('speech.goNow', { name: 'TS' });
+    assert.notStrictEqual(rallyIn, english.rallyIn, code + ' speaks English');
+    assert.notStrictEqual(goNow, english.goNow, code + ' speaks English');
+    assert.ok(rallyIn.indexOf('TS') !== -1, code + ' drops the name from the callout');
+    assert.ok(rallyIn.indexOf('30') !== -1, code + ' drops the countdown from the callout');
+    assert.ok(goNow.indexOf('TS') !== -1, code + ' drops the name from the go callout');
+    assert.ok(!/\{\w+\}/.test(rallyIn + goNow), code + ' leaked a placeholder into speech');
+  });
+
   i18n.setLanguage('ja');
-  assert.strictEqual(i18n.t('speech.rallyIn', { name: 'TS', seconds: 30 }), 'TS、集結まで30秒');
-  assert.strictEqual(i18n.t('speech.goNow', { name: 'TS' }), 'TS、今すぐ出撃');
 
   // Chinese needs a REGION or the engine falls back to a default voice.
   i18n.setLanguage('zh-Hant');
@@ -772,12 +798,32 @@ test('spoken callouts are localised and tagged for the right voice', () => {
 test('target and zone names follow the chosen language', () => {
   // Resolved when asked rather than when defined, so switching language
   // relabels rows that are already on screen.
-  i18n.setLanguage('ja');
-  assert.strictEqual(zones.targetTypeLabel('city'), '敵プレイヤー都市');
-  assert.strictEqual(zones.zoneLabel('general'), 'オープンマップ');
-  i18n.setLanguage('tr');
-  assert.strictEqual(zones.targetTypeLabel('hq_own'), 'Kendi karargâhın (takviye)');
-  assert.strictEqual(zones.zoneLabel('monster'), 'Canavar (Terror, Beast)');
+  //
+  // This asserts the BEHAVIOUR, not the wording. It used to hard-code the
+  // Japanese and Turkish strings, which meant any genuine improvement to a
+  // translation failed the build and pushed whoever hit it toward reverting
+  // good work to make a test pass. Wording belongs to the translators; what
+  // belongs here is that the lookup is late-bound and actually localised.
+  const KEYS = ['city', 'hq_own', 'monster_lair'];
+  const english = {};
+  i18n.setLanguage('en');
+  KEYS.forEach((k) => { english[k] = zones.targetTypeLabel(k); });
+  assert.strictEqual(english.city, 'Enemy player city');
+
+  ['ja', 'tr', 'ru'].forEach((code) => {
+    i18n.setLanguage(code);
+    KEYS.forEach((k) => {
+      const label = zones.targetTypeLabel(k);
+      assert.ok(label && label.trim(), code + ' has no label for ' + k);
+      assert.notStrictEqual(label, k, code + ' rendered the key name for ' + k);
+      assert.notStrictEqual(label, english[k],
+        code + ' still shows the English label for ' + k);
+    });
+    const zone = zones.zoneLabel('general');
+    assert.ok(zone && zone.trim() && zone !== 'general',
+      code + ' has no zone label for general');
+  });
+
   i18n.setLanguage('en');
   assert.strictEqual(zones.targetTypeLabel('city'), 'Enemy player city');
 });
@@ -789,4 +835,285 @@ test('every language covers the whole key set', () => {
     assert.strictEqual(i18n.coverage(l.code), 1,
       l.code + ' covers only ' + Math.round(i18n.coverage(l.code) * 100) + '% of the key set');
   });
+});
+
+test('no rendered string is a translated fragment glued to an English tail', () => {
+  // Two independent translators reported the same defect: a key holding only
+  // "Fitted to " concatenated with a count and a hard-coded " samples" reads
+  // half-English in every locale, and a language that puts the number first
+  // cannot be fixed by translating the prefix at all. Whole sentences with a
+  // {placeholder} are the only shape that survives translation, so forbid the
+  // concatenation outright rather than trusting anyone to remember.
+  var dir = path.join(__dirname, '..', 'js', 'views');
+  var offenders = [];
+  fs.readdirSync(dir).filter((f) => f.endsWith('.js')).forEach((file) => {
+    var src = fs.readFileSync(path.join(dir, file), 'utf8');
+    src.split('\n').forEach((line, i) => {
+      // T.t(...) welded to a quoted literal on either side. A literal with no
+      // letters in it -- a space, a separator, a bracket -- carries no meaning
+      // to translate, so it is punctuation around the sentence, not a tail of it.
+      var tail = line.match(/T\.t\([^)]*\)\s*\+\s*(['"])((?:(?!\1).)*)\1/);
+      var head = line.match(/(['"])((?:(?!\1).)*)\1\s*\+\s*T\.t\(/);
+      if ([tail, head].some((m) => m && /[A-Za-z]/.test(m[2]))) {
+        offenders.push(file + ':' + (i + 1) + '  ' + line.trim());
+      }
+    });
+  });
+  assert.deepStrictEqual(offenders, [],
+    'use one key with a {placeholder} instead of concatenating:\n' + offenders.join('\n'));
+});
+
+test('every placeholder in an English string survives into every translation', () => {
+  // A dropped or renamed {token} renders the literal braces to the player.
+  var withTokens = Object.keys(i18n.KEYS).filter((k) => /\{\w+\}/.test(i18n.KEYS[k]));
+  assert.ok(withTokens.length > 15, 'expected the placeholder keys to exist');
+  var problems = [];
+  i18n.LANGUAGES.filter((l) => l.code !== 'en').forEach((l) => {
+    var table = i18n.DICT[l.code] || {};
+    withTokens.forEach((k) => {
+      if (!(k in table)) return;                     // absent falls back to English
+      var want = (i18n.KEYS[k].match(/\{\w+\}/g) || []).slice().sort();
+      var got = (String(table[k]).match(/\{\w+\}/g) || []).slice().sort();
+      if (want.join(',') !== got.join(',')) {
+        problems.push(l.code + ' ' + k + ': expected ' + want.join(' ') + ', got ' + (got.join(' ') || 'none'));
+      }
+    });
+  });
+  assert.deepStrictEqual(problems, [], problems.join('\n'));
+});
+
+test('no module renders hard-coded English outside the dictionary', () => {
+  // focus.js and timepicker.js shipped fully untranslated because the original
+  // extraction only walked js/views/, and nobody re-checked which files render
+  // text. The countdown overlay and the time picker are two of the most-looked-at
+  // surfaces in the app. So scan every module, not a directory anyone has to
+  // remember to update, and make a new one fail loudly.
+  const ALLOWED_FILES = {
+    // English here is the default the translating accessor falls back to:
+    // zoneLabel()/targetTypeLabel() resolve through i18n at lookup time.
+    'zones.js': 'labels resolved via zoneLabel()/targetTypeLabel()',
+    // g(key, fallback) deliberately keeps the inline English as its fallback so
+    // an untranslated panel still renders a usable instruction.
+    'guide.js': 'inline English is the documented g() fallback',
+    'howto.js': 'inline English is the documented g() fallback'
+  };
+  const ALLOWED_VALUES = new Set(['UTC', 'RallySync', 'Kingshot', 'JSON']);
+
+  const slot = /(text|title|placeholder|'aria-label'|label)\s*:\s*'((?:[^'\\]|\\.)*)'/g;
+  const roots = [path.join(__dirname, '..', 'js'), path.join(__dirname, '..', 'js', 'views')];
+  const offenders = [];
+
+  roots.forEach((dir) => {
+    fs.readdirSync(dir, { withFileTypes: true })
+      .filter((e) => e.isFile() && e.name.endsWith('.js'))
+      .forEach((entry) => {
+        if (ALLOWED_FILES[entry.name]) return;
+        const src = fs.readFileSync(path.join(dir, entry.name), 'utf8');
+        src.split('\n').forEach((line, i) => {
+          let m;
+          slot.lastIndex = 0;
+          while ((m = slot.exec(line)) !== null) {
+            const value = m[2];
+            if (ALLOWED_VALUES.has(value)) continue;
+            if (!/[A-Za-z]{2}/.test(value)) continue;          // punctuation or digits
+            if (!/\s/.test(value) && value === value.toLowerCase()) continue; // a token, not prose
+            offenders.push(entry.name + ':' + (i + 1) + '  ' + m[1] + ": '" + value + "'");
+          }
+        });
+      });
+  });
+
+  assert.deepStrictEqual(offenders, [],
+    'wrap these in T.t() with a key, or add the file to ALLOWED_FILES with a reason:\n' +
+    offenders.join('\n'));
+});
+
+test('spoken callouts go through the dictionary, not string concatenation', () => {
+  // speech.rallyIn and speech.goNow were translated in all 16 locales while
+  // focus.js spoke an English sentence it built itself, so every non-English
+  // player heard English. The keys existing is not evidence they are used.
+  const files = ['focus.js', 'alarm.js', path.join('views', 'settings.js'), path.join('views', 'calculate.js')];
+  const offenders = [];
+  files.forEach((rel) => {
+    const p = path.join(__dirname, '..', 'js', rel);
+    if (!fs.existsSync(p)) return;
+    fs.readFileSync(p, 'utf8').split('\n').forEach((line, i) => {
+      // speechSynthesis.speak() is the browser API receiving a built utterance;
+      // the rule is about our own alarm.speak(), which takes a sentence.
+      if (/speechSynthesis\.speak\(/.test(line)) return;
+      const call = line.split('.speak(')[1];
+      // The argument must BE a lookup. A quote is fine -- it is the key name --
+      // but anything that does not open with T.t( is a sentence built in code.
+      if (call !== undefined && !/^\s*T\.t\(/.test(call)) {
+        offenders.push(rel + ':' + (i + 1) + '  ' + line.trim().slice(0, 90));
+      }
+    });
+  });
+  assert.deepStrictEqual(offenders, [],
+    'speak() must be handed a T.t() result:\n' + offenders.join('\n'));
+});
+
+test('no English is passed to el() as a child instead of through a key', () => {
+  // The third shape, and the one that hid the longest. Two earlier audits looked
+  // at `text:` style properties and at labels passed as positional arguments;
+  // neither could see a bare string sitting in the children array:
+  //
+  //     el('button.btn', { onclick: save }, ['Save current setup'])
+  //
+  // Roughly thirty of the app's most-clicked controls shipped English in every
+  // language this way -- Save, Add a target, Export backup, Erase everything,
+  // Check for updates -- and nothing in the pipeline could catch it. The
+  // coverage check saw no missing key because no key existed. The seventeen-
+  // language render sweep flags a rendered string that matches a KEY NAME, and
+  // these are real English prose: indistinguishable from a good translation
+  // unless you read the language.
+  //
+  // Seven of them already had translated keys that simply were not wired up.
+  const ALLOWED_FILES = {
+    'zones.js': 'labels resolved via zoneLabel()/targetTypeLabel()',
+    'guide.js': 'inline English is the documented g() fallback',
+    'howto.js': 'inline English is the documented g() fallback',
+    'icons.js': 'arrays of SVG path data, not text'
+  };
+
+  // A quoted string that is an ARRAY ELEMENT: preceded by [ or , and followed
+  // by , or ]. Not an object value, not a call argument.
+  const child = /[[,]\s*'((?:[^'\\]|\\.)*)'\s*[,\]]/g;
+  const roots = [path.join(__dirname, '..', 'js'), path.join(__dirname, '..', 'js', 'views')];
+  const offenders = [];
+
+  roots.forEach((dir) => {
+    fs.readdirSync(dir, { withFileTypes: true })
+      .filter((e) => e.isFile() && e.name.endsWith('.js'))
+      .forEach((entry) => {
+        if (ALLOWED_FILES[entry.name]) return;
+        const src = fs.readFileSync(path.join(dir, entry.name), 'utf8');
+        const lines = src.split('\n');
+        lines.forEach((line, i) => {
+          const trimmed = line.trim();
+          if (trimmed.startsWith('*') || trimmed.startsWith('//')) return;
+          // An explicit, documented escape hatch. The one legitimate case so far
+          // is a weekday fallback reached only when Intl is missing — which is
+          // exactly when there is no locale data to translate from. Requiring
+          // the marker in a comment keeps the reason next to the code.
+          const exempt = /i18n-exempt/.test(line) ||
+            (i > 0 && /i18n-exempt/.test(lines[i - 1])) ||
+            (i > 1 && /i18n-exempt/.test(lines[i - 2]));
+          if (exempt) return;
+          let m;
+          child.lastIndex = 0;
+          while ((m = child.exec(line)) !== null) {
+            const v = m[1];
+            // Prose a player would read: two letters together, and either a
+            // space or a leading capital. Class names, event names and keys are
+            // lowercase single tokens.
+            if (!/[A-Za-z]{2}/.test(v)) continue;
+            if (!/\s/.test(v) && !/^[A-Z]/.test(v)) continue;
+            // string concatenation fragments, not literals a reader sees
+            if (v.indexOf(' + ') !== -1) continue;
+            offenders.push(entry.name + ':' + (i + 1) + "  '" + v + "'");
+          }
+        });
+      });
+  });
+
+  assert.deepStrictEqual(offenders, [],
+    'pass these through T.t() with a key instead of as a literal child:\n' +
+    offenders.join('\n'));
+});
+
+test('destructive confirmations are translated', () => {
+  // Seven confirm() dialogs shipped English in every language: delete a lead,
+  // erase everything on this device, discard fitted constants. Of all the text
+  // in the app these are the worst to leave unreadable -- the player is being
+  // asked to authorise something irreversible, and the one thing they can read
+  // is the OK button.
+  const roots = [path.join(__dirname, '..', 'js'), path.join(__dirname, '..', 'js', 'views')];
+  const offenders = [];
+  roots.forEach((dir) => {
+    fs.readdirSync(dir, { withFileTypes: true })
+      .filter((e) => e.isFile() && e.name.endsWith('.js'))
+      .forEach((entry) => {
+        const src = fs.readFileSync(path.join(dir, entry.name), 'utf8');
+        src.split('\n').forEach((line, i) => {
+          const call = line.split(/\bconfirm\(/)[1];
+          if (call === undefined) return;
+          if (/^\s*T\.t\(/.test(call)) return;
+          offenders.push(entry.name + ':' + (i + 1) + '  ' + line.trim().slice(0, 80));
+        });
+      });
+  });
+  assert.deepStrictEqual(offenders, [],
+    'confirm() must be handed a T.t() result:\n' + offenders.join('\n'));
+});
+
+test('no count is glued to an English tail', () => {
+  // "3 blocked", "2 leads share a name." -- a number concatenated with an
+  // English literal. The fragment guard cannot see these because it looks for a
+  // TRANSLATED fragment welded to an English tail, and here both halves are
+  // English. They render as English inside an otherwise translated screen.
+  const ALLOWED = new Set(['UTC', 'km', 'RallySync', 'Kingshot', 'JSON', 'X', 'Y']);
+  const ALLOWED_FILES = { 'zones.js': 1, 'guide.js': 1, 'howto.js': 1, 'icons.js': 1 };
+
+  // A quoted literal next to a +, OR sitting in a ternary that feeds one.
+  // The ternary arm is the shape that hid the third of three sibling warnings:
+  //   notes.push(n + (n === 1 ? ' march is' : ' marches are') + ' well outside…')
+  // Its two neighbours were caught because they touch a +; this one only ever
+  // touches ? and :, so a +-only pattern walked straight past it — and the
+  // sentence it joins was already translated, giving a line that switches
+  // language halfway through.
+  const glued = /([+?:])\s*'((?:[^'\\]|\\.)*)'|'((?:[^'\\]|\\.)*)'\s*([+?:])/g;
+  const roots = [path.join(__dirname, '..', 'js'), path.join(__dirname, '..', 'js', 'views')];
+  const offenders = [];
+
+  roots.forEach((dir) => {
+    fs.readdirSync(dir, { withFileTypes: true })
+      .filter((e) => e.isFile() && e.name.endsWith('.js'))
+      .forEach((entry) => {
+        if (ALLOWED_FILES[entry.name]) return;
+        const src = fs.readFileSync(path.join(dir, entry.name), 'utf8');
+        const lines = src.split('\n');
+        lines.forEach((line, i) => {
+          const trimmed = line.trim();
+          if (trimmed.startsWith('*') || trimmed.startsWith('//')) return;
+          // Same lookback as the children-array guard, so the marker can sit on
+          // a comment line above the code it explains rather than trailing it.
+          if (/i18n-exempt/.test(line) ||
+              (i > 0 && /i18n-exempt/.test(lines[i - 1])) ||
+              (i > 1 && /i18n-exempt/.test(lines[i - 2]))) return;
+          let m;
+          glued.lastIndex = 0;
+          while ((m = glued.exec(line)) !== null) {
+            const raw = m[2] !== undefined ? m[2] : m[3];
+            const delimiter = m[1] || m[4];
+            // A ":" is a ternary arm only where there is a "?" to match it.
+            // Everywhere else it introduces an object property value, which is
+            // a perfectly ordinary place for an English string to live —
+            // js/i18n.js is nothing but those.
+            if (delimiter === ':' && line.indexOf('?') === -1) continue;
+            const word = raw.trim();
+            if (!/[A-Za-z]{3}/.test(word)) continue;   // separators, punctuation
+            if (ALLOWED.has(word)) continue;
+            // Prose has a space in it. Element selectors ('button.nav-btn'),
+            // state-key prefixes ('pip', 'say') and CSS function names
+            // ('translateY(') do not, and are not read by anyone.
+            if (!/\s/.test(raw)) continue;
+            // Class-name fragments toggled onto elements: ' is-selected',
+            // '.btn-ghost is-exact'. All-lowercase hyphenated tokens, which no
+            // sentence looks like.
+            const tokens = word.split(/\s+/);
+            if (tokens.every((tk) => /^[.#]?[a-z][a-z0-9-]*$/.test(tk)) &&
+                tokens.some((tk) => tk.indexOf('-') !== -1)) continue;
+            // Brackets and slashes mean this capture ran across an expression
+            // rather than sitting inside one literal -- a ternary or a regex.
+            if (/[(){}<>/]/.test(raw)) continue;
+            offenders.push(entry.name + ':' + (i + 1) + "  '" + raw + "'");
+          }
+        });
+      });
+  });
+
+  assert.deepStrictEqual(offenders, [],
+    'use one key with a {placeholder} instead of concatenating English:\n' +
+    offenders.join('\n'));
 });

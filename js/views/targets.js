@@ -15,6 +15,7 @@
   'use strict';
 
   var d = root.RallySync.dom;
+  var T = root.RallySync.i18n;
   var S = root.RallySync.state;
   var Z = root.RallySync.zones;
   var G = root.RallySync.guide;
@@ -32,17 +33,18 @@
 
     container.appendChild(el('div.view-head', {}, [
       el('div', {}, [
-        el('h2.view-title', { text: 'Targets' }),
+        el('h2.view-title', { text: T.t('tgt.targets') }),
         el('p.view-sub', {
           text: targets.length
-            ? targets.length + (targets.length === 1 ? ' target saved' : ' targets saved')
-            : 'Set your kingdom’s coordinates once. Reused every event.'
+            ? T.t(targets.length === 1 ? 'tgt.nSavedOne' : 'tgt.nSavedMany',
+                { n: targets.length })
+            : T.t('tgt.emptySub')
         })
       ]),
       el('button.btn.btn-primary', {
         type: 'button',
         onclick: function () { addingOpen = !addingOpen; root.RallySync.app.refresh(); }
-      }, [icon('plus', 15), el('span', { text: 'Add target' })])
+      }, [icon('plus', 15), el('span', { text: T.t('tgt.addTarget') })])
     ]));
 
     if (addingOpen) container.appendChild(typePicker());
@@ -52,8 +54,11 @@
       container.appendChild(el('div.banner.banner-info', {}, [
         icon('alert', 16),
         el('span', {}, [
-          el('strong', { text: needsCoords + ' target' + (needsCoords === 1 ? '' : 's') + ' still need coordinates. ' }),
-          'Open one and fill in the X/Y you see in game.'
+          el('strong', {
+            text: T.t(needsCoords === 1 ? 'tgt.needCoordsOne' : 'tgt.needCoordsMany',
+              { n: needsCoords }) + ' '
+          }),
+          T.t('tgt.needCoordsBody')
         ])
       ]));
     }
@@ -69,7 +74,7 @@
       return filterType === 'all' || t.type === filterType;
     });
     if (visible.length === 0) {
-      container.appendChild(el('p.muted', { text: 'No targets of this type yet.' }));
+      container.appendChild(el('p.muted', { text: T.t('tgt.noTargetsOfThis') }));
       return;
     }
 
@@ -83,14 +88,14 @@
   function typePicker() {
     var panel = el('section.panel.panel-accent');
     panel.appendChild(el('div.panel-head', {}, [
-      el('h2.panel-title', { text: 'What are you adding?' }),
+      el('h2.panel-title', { text: T.t('tgt.whatAreYouAdding') }),
       el('button.btn.btn-icon', {
-        type: 'button', 'aria-label': 'Close',
+        type: 'button', 'aria-label': T.t('tgt.close'),
         onclick: function () { addingOpen = false; root.RallySync.app.refresh(); }
       }, [icon('x', 16)])
     ]));
     panel.appendChild(el('p.panel-note', {
-      text: 'Pick a type to start from. It only sets the zone model and rally window — you can rename it and change both afterwards, and add as many of a type as you need.'
+      text: T.t('tgt.pickATypeTo')
     }));
 
     var chips = el('div.chips');
@@ -98,7 +103,7 @@
       var count = S.data.targets.filter(function (t) { return t.type === def.key; }).length;
       chips.appendChild(el('button.chip', {
         type: 'button',
-        title: 'Add a ' + def.label,
+        title: T.t('tgt.addAType', { type: def.label }),
         onclick: function () { addOfType(def.key); }
       }, [
         def.label,
@@ -141,12 +146,12 @@
   function emptyState() {
     return el('div.empty', {}, [
       icon('pin', 30),
-      el('h3', { text: 'No targets yet' }),
-      el('p', { text: 'Add whatever your alliance hits — the Castle, turrets, Sanctuaries, Outposts. You can have as many of each as you like, with your own names.' }),
+      el('h3', { text: T.t('tgt.noTargetsYet') }),
+      el('p', { text: T.t('tgt.addWhateverYourAlliance') }),
       el('button.btn.btn-primary', {
         type: 'button',
         onclick: function () { addingOpen = true; root.RallySync.app.refresh(); }
-      }, ['Add a target'])
+      }, [T.t('btn.addTarget')])
     ]);
   }
 
@@ -169,14 +174,16 @@
           el('span.tag.tag-squad', { text: Z.targetTypeLabel(target.type) })
         ]),
         el('div.card-meta', {}, [
-          el('span', { text: missing ? 'no coordinates' : 'X:' + target.x + ' Y:' + target.y }),
+          el('span', { text: missing ? T.t('tgt.noCoordinates') : 'X:' + target.x + ' Y:' + target.y }),
           el('span.dot', { text: '·' }),
           el('span.tag.tag-zone', { text: Z.zoneLabel(target.zoneKey) }),
           el('span.dot', { text: '·' }),
-          el('span', { text: 'rally ' + formatWindow(target.gatherSeconds) })
+          el('span', { text: Number(target.gatherSeconds) > 0
+            ? T.t('tgt.rallyWindowOf', { window: formatWindow(target.gatherSeconds) })
+            : T.t('tgt.noRallyWindow') })
         ])
       ]),
-      missing ? el('span.tag.tag-error', { text: 'set X/Y' }) : null,
+      missing ? el('span.tag.tag-error', { text: T.t('tgt.setXY') }) : null,
       el('span.chev', {}, [icon(isOpen ? 'chevronDown' : 'chevronRight', 14)])
     ]));
 
@@ -184,8 +191,8 @@
 
     var body = el('div.card-body');
 
-    body.appendChild(field('Name', el('input.input', {
-      type: 'text', value: target.name, placeholder: 'e.g. North Sanctuary', autocomplete: 'off',
+    body.appendChild(field(T.t('tgt.nameField'), el('input.input', {
+      type: 'text', value: target.name, placeholder: T.t('tgt.eGNorthSanctuary'), autocomplete: 'off',
       onchange: function (e) { patch(target, { name: e.target.value }); }
     }), 'Call it whatever your alliance calls it.'));
 
@@ -194,15 +201,15 @@
     }, Z.TARGET_TYPES.map(function (def) {
       return el('option', { value: def.key, selected: def.key === target.type }, [Z.zoneLabel(def.key)]);
     }));
-    body.appendChild(field('Type', typeSelect,
+    body.appendChild(field(T.t('tgt.typeField'), typeSelect,
       'Changing type resets the zone model and rally window to that type’s defaults.'));
 
     body.appendChild(el('div.grid-2', {}, [
-      field('X', el('input.input', {
+      field(T.t('field.x'), el('input.input', {
         type: 'number', inputmode: 'numeric', value: valueOf(target.x), placeholder: '—',
         onchange: function (e) { patch(target, { x: e.target.value }); }
       })),
-      field('Y', el('input.input', {
+      field(T.t('field.y'), el('input.input', {
         type: 'number', inputmode: 'numeric', value: valueOf(target.y), placeholder: '—',
         onchange: function (e) { patch(target, { y: e.target.value }); }
       }))
@@ -215,7 +222,7 @@
       return el('option', { value: def.key, selected: def.key === target.zoneKey }, [def.label]);
     }));
     var activeZone = Z.zoneDef(target.zoneKey);
-    body.appendChild(field('Zone model', zoneSelect, activeZone ? activeZone.blurb : null));
+    body.appendChild(field(T.t('tgt.zoneModel'), zoneSelect, activeZone ? activeZone.blurb : null));
 
     body.appendChild(field(
       'Rally window (minutes)',
@@ -234,22 +241,24 @@
     body.appendChild(el('div.card-actions', {}, [
       el('button.btn.btn-ghost', {
         type: 'button',
-        title: 'Add another of this type',
+        title: T.t('tgt.addAnotherOfThis'),
         onclick: function () { addOfType(target.type); }
-      }, [icon('plus', 15), el('span', { text: 'Add another' })]),
+      }, [icon('plus', 15), el('span', { text: T.t('tgt.addAnother') })]),
       el('button.btn.btn-ghost.btn-danger', {
         type: 'button',
         onclick: function () {
-          if (root.confirm('Delete ' + (target.name || 'this target') + '?')) {
+          if (root.confirm(T.t('confirm.deleteTarget', {
+            name: target.name || T.t('common.thisTarget')
+          }))) {
             delete expanded[target.id];
             S.deleteTarget(target.id);
           }
         }
-      }, [icon('trash', 15), el('span', { text: 'Delete' })]),
+      }, [icon('trash', 15), el('span', { text: T.t('tgt.delete') })]),
       el('button.btn.btn-secondary', {
         type: 'button',
         onclick: function () { expanded[target.id] = false; root.RallySync.app.refresh(); }
-      }, ['Done'])
+      }, [T.t('common.done')])
     ]));
 
     card.appendChild(body);
@@ -263,11 +272,19 @@
     root.RallySync.app.refresh();
   }
 
-  /** "5 min", "2.5 min", or "none" for a solo march. */
+  /**
+   * "5 min", or the standalone no-window phrase for a solo march.
+   *
+   * The caller now picks between two whole sentences, so the zero case is not
+   * reached from there any more. It returns the standalone phrase rather than a
+   * bare "none" because that is the only thing that reads correctly on its own:
+   * the old value was written to be substituted INTO a sentence, which produced
+   * "rally none" in English and worse in languages that inflect.
+   */
   function formatWindow(seconds) {
     var s = Number(seconds) || 0;
-    if (s === 0) return 'none';
-    return (Math.round((s / 60) * 10) / 10) + ' min';
+    if (s === 0) return T.t('tgt.noRallyWindow');
+    return T.t('dur.minutes', { n: Math.round((s / 60) * 10) / 10 });
   }
 
   function minutesValue(seconds) {

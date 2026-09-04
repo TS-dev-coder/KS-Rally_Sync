@@ -22,7 +22,15 @@ const VERSION = readVersion();
 
 test('the shipped version number is the one the app reports', () => {
   require('../js/dom.js');
-  assert.strictEqual(VERSION, '3.9');
+  require('../js/version.js');
+  // The stamper reads VERSION out of the file with a regex; the app reads it by
+  // running the module. Those are two different parsers of the same line, and
+  // if they ever disagree the stamp on index.html would not match the version
+  // the header shows. Comparing them keeps the check meaningful without needing
+  // a literal edited by hand every release -- which is the sort of chore that
+  // gets skipped, leaving the test asserting a number nobody ships any more.
+  assert.strictEqual(VERSION, globalThis.RallySync.version.VERSION);
+  assert.match(VERSION, /^\d+\.\d+$/, 'version should look like 4.0, got ' + VERSION);
 });
 
 test('every local asset URL carries the current version stamp', () => {

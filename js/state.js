@@ -340,13 +340,25 @@
    * Refits one zone's constants to its samples.
    * @returns {{ok:boolean, fit:object|null, reason:string|null}}
    */
+  /**
+   * Dictionary lookup that still works when this module is used on its own --
+   * it is required directly by the tests and by Node scripts, where i18n has
+   * not necessarily been loaded.
+   */
+  function say(key, fallback) {
+    var T = root.RallySync && root.RallySync.i18n;
+    if (!T || !T.t) return fallback;
+    var out = T.t(key);
+    return out === key ? fallback : out;
+  }
+
   function recalibrateZone(zoneKey) {
     var zone = findZone(zoneKey);
-    if (!zone) return { ok: false, fit: null, reason: 'Unknown zone.' };
+    if (!zone) return { ok: false, fit: null, reason: say('state.unknownZone', 'Unknown zone.') };
 
     var samples = samplesForZone(zoneKey);
     if (samples.length === 0) {
-      return { ok: false, fit: null, reason: 'No samples recorded for this zone yet.' };
+      return { ok: false, fit: null, reason: say('state.noSamples', 'No samples recorded for this zone yet.') };
     }
 
     // Fit whichever curve the zone runs on. The power model needs two samples
@@ -358,7 +370,7 @@
     if (zone.formulaType === 'piecewise') {
       var scaled = calc.fitPiecewiseScale(samples, zone.constants);
       if (!scaled) {
-        return { ok: false, fit: null, reason: 'These samples do not produce a usable fit.' };
+        return { ok: false, fit: null, reason: say('state.noUsableFit', 'These samples do not produce a usable fit.') };
       }
       zone.constants = calc.scalePiecewiseConstants(zone.constants, scaled.scale);
       zone.trust = 'calibrated';
@@ -382,7 +394,7 @@
     if (!fit) fit = calc.fitAffine(samples, affineSeed(zone));
 
     if (!fit) {
-      return { ok: false, fit: null, reason: 'These samples do not produce a usable fit.' };
+      return { ok: false, fit: null, reason: say('state.noUsableFit', 'These samples do not produce a usable fit.') };
     }
 
     if (usedPower) {

@@ -11,7 +11,7 @@
 ;(function (root) {
   'use strict';
 
-  var VERSION = '3.8';
+  var VERSION = '3.9';
 
   /** When the page this tab is running was published. */
   function buildMs() {

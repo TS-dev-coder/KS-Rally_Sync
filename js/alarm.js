@@ -175,12 +175,46 @@
    * downloaded and it still works offline. Deliberately fire-and-forget: a
    * browser with no voices installed simply stays quiet.
    */
+  /**
+   * The installed voice that best matches a language tag. An exact match wins;
+   * otherwise any voice sharing the base language will do, since a Brazilian
+   * voice reading European Portuguese is still Portuguese, whereas the default
+   * English voice reading it is not.
+   */
+  function voiceFor(tag) {
+    if (!tag) return null;
+    var voices;
+    try { voices = root.speechSynthesis.getVoices() || []; } catch (err) { return null; }
+    if (!voices.length) return null;
+    var wanted = String(tag).toLowerCase();
+    var base = wanted.split('-')[0];
+    var loose = null;
+    for (var i = 0; i < voices.length; i++) {
+      var have = String(voices[i].lang || '').toLowerCase().replace('_', '-');
+      if (have === wanted) return voices[i];
+      if (!loose && have.split('-')[0] === base) loose = voices[i];
+    }
+    return loose;
+  }
+
   function speak(text) {
     if (!speechOn || !speechSupported()) return false;
     try {
       var utterance = new root.SpeechSynthesisUtterance(String(text));
       utterance.rate = 1.05;      // a touch quick, this is a callout
       utterance.volume = Math.max(0.3, volume);
+
+      // Say it in the language it was written in. Without this the engine uses
+      // the page default and reads every locale with an English accent, which
+      // is worse than useless for a callout you have to react to in seconds.
+      var i18n = root.RallySync && root.RallySync.i18n;
+      if (i18n) {
+        var tag = i18n.speechTag();
+        utterance.lang = tag;
+        var voice = voiceFor(tag);
+        if (voice) utterance.voice = voice;
+      }
+
       root.speechSynthesis.speak(utterance);
       return true;
     } catch (err) {
@@ -230,6 +264,7 @@
     speechSupported: speechSupported,
     setSpeech: setSpeech,
     speak: speak,
+    voiceFor: voiceFor,
     sayOnce: sayOnce,
     cancelSpeech: cancelSpeech,
     fireOnce: fireOnce,

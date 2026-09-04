@@ -742,3 +742,51 @@ test('setting a language flips text direction for Arabic', () => {
   assert.strictEqual(i18n.isRtl(), false);
   assert.strictEqual(i18n.setLanguage('klingon'), 'en', 'an unknown code falls back to English');
 });
+
+test('spoken callouts are localised and tagged for the right voice', () => {
+  // A callout you must react to in seconds is useless read in the wrong accent,
+  // so the utterance carries a language tag as well as translated words.
+  i18n.setLanguage('ja');
+  assert.strictEqual(i18n.t('speech.rallyIn', { name: 'TS', seconds: 30 }), 'TS、集結まで30秒');
+  assert.strictEqual(i18n.t('speech.goNow', { name: 'TS' }), 'TS、今すぐ出撃');
+
+  // Chinese needs a REGION or the engine falls back to a default voice.
+  i18n.setLanguage('zh-Hant');
+  assert.strictEqual(i18n.speechTag(), 'zh-TW');
+  i18n.setLanguage('zh-Hans');
+  assert.strictEqual(i18n.speechTag(), 'zh-CN');
+  i18n.setLanguage('tr');
+  assert.strictEqual(i18n.speechTag(), 'tr');
+
+  // Every locale must actually carry both phrases, and keep the placeholders.
+  Object.keys(i18n.DICT).forEach((code) => {
+    i18n.setLanguage(code);
+    const said = i18n.t('speech.rallyIn', { name: 'X', seconds: 9 });
+    assert.ok(said.indexOf('X') !== -1, code + ' drops the lead name from its callout');
+    assert.ok(said.indexOf('9') !== -1, code + ' drops the countdown from its callout');
+    assert.ok(said.indexOf('{') === -1, code + ' left an unfilled placeholder: ' + said);
+  });
+  i18n.setLanguage('en');
+});
+
+test('target and zone names follow the chosen language', () => {
+  // Resolved when asked rather than when defined, so switching language
+  // relabels rows that are already on screen.
+  i18n.setLanguage('ja');
+  assert.strictEqual(zones.targetTypeLabel('city'), '敵プレイヤー都市');
+  assert.strictEqual(zones.zoneLabel('general'), 'オープンマップ');
+  i18n.setLanguage('tr');
+  assert.strictEqual(zones.targetTypeLabel('hq_own'), 'Kendi karargâhın (takviye)');
+  assert.strictEqual(zones.zoneLabel('monster'), 'Canavar (Terror, Beast)');
+  i18n.setLanguage('en');
+  assert.strictEqual(zones.targetTypeLabel('city'), 'Enemy player city');
+});
+
+test('every language covers the whole key set', () => {
+  // A locale at less than 100% still works -- it falls back to English -- but
+  // this catches a key added to English and forgotten everywhere else.
+  i18n.LANGUAGES.forEach((l) => {
+    assert.strictEqual(i18n.coverage(l.code), 1,
+      l.code + ' covers only ' + Math.round(i18n.coverage(l.code) * 100) + '% of the key set');
+  });
+});

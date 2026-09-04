@@ -192,7 +192,7 @@
     var typeSelect = el('select.input', {
       onchange: function (e) { changeType(target, e.target.value); }
     }, Z.TARGET_TYPES.map(function (def) {
-      return el('option', { value: def.key, selected: def.key === target.type }, [def.label]);
+      return el('option', { value: def.key, selected: def.key === target.type }, [Z.zoneLabel(def.key)]);
     }));
     body.appendChild(field('Type', typeSelect,
       'Changing type resets the zone model and rally window to that type’s defaults.'));

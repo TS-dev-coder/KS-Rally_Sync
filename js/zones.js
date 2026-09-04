@@ -72,7 +72,35 @@
     return TARGET_TYPES[TARGET_TYPES.length - 1];
   }
 
-  function targetTypeLabel(key) { return targetTypeDef(key).label; }
+  /** Dictionary key for a target type, e.g. 'hq_own' -> 'targetType.hqOwn'. */
+  function typeKeyFor(key) {
+    var camel = String(key).replace(/_([a-z])/g, function (m, c) { return c.toUpperCase(); });
+    return 'targetType.' + camel;
+  }
+
+  /** Dictionary key for a zone, e.g. 'castle_relic' -> 'zone.castleRelic'. */
+  function zoneKeyFor(key) {
+    var camel = String(key).replace(/_([a-z])/g, function (m, c) { return c.toUpperCase(); });
+    return 'zone.' + camel;
+  }
+
+  /**
+   * Resolved when asked, not when defined, so switching language relabels
+   * everything already on screen. Falls back to the English label baked into
+   * the definition if i18n has not loaded.
+   */
+  function translate(dictKey, fallback) {
+    var i18n = root.RallySync && root.RallySync.i18n;
+    if (!i18n) return fallback;
+    var out = i18n.t(dictKey);
+    return out === dictKey ? fallback : out;
+  }
+
+  function targetTypeLabel(key) {
+    var def = targetTypeDef(key);
+    return translate(typeKeyFor(def.key), def.label);
+  }
+
 
   /** Best guess for targets saved before types existed. */
   function inferTargetType(target) {
@@ -252,7 +280,7 @@
 
   function zoneLabel(key) {
     var def = zoneDef(key);
-    return def ? def.label : key;
+    return def ? translate(zoneKeyFor(key), def.label) : key;
   }
 
   /**

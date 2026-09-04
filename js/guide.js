@@ -45,10 +45,14 @@
       steps: [
         'Tap the target on the map, then Rally.',
         'Pick any rally window and tap Hold a rally.',
-        'On the troop screen, read the time beside the timer icon at the bottom right — that is the march time.',
-        'Leave with the arrow at the top left. Nothing is deployed and no rally is created.'
+        'On the troop screen, read the time beside the timer icon at the bottom right, just left of Deploy — that is the march time.',
+        'Leave with the arrow at the top left. Nothing is deployed, no rally is created, and no stamina is spent.',
+        'Type that time into Exact time on the result row.'
       ],
-      note: 'The number holds still rather than counting down, and does not depend on which rally window you picked — so you can read it at your leisure. Typing it in makes that lead and target exact, with no formula involved.'
+      note: 'Verified against real marches: the number the screen shows before you commit is the time the march actually takes. ' +
+        'It holds still rather than counting down, and it does not change with the rally window you picked, so there is no rush to read it. ' +
+        'Small monsters offer only Attack rather than Rally — that screen shows the same number, so use it. ' +
+        'Once typed in, that lead and target are exact and no formula is used for them again.'
     },
     rallyWindow: {
       title: 'What is the rally window?',

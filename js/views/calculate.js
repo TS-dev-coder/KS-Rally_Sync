@@ -1093,10 +1093,21 @@
     }
 
     var panel = el('div.exact-panel', { hidden: exactOpenKey !== key }, [
-      el('div.exact-help', {
-        text: 'In game: tap the target, Rally, Hold a rally, then read the time beside the ' +
-          'timer icon at the bottom right. Back out with the arrow — nothing is deployed.'
-      }),
+      // The steps live here rather than only on the Tune tab: this is the moment
+      // someone needs them, and sending them to another screen to find out how
+      // to get the number is how a feature goes unused.
+      el('div.exact-help', {}, [
+        el('div.exact-help-title', { text: 'Get this from the game without marching' }),
+        el('ol.exact-steps', {}, [
+          el('li', { text: 'Tap the target on the map, then Rally.' }),
+          el('li', { text: 'Pick any rally window, then Hold a rally.' }),
+          el('li', { text: 'Read the time beside the timer icon, left of Deploy.' }),
+          el('li', { text: 'Back out with the arrow. Nothing deploys, no stamina is spent.' })
+        ]),
+        el('div.exact-help-note', {
+          text: 'Small monsters show Attack instead of Rally — that screen gives the same number.'
+        })
+      ]),
       el('div.exact-row', {}, [
         input,
         el('button.btn.btn-primary.btn-sm', { type: 'button', onclick: save }, [
@@ -1273,11 +1284,11 @@
       // the spoken number is the real remaining time rather than the mark.
       if (seconds <= mark && seconds > mark - 2) {
         A.sayOnce(item.leadId + ':say:' + mark,
-          item.name + ', rally in ' + Math.round(seconds) + ' seconds');
+          T.t('speech.rallyIn', { name: item.name, seconds: Math.round(seconds) }));
       }
     }
     if (seconds <= 0 && seconds > -3) {
-      A.sayOnce(item.leadId + ':say:go', item.name + ', go now');
+      A.sayOnce(item.leadId + ':say:go', T.t('speech.goNow', { name: item.name }));
     }
   }
 

@@ -30,6 +30,7 @@
     }
 
     container.appendChild(versionSection());
+    container.appendChild(languageSection());
     container.appendChild(themeSection());
     container.appendChild(clockSection());
     container.appendChild(alarmSection());
@@ -105,6 +106,62 @@
       }
     }, [updateState === 'checking' ? 'Checking…' : 'Check for updates']));
 
+    return section;
+  }
+
+  // ---------------------------------------------------------------- language
+
+  /**
+   * The seventeen languages Kingshot itself ships in. "Automatic" follows the
+   * browser, which is the right default: a player who reads the game in Turkish
+   * should not have to find this screen first.
+   *
+   * Each option shows its own name in its own script, because someone looking
+   * for their language is scanning for how THEY write it, not for the English
+   * word for it.
+   */
+  function languageSection() {
+    var T = root.RallySync.i18n;
+    var chosen = S.data.settings.language;
+    var section = el('section.panel');
+    section.appendChild(el('div.panel-head', {}, [
+      el('h2.panel-title', { text: T.t('head.language') })
+    ]));
+    section.appendChild(el('p.panel-note', {
+      text: 'These are the languages Kingshot itself supports. Partly translated ' +
+        'ones fall back to English for anything still missing, so nothing goes blank.'
+    }));
+
+    function pick(code) {
+      S.updateSettings({ language: code });
+      root.RallySync.app.applyLanguage();
+      root.RallySync.app.refresh();
+    }
+
+    var buttons = [
+      el('button.lang-btn' + (!chosen ? ' is-selected' : ''), {
+        type: 'button', 'aria-pressed': !chosen ? 'true' : 'false',
+        onclick: function () { pick(null); }
+      }, [
+        el('span.lang-native', { text: 'Automatic' }),
+        el('span.lang-english', { text: T.LANGUAGES.filter(function (l) {
+          return l.code === T.detect();
+        })[0].native })
+      ])
+    ];
+
+    T.LANGUAGES.forEach(function (def) {
+      var pct = Math.round(T.coverage(def.code) * 100);
+      buttons.push(el('button.lang-btn' + (chosen === def.code ? ' is-selected' : ''), {
+        type: 'button', lang: def.code, 'aria-pressed': chosen === def.code ? 'true' : 'false',
+        onclick: function () { pick(def.code); }
+      }, [
+        el('span.lang-native', { text: def.native }),
+        el('span.lang-english', { text: def.english + (pct < 100 ? ' · ' + pct + '%' : '') })
+      ]));
+    });
+
+    section.appendChild(el('div.lang-grid', {}, buttons));
     return section;
   }
 

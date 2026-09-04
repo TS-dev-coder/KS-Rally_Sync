@@ -14,6 +14,9 @@
   var DEFAULT_GATHER_SECONDS = 300; // Castle rallies march at 5:00, filled or not.
 
   var DEFAULT_SETTINGS = {
+    // null means follow the browser, so a new install speaks the player's
+    // language without being asked.
+    language: null,
     clockOffsetSeconds: 0,
     mode: 'sync',
     gapSeconds: 5,

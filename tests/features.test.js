@@ -8,12 +8,13 @@ const test = require('node:test');
 const assert = require('node:assert');
 
 require('../js/zones.js');
+require('../js/i18n.js');
 require('../js/calculations.js');
 require('../js/roster-import.js');
 require('../js/share.js');
 require('../js/alarm.js');
 
-const { calc, zones, rosterImport, share } = globalThis.RallySync;
+const { calc, zones, rosterImport, share, i18n } = globalThis.RallySync;
 
 const near = (actual, expected, tolerance = 1e-9) =>
   assert.ok(Math.abs(actual - expected) <= tolerance,
@@ -675,4 +676,69 @@ test('an unknown target type takes the well-measured curve, not the guessed one'
     (at('general') / at('monster')).toFixed(2) + 'x');
   assert.ok(Math.abs(at('general') - 676) < 8,
     'the open-map curve should reproduce the real 11:16 march; got ' + at('general').toFixed(0));
+});
+
+// ================================================================== i18n
+
+test('the language list is exactly what Kingshot itself ships', () => {
+  // Not a list I chose: these are the seventeen locales declared on the
+  // Kingshot App Store listing. Anyone who can read the game can read this.
+  const codes = i18n.LANGUAGES.map((l) => l.code).sort();
+  assert.deepStrictEqual(codes, [
+    'ar', 'de', 'en', 'es', 'fr', 'id', 'it', 'ja', 'ko',
+    'pl', 'pt', 'ru', 'th', 'tr', 'vi', 'zh-Hans', 'zh-Hant'
+  ]);
+  assert.strictEqual(i18n.LANGUAGES[0].code, 'en', 'English is the key set and comes first');
+  i18n.LANGUAGES.forEach((l) => {
+    assert.ok(l.native && l.english, l.code + ' needs both its own name and an English one');
+  });
+  assert.ok(i18n.LANGUAGES.find((l) => l.code === 'ar').rtl, 'Arabic must be marked right-to-left');
+});
+
+test('a missing translation falls back to English, never to a blank', () => {
+  // A half-translated locale has to degrade into a readable mix. A blank button
+  // or a raw key on screen mid-event is worse than an English word.
+  i18n.setLanguage('de');
+  assert.strictEqual(i18n.t('nav.calculate'), 'Berechnen');
+  assert.strictEqual(i18n.t('badge.measured'), 'gemessen');
+
+  const invented = 'some.key.no.locale.defines';
+  i18n.KEYS[invented] = 'English fallback';
+  assert.strictEqual(i18n.t(invented), 'English fallback', 'unknown key must render the English string');
+  delete i18n.KEYS[invented];
+
+  assert.strictEqual(i18n.t('totally.unknown'), 'totally.unknown', 'and an unknown key renders as itself');
+  i18n.setLanguage('en');
+});
+
+test('every locale translates a key the English set actually has', () => {
+  // Guards against a typo in a locale creating a key that can never be read.
+  const known = Object.keys(i18n.KEYS);
+  Object.keys(i18n.DICT).forEach((code) => {
+    Object.keys(i18n.DICT[code]).forEach((key) => {
+      assert.ok(known.indexOf(key) !== -1,
+        code + ' defines "' + key + '", which is not a key in the English set');
+    });
+  });
+});
+
+test('browser tags resolve to the closest language the app speaks', () => {
+  // Chinese is the one that matters: zh-TW must not quietly land on Simplified,
+  // which would be readable but wrong.
+  assert.strictEqual(i18n.resolve('pt-BR'), 'pt');
+  assert.strictEqual(i18n.resolve('es-419'), 'es');
+  assert.strictEqual(i18n.resolve('zh-TW'), 'zh-Hant');
+  assert.strictEqual(i18n.resolve('zh-HK'), 'zh-Hant');
+  assert.strictEqual(i18n.resolve('zh-CN'), 'zh-Hans');
+  assert.strictEqual(i18n.resolve('zh'), 'zh-Hans');
+  assert.strictEqual(i18n.resolve('en-GB'), 'en');
+  assert.strictEqual(i18n.resolve('xx'), null, 'a language we do not speak resolves to nothing');
+});
+
+test('setting a language flips text direction for Arabic', () => {
+  assert.strictEqual(i18n.setLanguage('ar'), 'ar');
+  assert.strictEqual(i18n.isRtl(), true);
+  assert.strictEqual(i18n.setLanguage('en'), 'en');
+  assert.strictEqual(i18n.isRtl(), false);
+  assert.strictEqual(i18n.setLanguage('klingon'), 'en', 'an unknown code falls back to English');
 });

@@ -28,6 +28,7 @@
   var SS = root.RallySync.searchSelect;
   var el = d.el;
   var icon = I.icon;
+  var T = root.RallySync.i18n;
 
   // Which result row has its exact-time panel open, kept across re-renders.
   var exactOpenKey = null;
@@ -76,7 +77,7 @@
         el('span.mission-chip', {}, [
           icon('swap', 15),
           el('span.mission-chip-text', {
-            text: settings.mode === 'sync' ? 'Sync' : settings.gapSeconds + 's gap'
+            text: settings.mode === 'sync' ? T.t('mode.sync') : settings.gapSeconds + 's gap'
           })
         ]),
         el('span.mission-chip', {}, [
@@ -176,7 +177,7 @@
       }, ['Save current setup']));
     }
 
-    return group('Event setups', children, presets.length ? String(presets.length) : null);
+    return group(T.t('head.eventSetups'), children, presets.length ? String(presets.length) : null);
   }
 
   function commitPreset() {
@@ -192,7 +193,7 @@
     var settings = S.data.settings;
 
     if (S.data.targets.length === 0) {
-      return group('Target', [
+      return group(T.t('head.target'), [
         el('div.empty.empty-inline', {}, [
           icon('pin', 26),
           el('h3', { text: 'No targets yet' }),
@@ -273,7 +274,7 @@
       ])
     ]));
 
-    return group('Target', children, String(S.data.targets.length));
+    return group(T.t('head.target'), children, String(S.data.targets.length));
   }
 
   // -------------------------------------------------------------------- mode
@@ -282,11 +283,11 @@
     var settings = S.data.settings;
     var children = [
       el('div.segmented', {}, [
-        segButton('Sync', 'All land together', settings.mode === 'sync', function () {
+        segButton(T.t('mode.sync'), T.t('mode.syncSub'), settings.mode === 'sync', function () {
           S.updateSettings({ mode: 'sync' });
           root.RallySync.app.refresh();
         }),
-        segButton('Sequence', 'Staggered, gapless', settings.mode === 'sequence', function () {
+        segButton(T.t('mode.sequence'), T.t('mode.sequenceSub'), settings.mode === 'sequence', function () {
           S.updateSettings({ mode: 'sequence' });
           root.RallySync.app.refresh();
         })
@@ -313,7 +314,7 @@
         text: 'Sanctuary and Fortress pushes are usually staggered 10–15s so the first rally softens the garrison.'
       }));
     }
-    return group('Mode', children);
+    return group(T.t('head.mode'), children);
   }
 
   function bumpGap(delta) {
@@ -409,7 +410,7 @@
     }
 
     children.push(G.helpBlock('startTime'));
-    return group('Timing', children, 'UTC');
+    return group(T.t('head.timing'), children, 'UTC');
   }
 
   function openStartPicker() {
@@ -743,7 +744,7 @@
 
     resultsHost.appendChild(el('p.disclaimer', {}, [
       el('strong', { text: 'Estimates, not guarantees. ' }),
-      'Rows marked ', el('span.badge.badge-measured', { text: 'measured' }),
+      'Rows marked ', el('span.badge.badge-measured', { text: T.t('badge.measured') }),
       ' come from a real march you logged and are exact. Everything else should carry a ',
       el('strong', { text: (settings.safetyBufferSeconds || 2) + 's buffer' }),
       ' — the in-game countdown is the final word.'
@@ -930,11 +931,11 @@
         if (next && A.prime()) A.beep(880, 0.07);
         root.RallySync.app.refresh();
       }
-    }, [icon('bell', 15), el('span', { text: alarmOn ? 'Alarm on' : 'Alarm off' })]);
+    }, [icon('bell', 15), el('span', { text: alarmOn ? T.t('label.alarmOn') : T.t('label.alarmOff') })]);
 
     return el('div.results-head', {}, [
       el('div.results-head-main', {}, [
-        el('h2.results-title', { text: 'Launch order' }),
+        el('h2.results-title', { text: T.t('head.launchOrder') }),
         el('p.results-sub', {
           text: (settings.mode === 'sync'
             ? 'All ' + plan.rows.length + ' land ' + d.utcClock(landing) + ' UTC'
@@ -948,13 +949,13 @@
       alarmBtn,
       el('button.btn.btn-secondary.btn-copy', {
         type: 'button', onclick: function (e) { copyPlan(e.currentTarget); }
-      }, [icon('copy', 15), el('span', { text: 'Copy' })])
+      }, [icon('copy', 15), el('span', { text: T.t('btn.copy') })])
     ]);
   }
 
   function groupBySelect() {
     var options = [
-      ['none', 'No grouping'], ['alliance', 'By alliance'],
+      ['none', T.t('label.noGrouping')], ['alliance', 'By alliance'],
       ['squad', 'By squad'], ['target', 'By target']
     ];
     return el('select.input.group-select', {
@@ -996,12 +997,12 @@
     var countdownNode = el('span.count-value', { text: '—' });
     var countdownPill = el('div.countdown', {}, [
       countdownNode,
-      el('span.count-label', { text: 'until you go' })
+      el('span.count-label', { text: T.t('label.untilYouGo') })
     ]);
 
     node.appendChild(el('div.result-body', {}, [
       el('div.result-time', {}, [
-        el('span.result-time-label', { text: gathering ? 'TAP RALLY AT' : 'MARCH AT' }),
+        el('span.result-time-label', { text: gathering ? T.t('label.tapRallyAt') : T.t('label.marchAt') }),
         el('div.result-time-main', {}, [
           el('span.result-time-value', { text: d.utcClock(row.rallyOpenMs) }),
           el('span.result-time-zone', { text: 'UTC' })
@@ -1015,21 +1016,21 @@
       // Always name the target, not only in multi-target mode. A row that says
       // only "to X:503 Y:1141" makes you cross-check the Targets tab to know
       // what you are hitting.
-      fact('on', row.targetName || (target && target.name) || '—'),
-      target && target.type ? fact('type', Z.targetTypeLabel(target.type)) : null,
-      fact('march', C.formatDuration(row.marchSeconds)),
-      gathering ? fact('departs', d.utcClock(row.departMs)) : null,
-      fact('lands', d.utcClock(row.landingMs)),
+      fact(T.t('row.on'), row.targetName || (target && target.name) || '—'),
+      target && target.type ? fact(T.t('row.type'), Z.targetTypeLabel(target.type)) : null,
+      fact(T.t('row.march'), C.formatDuration(row.marchSeconds)),
+      gathering ? fact(T.t('row.departs'), d.utcClock(row.departMs)) : null,
+      fact(T.t('row.lands'), d.utcClock(row.landingMs)),
       // The inputs behind the number, so a mistyped coordinate or speed is
       // visible here rather than only on the Leads tab.
       lead && lead.x !== null && lead.y !== null
-        ? fact('from', 'X:' + lead.x + ' Y:' + lead.y) : null,
+        ? fact(T.t('row.from'), 'X:' + lead.x + ' Y:' + lead.y) : null,
       target && target.x !== null && target.y !== null
-        ? fact('to', 'X:' + target.x + ' Y:' + target.y) : null,
-      fact('dist', d.km(row.distance)),
+        ? fact(T.t('row.to'), 'X:' + target.x + ' Y:' + target.y) : null,
+      fact(T.t('row.dist'), d.km(row.distance)),
       lead && lead.marchSpeedUpPercent !== null
-        ? fact('speed', '+' + lead.marchSpeedUpPercent + '%') : null,
-      lead && lead.power ? fact('power', compact(lead.power)) : null
+        ? fact(T.t('row.speed'), '+' + lead.marchSpeedUpPercent + '%') : null,
+      lead && lead.power ? fact(T.t('row.power'), compact(lead.power)) : null
     ]));
 
     row.notes.forEach(function (note) {
@@ -1041,13 +1042,13 @@
     node.appendChild(el('div.result-actions', {}, [
       el('button.btn.btn-ghost.btn-sm', {
         type: 'button', onclick: function () { F.open(slot, S.now); }
-      }, [icon('crosshair', 14), el('span', { text: 'Focus' })]),
+      }, [icon('crosshair', 14), el('span', { text: T.t('btn.focus') })]),
       el('button.btn.btn-ghost.btn-sm', {
         type: 'button', onclick: function (e) { shareSlot(slot, e.currentTarget); }
-      }, [icon('share', 14), el('span', { text: 'Share link' })]),
+      }, [icon('share', 14), el('span', { text: T.t('btn.share') })]),
       el('button.btn.btn-ghost.btn-sm', {
         type: 'button', onclick: function (e) { copyRow(row, lead, target, e.currentTarget); }
-      }, [icon('copy', 14), el('span', { text: 'Copy' })]),
+      }, [icon('copy', 14), el('span', { text: T.t('btn.copy') })]),
       exact.button
     ]));
     node.appendChild(exact.panel);
@@ -1099,7 +1100,7 @@
       el('div.exact-row', {}, [
         input,
         el('button.btn.btn-primary.btn-sm', { type: 'button', onclick: save }, [
-          icon('check', 14), el('span', { text: 'Set exact' })
+          icon('check', 14), el('span', { text: T.t('btn.setExact') })
         ]),
         existing ? el('button.btn.btn-ghost.btn-sm', {
           type: 'button',
@@ -1108,7 +1109,7 @@
             exactOpenKey = null;
             root.RallySync.app.refresh();
           }
-        }, [icon('trash', 14), el('span', { text: 'Clear' })]) : null
+        }, [icon('trash', 14), el('span', { text: T.t('btn.clear') })]) : null
       ]),
       feedback
     ]);
@@ -1139,7 +1140,7 @@
         exactOpenKey = panel.hidden ? null : key;
         if (!panel.hidden) input.focus();
       }
-    }, [icon('clock', 14), el('span', { text: existing ? 'Exact set' : 'Exact time' })]);
+    }, [icon('clock', 14), el('span', { text: existing ? T.t('btn.exactSet') : T.t('btn.exactTime') })]);
 
     return { button: button, panel: panel };
   }
@@ -1183,7 +1184,7 @@
     var label = button.querySelector('span');
     var original = label.textContent;
     writeClipboard(text).then(function (ok) {
-      label.textContent = ok ? 'Copied' : 'Copy failed';
+      label.textContent = ok ? T.t('btn.copied') : T.t('btn.copyFailed');
       root.setTimeout(function () { label.textContent = original; }, 1800);
     });
   }
@@ -1193,7 +1194,7 @@
     var label = button.querySelector('span');
     var original = label.textContent;
     writeClipboard(url).then(function (ok) {
-      label.textContent = ok ? 'Link copied' : 'Copy failed';
+      label.textContent = ok ? T.t('btn.linkCopied') : T.t('btn.copyFailed');
       root.setTimeout(function () { label.textContent = original; }, 1800);
     });
   }
@@ -1206,10 +1207,10 @@
   }
 
   function tierBadge(tier, hasError) {
-    if (hasError) return el('span.badge.badge-error', { text: 'blocked' });
-    if (tier === C.TIER.MEASURED) return el('span.badge.badge-measured', { text: 'measured' });
-    if (tier === C.TIER.CALIBRATED) return el('span.badge.badge-calibrated', { text: 'calibrated' });
-    return el('span.badge.badge-estimated', { text: 'estimated' });
+    if (hasError) return el('span.badge.badge-error', { text: T.t('badge.blocked') });
+    if (tier === C.TIER.MEASURED) return el('span.badge.badge-measured', { text: T.t('badge.measured') });
+    if (tier === C.TIER.CALIBRATED) return el('span.badge.badge-calibrated', { text: T.t('badge.calibrated') });
+    return el('span.badge.badge-estimated', { text: T.t('badge.estimated') });
   }
 
   // --------------------------------------------------------------- live tick

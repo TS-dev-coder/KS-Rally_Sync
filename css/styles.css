@@ -1696,3 +1696,35 @@ body.is-solo .app { padding-bottom: 30px; }
   white-space: nowrap;
 }
 .clock-value-small { font-size: 12px; line-height: 1.5; }
+
+/* Language picker. A grid rather than a <select> so every script is visible at
+   once — someone scanning for their own language is looking for its shape. */
+.lang-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 7px;
+  margin-top: 12px;
+}
+.lang-btn {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 9px 11px;
+  text-align: start;
+  background: var(--sunk);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  cursor: pointer;
+}
+.lang-btn:hover { border-color: var(--line-strong); }
+.lang-btn.is-selected { border-color: var(--accent); background: var(--accent-soft); }
+.lang-native { font-size: 13px; font-weight: 600; }
+.lang-english { font-size: 10.5px; color: var(--text-3); }
+
+/* Right-to-left. The layout is flow-relative almost everywhere already, so
+   only the few places that hard-code a side need flipping. */
+[dir='rtl'] .fact,
+[dir='rtl'] .result-head,
+[dir='rtl'] .result-actions { flex-direction: row-reverse; }
+[dir='rtl'] .lang-btn { text-align: start; }

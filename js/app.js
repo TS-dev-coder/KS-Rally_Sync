@@ -7,6 +7,7 @@
 ;(function (root) {
   'use strict';
 
+  var T = root.RallySync.i18n;
   var d = root.RallySync.dom;
   var S = root.RallySync.state;
   var I = root.RallySync.icons;
@@ -17,11 +18,11 @@
   var el = d.el;
 
   var TABS = [
-    { key: 'calculate', label: 'Calculate', icon: 'crosshair', view: 'calculate' },
-    { key: 'roster', label: 'Leads', icon: 'users', view: 'roster' },
-    { key: 'targets', label: 'Targets', icon: 'pin', view: 'targets' },
-    { key: 'calibrate', label: 'Tune', icon: 'sliders', view: 'calibrate' },
-    { key: 'settings', label: 'More', icon: 'menu', view: 'settings' }
+    { key: 'calculate', labelKey: 'nav.calculate', icon: 'crosshair', view: 'calculate' },
+    { key: 'roster', labelKey: 'nav.leads', icon: 'users', view: 'roster' },
+    { key: 'targets', labelKey: 'nav.targets', icon: 'pin', view: 'targets' },
+    { key: 'calibrate', labelKey: 'nav.tune', icon: 'sliders', view: 'calibrate' },
+    { key: 'settings', labelKey: 'nav.more', icon: 'menu', view: 'settings' }
   ];
 
   var current = 'calculate';
@@ -33,6 +34,7 @@
 
   function start() {
     S.load();
+    applyLanguage();
     applyTheme(S.data.settings.theme);
     A.setVolume(S.data.settings.alarmVolume);
     A.setSpeech(S.data.settings.speechEnabled);
@@ -90,9 +92,18 @@
         onclick: function () { go(tab.key); }
       }, [
         el('span.nav-icon', {}, [I.icon(tab.icon, 21)]),
-        el('span.nav-label', { text: tab.label })
+        el('span.nav-label', { text: T.t(tab.labelKey) })
       ]));
     });
+  }
+
+  /**
+   * Applied before the first paint and again whenever it changes, because the
+   * language decides the text direction of the whole document, not just words.
+   */
+  function applyLanguage() {
+    var chosen = S.data.settings.language;
+    T.setLanguage(chosen || T.detect());
   }
 
   function render() {
@@ -114,6 +125,7 @@
 
   /** Re-render the active view in place, keeping the scroll position. */
   function refresh() {
+    applyLanguage();
     var y = root.scrollY;
     renderNav();
     render();
@@ -166,7 +178,8 @@
   }
 
   root.RallySync.app = {
-    start: start, go: go, refresh: refresh, tick: tick, applyTheme: applyTheme
+    start: start, go: go, refresh: refresh, tick: tick,
+    applyTheme: applyTheme, applyLanguage: applyLanguage
   };
 
   if (root.document.readyState === 'loading') {

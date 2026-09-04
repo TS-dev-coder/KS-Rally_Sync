@@ -333,9 +333,6 @@
       'tp.hh': 'HH',
       'tp.increase': 'Aumentar {unit}',
       'tp.mm': 'MM',
-      'tp.next00': 'Próximo :00',
-      'tp.next15': 'Próximo :15',
-      'tp.next30': 'Próximo :30',
       'tp.nextDay': 'Dia seguinte',
       'tp.now': 'Agora',
       'tp.prevDay': 'Dia anterior',
@@ -572,6 +569,9 @@
       'tgt.emptySub': 'Defina as coordenadas do seu reino uma vez. Reutilizadas em todo evento.',
       'tgt.nSavedOne': '{n} alvo salvo',
       'tgt.nSavedMany': '{n} alvos salvos',
-      'calc.listJoiner': '; '
+      'calc.listJoiner': '; ',
+      'tp.nextHour': 'Arredondar para a hora',
+      'tp.nextHalf': 'Arredondar para a meia hora',
+      'tp.nextQuarter': 'Arredondar para 15 minutos'
   });
 })(typeof globalThis !== 'undefined' ? globalThis : this);

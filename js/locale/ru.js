@@ -329,9 +329,6 @@
       'tp.hh': 'ЧЧ',
       'tp.increase': 'Увеличить {unit}',
       'tp.mm': 'ММ',
-      'tp.next00': 'Следующие :00',
-      'tp.next15': 'Следующие :15',
-      'tp.next30': 'Следующие :30',
       'tp.nextDay': 'Следующий день',
       'tp.now': 'Сейчас',
       'tp.prevDay': 'Предыдущий день',
@@ -568,6 +565,9 @@
       'tgt.emptySub': 'Задай координаты своего королевства один раз. Дальше — на каждом событии.',
       'tgt.nSavedOne': 'сохранена {n} цель',
       'tgt.nSavedMany': 'сохранено целей: {n}',
-      'calc.listJoiner': '; '
+      'calc.listJoiner': '; ',
+      'tp.nextHour': 'Округлить до часа',
+      'tp.nextHalf': 'Округлить до получаса',
+      'tp.nextQuarter': 'Округлить до 15 минут'
   });
 })(typeof globalThis !== 'undefined' ? globalThis : this);

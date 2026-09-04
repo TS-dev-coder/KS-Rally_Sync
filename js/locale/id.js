@@ -331,9 +331,6 @@
       'tp.hh': 'JAM',
       'tp.increase': 'Tambah {unit}',
       'tp.mm': 'MNT',
-      'tp.next00': ':00 berikutnya',
-      'tp.next15': ':15 berikutnya',
-      'tp.next30': ':30 berikutnya',
       'tp.nextDay': 'Hari berikutnya',
       'tp.now': 'Sekarang',
       'tp.prevDay': 'Hari sebelumnya',
@@ -578,6 +575,10 @@
       'tgt.nSavedMany': '{n} target tersimpan',
       'tgt.nSavedOne': '{n} target tersimpan',
 
-      'calc.listJoiner': '; '
+      'calc.listJoiner': '; ',
+
+      'tp.nextHour': 'Bulatkan ke jam',
+      'tp.nextHalf': 'Bulatkan ke 30 menit',
+      'tp.nextQuarter': 'Bulatkan ke 15 menit'
   });
 })(typeof globalThis !== 'undefined' ? globalThis : this);

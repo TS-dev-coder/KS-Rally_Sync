@@ -329,9 +329,6 @@
       'tp.hh': 'GG',
       'tp.increase': 'Zwiększ {unit}',
       'tp.mm': 'MM',
-      'tp.next00': 'Następne :00',
-      'tp.next15': 'Następne :15',
-      'tp.next30': 'Następne :30',
       'tp.nextDay': 'Następny dzień',
       'tp.now': 'Teraz',
       'tp.prevDay': 'Poprzedni dzień',
@@ -568,6 +565,9 @@
       'tgt.emptySub': 'Ustaw współrzędne swojego królestwa raz. Używane na każdym wydarzeniu.',
       'tgt.nSavedOne': 'zapisano {n} cel',
       'tgt.nSavedMany': 'zapisanych celów: {n}',
-      'calc.listJoiner': '; '
+      'calc.listJoiner': '; ',
+      'tp.nextHour': 'Zaokrąglij do godziny',
+      'tp.nextHalf': 'Zaokrąglij do pół godziny',
+      'tp.nextQuarter': 'Zaokrąglij do kwadransa'
   });
 })(typeof globalThis !== 'undefined' ? globalThis : this);

@@ -330,9 +330,6 @@
       'tp.hh': '시',
       'tp.increase': '{unit} 늘리기',
       'tp.mm': '분',
-      'tp.next00': '다음 :00',
-      'tp.next15': '다음 :15',
-      'tp.next30': '다음 :30',
       'tp.nextDay': '다음 날',
       'tp.now': '지금',
       'tp.prevDay': '전날',
@@ -342,7 +339,7 @@
       'tp.today': '오늘',
       'tp.tomorrow': '내일',
       'tp.utcNote': 'UTC로 입력하고 저장해요. 게임이 돌아가는 시계예요.',
-      'tp.zeroSecs': '0초로',
+      'tp.zeroSecs': '초를 0으로',
       'cal.coefficient': '계수',
       'cal.exponent': '지수',
       'cal.fixedOffset': '고정 오프셋(초)',
@@ -577,6 +574,10 @@
       'tgt.nSavedMany': '목표 {n}개 저장됨',
       'tgt.nSavedOne': '목표 {n}개 저장됨',
 
-      'calc.listJoiner': ', '
+      'calc.listJoiner': ', ',
+
+      'tp.nextHour': '다음 정각',
+      'tp.nextHalf': '다음 30분 단위',
+      'tp.nextQuarter': '다음 15분 단위'
   });
 })(typeof globalThis !== 'undefined' ? globalThis : this);

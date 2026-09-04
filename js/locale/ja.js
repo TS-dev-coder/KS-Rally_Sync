@@ -330,9 +330,6 @@
       'tp.hh': '時',
       'tp.increase': '{unit}を増やす',
       'tp.mm': '分',
-      'tp.next00': '次の :00',
-      'tp.next15': '次の :15',
-      'tp.next30': '次の :30',
       'tp.nextDay': '翌日',
       'tp.now': '現在',
       'tp.prevDay': '前日',
@@ -578,6 +575,10 @@
       'tgt.nSavedMany': '目標{n}件を保存済み',
       'tgt.nSavedOne': '目標{n}件を保存済み',
 
-      'calc.listJoiner': '。'
+      'calc.listJoiner': '。',
+
+      'tp.nextHour': '次の正時',
+      'tp.nextHalf': '次の30分刻み',
+      'tp.nextQuarter': '次の15分刻み'
   });
 })(typeof globalThis !== 'undefined' ? globalThis : this);

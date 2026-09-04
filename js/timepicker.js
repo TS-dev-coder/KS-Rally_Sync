@@ -160,9 +160,13 @@
 
       el('div.tp-quick', {}, [
         quick(T.t('tp.now'), function () { sync(nowOf(options)); }),
-        quick(T.t('tp.next00'), function () { sync(nextBoundary(nowOf(options), 3600)); }),
-        quick(T.t('tp.next15'), function () { sync(nextBoundary(nowOf(options), 900)); }),
-        quick(T.t('tp.next30'), function () { sync(nextBoundary(nowOf(options), 1800)); }),
+        // Coarsest first. Each snaps to the next mark on that grid -- so at
+        // 19:34 these give 20:00, 20:00 and 19:45. They were labelled
+        // ":00 / :15 / :30", which promised a time ending in those digits and
+        // was only true of the first.
+        quick(T.t('tp.nextHour'), function () { sync(nextBoundary(nowOf(options), 3600)); }),
+        quick(T.t('tp.nextHalf'), function () { sync(nextBoundary(nowOf(options), 1800)); }),
+        quick(T.t('tp.nextQuarter'), function () { sync(nextBoundary(nowOf(options), 900)); }),
         quick(T.t('tp.zeroSecs'), function () { parts.s = 0; sync(currentMs()); })
       ]),
 

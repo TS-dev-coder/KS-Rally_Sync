@@ -330,9 +330,6 @@
       'tp.hh': 'ORE',
       'tp.increase': 'Aumenta {unit}',
       'tp.mm': 'MIN',
-      'tp.next00': 'Prossimo :00',
-      'tp.next15': 'Prossimo :15',
-      'tp.next30': 'Prossimo :30',
       'tp.nextDay': 'Giorno successivo',
       'tp.now': 'Adesso',
       'tp.prevDay': 'Giorno precedente',
@@ -577,6 +574,10 @@
       'tgt.nSavedMany': '{n} bersagli salvati',
       'tgt.nSavedOne': '{n} bersaglio salvato',
 
-      'calc.listJoiner': '; '
+      'calc.listJoiner': '; ',
+
+      'tp.nextHour': 'Prossima ora esatta',
+      'tp.nextHalf': 'Prossima mezz\'ora',
+      'tp.nextQuarter': 'Prossimo quarto d\'ora'
   });
 })(typeof globalThis !== 'undefined' ? globalThis : this);

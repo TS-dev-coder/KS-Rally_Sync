@@ -566,7 +566,14 @@ select.input {
   border-color: var(--line);
 }
 .btn-quick {
-  flex: 1; min-width: 64px;
+  /* flex-basis auto, not 0. With `flex: 1` the basis is 0, so these ignore
+     their own text width entirely: they never overflow the line, so the row's
+     flex-wrap can never fire, and instead every button squeezes below its
+     content and clips. English fitted because the row was sized around it;
+     "Sonraki :00" and ":00 berikutnya" did not. With an auto basis the buttons
+     measure their text, wrap onto a second line when they must, and still grow
+     to fill whatever line they land on. */
+  flex: 1 1 auto; min-width: 64px;
   padding: 8px 6px;
   font-family: var(--mono);
   font-size: 12px;

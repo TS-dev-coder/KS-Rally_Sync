@@ -329,9 +329,6 @@
       'tp.hh': 'ชม.',
       'tp.increase': 'เพิ่ม {unit}',
       'tp.mm': 'นาที',
-      'tp.next00': 'ถัดไป :00',
-      'tp.next15': 'ถัดไป :15',
-      'tp.next30': 'ถัดไป :30',
       'tp.nextDay': 'วันถัดไป',
       'tp.now': 'ตอนนี้',
       'tp.prevDay': 'วันก่อนหน้า',
@@ -341,7 +338,7 @@
       'tp.today': 'วันนี้',
       'tp.tomorrow': 'พรุ่งนี้',
       'tp.utcNote': 'กรอกและเก็บเป็น UTC ซึ่งเป็นนาฬิกาที่เกมใช้',
-      'tp.zeroSecs': 'ล้างวินาที',
+      'tp.zeroSecs': 'ตั้งวินาทีเป็น 00',
       'cal.coefficient': 'สัมประสิทธิ์',
       'cal.exponent': 'เลขชี้กำลัง',
       'cal.fixedOffset': 'ค่าชดเชยคงที่ (วิ.)',
@@ -568,6 +565,9 @@
       'tgt.emptySub': 'ตั้งพิกัดของอาณาจักรคุณครั้งเดียว ใช้ซ้ำได้ทุกอีเวนต์',
       'tgt.nSavedOne': 'บันทึกเป้าหมายแล้ว {n} แห่ง',
       'tgt.nSavedMany': 'บันทึกเป้าหมายแล้ว {n} แห่ง',
-      'calc.listJoiner': ' '
+      'calc.listJoiner': ' ',
+      'tp.nextHour': 'ปัดขึ้นเป็นชั่วโมงเต็ม',
+      'tp.nextHalf': 'ปัดขึ้นเป็นครึ่งชั่วโมง',
+      'tp.nextQuarter': 'ปัดขึ้นเป็น 15 นาที'
   });
 })(typeof globalThis !== 'undefined' ? globalThis : this);

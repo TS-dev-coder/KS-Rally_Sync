@@ -439,9 +439,11 @@
     'tp.hh': 'HH',
     'tp.increase': 'Increase {unit}',
     'tp.mm': 'MM',
-    'tp.next00': 'Next :00',
-    'tp.next15': 'Next :15',
-    'tp.next30': 'Next :30',
+    // Snap the start time to the next mark on an hour / half / quarter grid.
+    // NOT "a time ending in :15" -- at 19:34 the quarter button gives 19:45.
+    'tp.nextHour': 'Next hour',
+    'tp.nextHalf': 'Next half hour',
+    'tp.nextQuarter': 'Next quarter hour',
     'tp.nextDay': 'Next day',
     'tp.now': 'Now',
     'tp.prevDay': 'Previous day',

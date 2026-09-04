@@ -1988,3 +1988,24 @@ body.is-solo .app { padding-bottom: 30px; }
 .guide-list li {
   unicode-bidi: plaintext;
 }
+
+/* Six sections plus the language switcher is a lot of bottom bar. It fits every
+   language at 360px, but at 320 -- an SE, or an Android split screen -- German,
+   Indonesian and Russian run 12-18px over and the row silently overflows its
+   own edge. Flex items default to min-width:auto, so they refuse to shrink
+   below their text and push the last tab off instead of sharing the squeeze.
+   Below 360 the labels are allowed to shrink and, as a last resort, ellipsise:
+   a clipped word still identifies the tab, a tab pushed off-screen does not. */
+@media (max-width: 359px) {
+  .nav-btn { min-width: 0; padding-left: 0; padding-right: 0; }
+  .nav-label {
+    display: block;
+    max-width: 100%;
+    font-size: 9px;
+    letter-spacing: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .nav-lang { min-width: 38px; margin-left: 2px; padding-left: 5px; }
+}

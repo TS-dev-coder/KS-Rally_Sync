@@ -578,6 +578,14 @@
 
       'tp.nextHour': '다음 정각',
       'tp.nextHalf': '다음 30분 단위',
-      'tp.nextQuarter': '다음 15분 단위'
+      'tp.nextQuarter': '다음 15분 단위',
+
+      'nav.guide': '가이드',
+      'guide.pageTitle': '가이드',
+      'guide.pageSub': 'Kingshot에서 행군 시간을 읽어 내는 방법, 그리고 각 값이 어디서 오는지.',
+      'guide.sectionInGame': 'Kingshot에서 값 찾기',
+      'guide.sectionHowItWorks': 'RallySync 작동 방식',
+      'guide.bulkPaste.step2': '그룹으로 묶으려면 연맹은 [대괄호]에, 부대는 {중괄호}에 넣으세요.',
+      'guide.bulkPaste.step3': '미리보기를 확인한 뒤 가져오세요.'
   });
 })(typeof globalThis !== 'undefined' ? globalThis : this);

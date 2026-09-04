@@ -2,7 +2,7 @@
 ;(function (root) {
   'use strict';
   root.RallySync.i18n.register('es', {
-'nav.calculate': 'Calcular', 'nav.leads': 'Líderes', 'nav.targets': 'Objetivos', 'nav.tune': 'Calibrar', 'nav.more': 'Más',
+'nav.calculate': 'Calcular', 'nav.leads': 'Líderes', 'nav.targets': 'Objetivos', 'nav.tune': 'Calibrar', 'nav.guide': 'Guía', 'nav.more': 'Más',
       'row.on': 'a', 'row.type': 'tipo', 'row.march': 'marcha', 'row.departs': 'sale', 'row.lands': 'llega',
       'row.from': 'desde', 'row.to': 'hasta', 'row.dist': 'dist', 'row.speed': 'veloc', 'row.power': 'poder',
       'badge.measured': 'medido', 'badge.calibrated': 'calibrado', 'badge.estimated': 'estimado', 'badge.blocked': 'bloqueado',
@@ -203,7 +203,13 @@
       'guide.bulkPaste.note': 'Las líneas que no puede leer se listan aparte en vez de saltárselas en silencio, así no se pierde nadie.',
       'guide.bulkPaste.step0': 'Un jugador por línea: nombre, X, Y y % de Aumento de Velocidad de Marcha.',
       'guide.bulkPaste.step1': 'Valen comas, espacios, corchetes y etiquetas x:/y:.',
+      'guide.bulkPaste.step2': 'Pon la alianza entre [los corchetes] y el escuadrón entre {las llaves} para agruparlos.',
+      'guide.bulkPaste.step3': 'Revisa la vista previa y luego importa.',
       'guide.bulkPaste.title': 'Pegar una plantilla',
+      'guide.pageSub': 'Cómo sacar un tiempo de marcha de Kingshot y de dónde sale cada valor.',
+      'guide.pageTitle': 'Guía',
+      'guide.sectionHowItWorks': 'Cómo funciona RallySync',
+      'guide.sectionInGame': 'Encontrar valores en Kingshot',
       'guide.cityCoords.note': 'Las coordenadas deben ser las de la ciudad desde la que sale la movilización. Si alguien se muda, actualízalas aquí.',
       'guide.cityCoords.step0': 'Cambia al mapa del Mundo.',
       'guide.cityCoords.step1': 'Pulsa la ciudad del jugador.',

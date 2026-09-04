@@ -384,7 +384,7 @@
       'howto.fig.targetTown': 'Цель: Город',
       'howto.fig.troops': 'твои герои и войска',
       'lang.close': 'Закрыть',
-      'lang.everythingFollows': 'Меняется всё: текст, озвучка и руководство.',
+      'lang.everythingFollows': 'Меняется всё: текст, озвучка и гайд.',
       'nav.language': 'Язык',
       'set.changeLanguage': 'Сменить язык',
       'btn.addLead': 'Добавить капитана',
@@ -568,6 +568,13 @@
       'calc.listJoiner': '; ',
       'tp.nextHour': 'Округлить до часа',
       'tp.nextHalf': 'Округлить до получаса',
-      'tp.nextQuarter': 'Округлить до 15 минут'
+      'tp.nextQuarter': 'Округлить до 15 минут',
+      'nav.guide': 'Гайд',
+      'guide.pageTitle': 'Гайд',
+      'guide.pageSub': 'Как узнать время марша в Kingshot и откуда берётся каждое значение.',
+      'guide.sectionInGame': 'Где найти значения в Kingshot',
+      'guide.sectionHowItWorks': 'Как работает RallySync',
+      'guide.bulkPaste.step2': 'Альянс пиши в [квадратных скобках], а отряд — в {фигурных скобках}, чтобы сгруппировать.',
+      'guide.bulkPaste.step3': 'Проверь предпросмотр и импортируй.'
   });
 })(typeof globalThis !== 'undefined' ? globalThis : this);

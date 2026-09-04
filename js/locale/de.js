@@ -2,7 +2,7 @@
 ;(function (root) {
   'use strict';
   root.RallySync.i18n.register('de', {
-'nav.calculate': 'Berechnen', 'nav.leads': 'Anführer', 'nav.targets': 'Ziele', 'nav.tune': 'Feintuning', 'nav.more': 'Mehr',
+'nav.calculate': 'Berechnen', 'nav.leads': 'Anführer', 'nav.targets': 'Ziele', 'nav.tune': 'Feintuning', 'nav.guide': 'Anleitung', 'nav.more': 'Mehr',
       'row.on': 'auf', 'row.type': 'Typ', 'row.march': 'Marsch', 'row.departs': 'Abmarsch', 'row.lands': 'Ankunft',
       'row.from': 'von', 'row.to': 'nach', 'row.dist': 'Distanz', 'row.speed': 'Tempo', 'row.power': 'Macht',
       'badge.measured': 'gemessen', 'badge.calibrated': 'kalibriert', 'badge.estimated': 'geschätzt', 'badge.blocked': 'blockiert',
@@ -203,7 +203,13 @@
       'guide.bulkPaste.note': 'Zeilen, die nicht gelesen werden können, werden separat aufgelistet statt stillschweigend übersprungen — so geht niemand verloren.',
       'guide.bulkPaste.step0': 'Ein Spieler pro Zeile: Name, X, Y, dann Marschgeschwindigkeit in %.',
       'guide.bulkPaste.step1': 'Kommas, Leerzeichen, Klammern und x:/y:-Bezeichner funktionieren alle.',
+      'guide.bulkPaste.step2': 'Setze die Allianz in [eckige Klammern] und den Trupp in {geschweifte Klammern}, um zu gruppieren.',
+      'guide.bulkPaste.step3': 'Prüfe die Vorschau und importiere dann.',
       'guide.bulkPaste.title': 'Eine Aufstellung einfügen',
+      'guide.pageSub': 'So liest du eine Marschzeit aus Kingshot ab — und woher jeder Wert kommt.',
+      'guide.pageTitle': 'Anleitung',
+      'guide.sectionHowItWorks': 'So arbeitet RallySync',
+      'guide.sectionInGame': 'Werte in Kingshot finden',
       'guide.cityCoords.note': 'Die Koordinaten müssen die Stadt sein, aus der die Rally startet. Zieht jemand um, aktualisiere sie hier.',
       'guide.cityCoords.step0': 'Wechsle zur Weltkarte.',
       'guide.cityCoords.step1': 'Tippe die Stadt des Spielers an.',

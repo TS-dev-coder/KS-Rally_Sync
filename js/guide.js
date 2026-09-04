@@ -111,7 +111,7 @@
       steps: [
         'One player per line: name, X, Y, then March Speed Up %.',
         'Commas, spaces, brackets and x:/y: labels all work.',
-        'Add [Alliance] and {Squad} in brackets if you want them grouped.',
+        'Put an alliance in [square brackets] and a squad in {curly braces} to group them.',
         'Check the preview, then import.'
       ],
       note: 'Lines it cannot read are listed separately rather than skipped silently, so nobody goes missing.'

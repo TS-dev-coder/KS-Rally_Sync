@@ -579,6 +579,14 @@
 
       'tp.nextHour': 'Bulatkan ke jam',
       'tp.nextHalf': 'Bulatkan ke 30 menit',
-      'tp.nextQuarter': 'Bulatkan ke 15 menit'
+      'tp.nextQuarter': 'Bulatkan ke 15 menit',
+
+      'nav.guide': 'Panduan',
+      'guide.pageTitle': 'Panduan',
+      'guide.pageSub': 'Cara membaca waktu barisan dari Kingshot, dan dari mana tiap nilai berasal.',
+      'guide.sectionInGame': 'Mencari nilai di Kingshot',
+      'guide.sectionHowItWorks': 'Cara kerja RallySync',
+      'guide.bulkPaste.step2': 'Taruh aliansi di [kurung siku] dan regu di {kurung kurawal} supaya dikelompokkan.',
+      'guide.bulkPaste.step3': 'Cek pratinjau, lalu impor.'
   });
 })(typeof globalThis !== 'undefined' ? globalThis : this);

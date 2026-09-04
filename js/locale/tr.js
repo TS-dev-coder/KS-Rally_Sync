@@ -2,7 +2,7 @@
 ;(function (root) {
   'use strict';
   root.RallySync.i18n.register('tr', {
-'nav.calculate': 'Hesapla', 'nav.leads': 'Liderler', 'nav.targets': 'Hedefler', 'nav.tune': 'İnce ayar', 'nav.more': 'Daha fazla',
+'nav.calculate': 'Hesapla', 'nav.leads': 'Liderler', 'nav.targets': 'Hedefler', 'nav.tune': 'İnce ayar', 'nav.more': 'Daha fazla', 'nav.guide': 'Rehber',
       'row.on': 'hedef', 'row.type': 'tür', 'row.march': 'intikal', 'row.departs': 'çıkış', 'row.lands': 'varış',
       'row.from': 'nereden', 'row.to': 'nereye', 'row.dist': 'mesafe', 'row.speed': 'hız', 'row.power': 'güç',
       'badge.measured': 'ölçüldü', 'badge.calibrated': 'kalibre', 'badge.estimated': 'tahmini', 'badge.blocked': 'eksik veri',
@@ -218,7 +218,13 @@
       'guide.bulkPaste.note': 'Okunamayan satırlar sessizce atlanmaz, ayrıca listelenir; böylece kimse kaybolmaz.',
       'guide.bulkPaste.step0': 'Her satıra bir oyuncu: ad, X, Y, sonra İntikal Hızı %.',
       'guide.bulkPaste.step1': 'Virgül, boşluk, parantez ve x:/y: etiketlerinin hepsi çalışır.',
+      'guide.bulkPaste.step2': 'Gruplamak için ittifakı [köşeli parantez] içine, ekibi {süslü parantez} içine yaz.',
+      'guide.bulkPaste.step3': 'Önizlemeyi kontrol et, sonra içe aktar.',
       'guide.bulkPaste.title': 'Kadro yapıştırma',
+      'guide.pageSub': 'Kingshot\'tan intikal süresi nasıl okunur ve her değer nereden geliyor.',
+      'guide.pageTitle': 'Rehber',
+      'guide.sectionHowItWorks': 'RallySync nasıl çalışır',
+      'guide.sectionInGame': 'Değerleri Kingshot\'ta bulma',
       'guide.cityCoords.note': 'Koordinatlar, seferberliğin çıktığı şehre ait olmalı. Biri taşınırsa buradan güncelle.',
       'guide.cityCoords.step0': 'Dünya haritasına geç.',
       'guide.cityCoords.step1': 'Oyuncunun şehrine bas.',

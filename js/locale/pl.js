@@ -568,6 +568,13 @@
       'calc.listJoiner': '; ',
       'tp.nextHour': 'Zaokrąglij do godziny',
       'tp.nextHalf': 'Zaokrąglij do pół godziny',
-      'tp.nextQuarter': 'Zaokrąglij do kwadransa'
+      'tp.nextQuarter': 'Zaokrąglij do kwadransa',
+      'nav.guide': 'Poradnik',
+      'guide.pageTitle': 'Poradnik',
+      'guide.pageSub': 'Jak odczytać czas marszu z Kingshot i skąd bierze się każda wartość.',
+      'guide.sectionInGame': 'Gdzie znaleźć wartości w Kingshot',
+      'guide.sectionHowItWorks': 'Jak działa RallySync',
+      'guide.bulkPaste.step2': 'Sojusz wpisz w [nawiasach kwadratowych], a oddział w {nawiasach klamrowych}, żeby je pogrupować.',
+      'guide.bulkPaste.step3': 'Sprawdź podgląd i zaimportuj.'
   });
 })(typeof globalThis !== 'undefined' ? globalThis : this);

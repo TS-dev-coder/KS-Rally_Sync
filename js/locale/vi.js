@@ -2,7 +2,7 @@
 ;(function (root) {
   'use strict';
   root.RallySync.i18n.register('vi', {
-'nav.calculate': 'Tính toán', 'nav.leads': 'Chỉ huy', 'nav.targets': 'Mục tiêu', 'nav.tune': 'Hiệu chỉnh', 'nav.more': 'Thêm',
+'nav.calculate': 'Tính toán', 'nav.leads': 'Chỉ huy', 'nav.targets': 'Mục tiêu', 'nav.tune': 'Hiệu chỉnh', 'nav.more': 'Thêm', 'nav.guide': 'Hướng dẫn',
       'row.on': 'vào', 'row.type': 'loại', 'row.march': 'hành quân', 'row.departs': 'xuất phát', 'row.lands': 'đến nơi',
       'row.from': 'từ', 'row.to': 'đến', 'row.dist': 'k.cách', 'row.speed': 'tốc độ', 'row.power': 'lực chiến',
       'badge.measured': 'đã đo', 'badge.calibrated': 'đã hiệu chỉnh', 'badge.estimated': 'ước tính', 'badge.blocked': 'thiếu dữ liệu',
@@ -218,7 +218,13 @@
       'guide.bulkPaste.note': 'Những dòng không đọc được sẽ được liệt kê riêng chứ không bị bỏ qua lặng lẽ, nên không ai bị sót.',
       'guide.bulkPaste.step0': 'Mỗi dòng một người: tên, X, Y, rồi % Tăng tốc hành quân.',
       'guide.bulkPaste.step1': 'Dấu phẩy, khoảng trắng, ngoặc và nhãn x:/y: đều dùng được.',
+      'guide.bulkPaste.step2': 'Đặt liên minh trong [ngoặc vuông] và đội trong {ngoặc nhọn} để nhóm lại.',
+      'guide.bulkPaste.step3': 'Xem thử rồi nhập vào.',
       'guide.bulkPaste.title': 'Dán danh sách thành viên',
+      'guide.pageSub': 'Cách đọc thời gian hành quân từ Kingshot, và mọi giá trị đến từ đâu.',
+      'guide.pageTitle': 'Hướng dẫn',
+      'guide.sectionHowItWorks': 'RallySync hoạt động thế nào',
+      'guide.sectionInGame': 'Tìm các giá trị trong Kingshot',
       'guide.cityCoords.note': 'Tọa độ phải là thành mà đội tập kết xuất phát. Nếu ai đó chuyển thành, hãy cập nhật ở đây.',
       'guide.cityCoords.step0': 'Chuyển sang bản đồ Thế giới.',
       'guide.cityCoords.step1': 'Chạm vào thành của người chơi.',

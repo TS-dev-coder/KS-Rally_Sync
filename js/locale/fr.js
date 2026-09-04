@@ -2,7 +2,7 @@
 ;(function (root) {
   'use strict';
   root.RallySync.i18n.register('fr', {
-'nav.calculate': 'Calculer', 'nav.leads': 'Chefs', 'nav.targets': 'Cibles', 'nav.tune': 'Calibrage', 'nav.more': 'Plus',
+'nav.calculate': 'Calculer', 'nav.leads': 'Chefs', 'nav.targets': 'Cibles', 'nav.tune': 'Calibrage', 'nav.guide': 'Guide', 'nav.more': 'Plus',
       'row.on': 'sur', 'row.type': 'type', 'row.march': 'marche', 'row.departs': 'départ', 'row.lands': 'arrivée',
       'row.from': 'de', 'row.to': 'vers', 'row.dist': 'dist', 'row.speed': 'vitesse', 'row.power': 'puissance',
       'badge.measured': 'mesuré', 'badge.calibrated': 'calibré', 'badge.estimated': 'estimé', 'badge.blocked': 'bloqué',
@@ -203,7 +203,13 @@
       'guide.bulkPaste.note': 'Les lignes illisibles sont listées à part plutôt qu’ignorées en silence, pour que personne ne disparaisse.',
       'guide.bulkPaste.step0': 'Un joueur par ligne : nom, X, Y, puis % de Vitesse de marche.',
       'guide.bulkPaste.step1': 'Virgules, espaces, crochets et étiquettes x:/y: fonctionnent tous.',
+      'guide.bulkPaste.step2': 'Mets l’alliance entre [les crochets] et l’escouade entre {les accolades} pour les grouper.',
+      'guide.bulkPaste.step3': 'Vérifie l’aperçu, puis importe.',
       'guide.bulkPaste.title': 'Coller une liste',
+      'guide.pageSub': 'Comment relever un temps de marche dans Kingshot, et d’où vient chaque valeur.',
+      'guide.pageTitle': 'Guide',
+      'guide.sectionHowItWorks': 'Comment fonctionne RallySync',
+      'guide.sectionInGame': 'Trouver les valeurs dans Kingshot',
       'guide.cityCoords.note': 'Les coordonnées doivent être celles de la ville d’où part le ralliement. Si quelqu’un déménage, mets-les à jour ici.',
       'guide.cityCoords.step0': 'Passe sur la carte du Monde.',
       'guide.cityCoords.step1': 'Touche la ville du joueur.',

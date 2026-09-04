@@ -102,7 +102,11 @@ maybe('every view in every language renders without a leaked placeholder or a ra
 
       const where = code + ' tab#' + i;
       visibleStrings(doc).forEach(({ what, text }) => {
-        if (/\{\w+\}/.test(text)) {
+        // Lower-initial only. Every real placeholder is a lowercase identifier
+        // -- {name}, {seconds}, {n} -- while "{Squad}" in the roster-paste guide
+        // is literal text the player TYPES into their own list. Matching any
+        // braced word flagged the instruction as a bug.
+        if (/\{[a-z]\w*\}/.test(text)) {
           problems.push(where + ' ' + what + ' leaked placeholder: ' + text.slice(0, 70));
         }
         // t() returns the key itself when a key is missing from English too

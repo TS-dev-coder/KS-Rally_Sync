@@ -147,7 +147,15 @@ node tools/i18n-report.js            coverage for every language
 node tools/i18n-report.js de         the keys German is missing
 node tools/i18n-report.js de --json  the same, as a translator's worklist
 node tools/i18n-report.js --audit    placeholder mismatches and English leftovers
+node tools/i18n-report.js --stale <ref>  English strings reworded since a git ref
 ```
+
+`--stale` covers the one failure nothing else can. Reword an English value and every
+locale still *has* that key: coverage reads 100%, the audit is clean, and sixteen files
+quietly describe the old sentence. It happened to `guide.bulkPaste.step2` within an hour of
+that key existing, and was caught only because a reviewer re-read the English rather than
+trusting the brief. Git is already the provenance store, so run it after editing English
+and re-send whatever it lists.
 
 ### Finding the game's own word
 

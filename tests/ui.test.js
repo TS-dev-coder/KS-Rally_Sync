@@ -84,7 +84,7 @@ maybe('the app boots and mounts its shell without errors', async () => {
     // Five sections. The language switcher also lives in the nav but is not a
     // section, so it is excluded rather than folded into the count.
     const doc = ctx.window.document;
-    assert.strictEqual(doc.querySelectorAll('#nav .nav-btn:not(.nav-lang)').length, 5);
+    assert.strictEqual(doc.querySelectorAll('#nav .nav-btn:not(.nav-lang)').length, 6);
     assert.strictEqual(doc.querySelectorAll('#nav .nav-lang').length, 1,
       'the language switcher must be reachable from every screen');
     assert.ok(ctx.window.document.querySelector('#main').children.length > 0, 'main is empty');

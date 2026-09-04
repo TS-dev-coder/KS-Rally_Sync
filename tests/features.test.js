@@ -865,15 +865,21 @@ test('no rendered string is a translated fragment glued to an English tail', () 
 
 test('every placeholder in an English string survives into every translation', () => {
   // A dropped or renamed {token} renders the literal braces to the player.
-  var withTokens = Object.keys(i18n.KEYS).filter((k) => /\{\w+\}/.test(i18n.KEYS[k]));
+  //
+  // Lower-initial only, matching tools/i18n-report.js and the sweep. Every
+  // real placeholder is a lowercase identifier; a capitalised one is
+  // illustrative text. The case-blind pattern read "{Squad}" in the
+  // roster-paste guide as a variable and demanded it survive verbatim,
+  // which meant an English word stranded inside a Chinese sentence.
+  var withTokens = Object.keys(i18n.KEYS).filter((k) => /\{[a-z]\w*\}/.test(i18n.KEYS[k]));
   assert.ok(withTokens.length > 15, 'expected the placeholder keys to exist');
   var problems = [];
   i18n.LANGUAGES.filter((l) => l.code !== 'en').forEach((l) => {
     var table = i18n.DICT[l.code] || {};
     withTokens.forEach((k) => {
       if (!(k in table)) return;                     // absent falls back to English
-      var want = (i18n.KEYS[k].match(/\{\w+\}/g) || []).slice().sort();
-      var got = (String(table[k]).match(/\{\w+\}/g) || []).slice().sort();
+      var want = (i18n.KEYS[k].match(/\{[a-z]\w*\}/g) || []).slice().sort();
+      var got = (String(table[k]).match(/\{[a-z]\w*\}/g) || []).slice().sort();
       if (want.join(',') !== got.join(',')) {
         problems.push(l.code + ' ' + k + ': expected ' + want.join(' ') + ', got ' + (got.join(' ') || 'none'));
       }
@@ -1116,4 +1122,42 @@ test('no count is glued to an English tail', () => {
   assert.deepStrictEqual(offenders, [],
     'use one key with a {placeholder} instead of concatenating English:\n' +
     offenders.join('\n'));
+});
+
+test('every guide step and note has a key', () => {
+  // Two steps of the roster-paste guide had no key at all and shipped English
+  // in sixteen languages. The extractor that built these keys matched
+  // `steps: [(.*?)]` and stopped at the first "]" -- which lands inside
+  // "Add [Alliance] and {Squad} in brackets", truncating that guide's list.
+  // g() falls back to the inline English, so nothing looked broken: the page
+  // rendered a perfectly good sentence, in the wrong language, with no key
+  // missing from any locale because no key existed to be missing.
+  const src = fs.readFileSync(path.join(__dirname, '..', 'js', 'guide.js'), 'utf8');
+  const body = src.slice(src.indexOf('var GUIDES = {'));
+
+  const starts = [...body.matchAll(/\n    (\w+): \{/g)].map((m) => ({ name: m[1], at: m.index }));
+  assert.ok(starts.length >= 8, 'expected the guide topics, found ' + starts.length);
+
+  const missing = [];
+  starts.forEach((g, i) => {
+    const chunk = body.slice(g.at, i + 1 < starts.length ? starts[i + 1].at : body.length);
+
+    const stepsBlock = chunk.match(/steps: \[([\s\S]*?)\n      \]/);
+    const declared = stepsBlock ? (stepsBlock[1].match(/^\s*'/gm) || []).length : 0;
+    for (let n = 0; n < declared; n++) {
+      const key = 'guide.' + g.name + '.step' + n;
+      if (i18n.KEYS[key] === undefined) missing.push(key);
+    }
+
+    if (/\n      title: '/.test(chunk) && i18n.KEYS['guide.' + g.name + '.title'] === undefined) {
+      missing.push('guide.' + g.name + '.title');
+    }
+    if (/\n      note: /.test(chunk) && i18n.KEYS['guide.' + g.name + '.note'] === undefined) {
+      missing.push('guide.' + g.name + '.note');
+    }
+  });
+
+  assert.deepStrictEqual(missing, [],
+    'these guide strings render from the inline English fallback in every ' +
+    'language because they have no key:\n' + missing.join('\n'));
 });

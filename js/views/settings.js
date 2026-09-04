@@ -31,7 +31,6 @@
     }
 
     container.appendChild(versionSection());
-    container.appendChild(root.RallySync.howto.walkthrough());
     container.appendChild(languageSection());
     container.appendChild(themeSection());
     container.appendChild(clockSection());

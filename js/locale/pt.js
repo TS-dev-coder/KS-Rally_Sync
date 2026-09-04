@@ -572,6 +572,13 @@
       'calc.listJoiner': '; ',
       'tp.nextHour': 'Arredondar para a hora',
       'tp.nextHalf': 'Arredondar para a meia hora',
-      'tp.nextQuarter': 'Arredondar para 15 minutos'
+      'tp.nextQuarter': 'Arredondar para 15 minutos',
+      'nav.guide': 'Guia',
+      'guide.pageTitle': 'Guia',
+      'guide.pageSub': 'Como ler um tempo de marcha no Kingshot e de onde vem cada valor.',
+      'guide.sectionInGame': 'Onde encontrar os valores no Kingshot',
+      'guide.sectionHowItWorks': 'Como o RallySync funciona',
+      'guide.bulkPaste.step2': 'Ponha a aliança entre [os colchetes] e o esquadrão entre {as chaves} para agrupar.',
+      'guide.bulkPaste.step3': 'Confira a prévia e importe.'
   });
 })(typeof globalThis !== 'undefined' ? globalThis : this);

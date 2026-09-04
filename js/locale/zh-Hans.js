@@ -2,7 +2,7 @@
 ;(function (root) {
   'use strict';
   root.RallySync.i18n.register('zh-Hans', {
-'nav.calculate': '计算', 'nav.leads': '队长', 'nav.targets': '目标', 'nav.tune': '校准', 'nav.more': '更多',
+'nav.calculate': '计算', 'nav.leads': '队长', 'nav.targets': '目标', 'nav.tune': '校准', 'nav.more': '更多', 'nav.guide': '指南',
       'row.on': '目标', 'row.type': '类型', 'row.march': '行军', 'row.departs': '出发', 'row.lands': '抵达',
       'row.from': '起点', 'row.to': '终点', 'row.dist': '距离', 'row.speed': '速度', 'row.power': '战力',
       'badge.measured': '实测', 'badge.calibrated': '已校准', 'badge.estimated': '估算', 'badge.blocked': '无法计算',
@@ -218,7 +218,13 @@
       'guide.bulkPaste.note': '读不懂的行会单独列出来，而不是悄悄跳过，这样不会漏掉任何人。',
       'guide.bulkPaste.step0': '每行一名玩家：名字、X、Y，然后是行军加速 %。',
       'guide.bulkPaste.step1': '逗号、空格、括号以及 x:/y: 标签都能识别。',
+      'guide.bulkPaste.step2': '想分组就把联盟写进 [方括号]，小队写进 {花括号}。',
+      'guide.bulkPaste.step3': '看一下预览，然后导入。',
       'guide.bulkPaste.title': '粘贴名单',
+      'guide.pageSub': '怎么从 Kingshot 里读出行军时间，以及每个数值是怎么来的。',
+      'guide.pageTitle': '指南',
+      'guide.sectionHowItWorks': 'RallySync 是怎么算的',
+      'guide.sectionInGame': '在 Kingshot 里找到这些数值',
       'guide.cityCoords.note': '坐标必须是发起集结的那座城的坐标。如果有人迁城，请在这里更新。',
       'guide.cityCoords.step0': '切换到世界地图。',
       'guide.cityCoords.step1': '点击该玩家的城池。',

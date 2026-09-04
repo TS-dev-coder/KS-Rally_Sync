@@ -578,6 +578,14 @@
 
       'tp.nextHour': 'Prossima ora esatta',
       'tp.nextHalf': 'Prossima mezz\'ora',
-      'tp.nextQuarter': 'Prossimo quarto d\'ora'
+      'tp.nextQuarter': 'Prossimo quarto d\'ora',
+
+      'nav.guide': 'Guida',
+      'guide.pageTitle': 'Guida',
+      'guide.pageSub': 'Come leggere un tempo di marcia da Kingshot, e da dove viene ogni valore.',
+      'guide.sectionInGame': 'Trovare i valori in Kingshot',
+      'guide.sectionHowItWorks': 'Come funziona RallySync',
+      'guide.bulkPaste.step2': 'Metti l\'alleanza fra [parentesi quadre] e la squadra fra {parentesi graffe} per raggrupparli.',
+      'guide.bulkPaste.step3': 'Controlla l\'anteprima, poi importa.'
   });
 })(typeof globalThis !== 'undefined' ? globalThis : this);

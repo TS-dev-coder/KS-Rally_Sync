@@ -568,6 +568,13 @@
       'calc.listJoiner': ' ',
       'tp.nextHour': 'ปัดขึ้นเป็นชั่วโมงเต็ม',
       'tp.nextHalf': 'ปัดขึ้นเป็นครึ่งชั่วโมง',
-      'tp.nextQuarter': 'ปัดขึ้นเป็น 15 นาที'
+      'tp.nextQuarter': 'ปัดขึ้นเป็น 15 นาที',
+      'nav.guide': 'คู่มือ',
+      'guide.pageTitle': 'คู่มือ',
+      'guide.pageSub': 'วิธีอ่านเวลาเดินทัพจาก Kingshot และที่มาของค่าทุกค่า',
+      'guide.sectionInGame': 'หาค่าต่าง ๆ ใน Kingshot',
+      'guide.sectionHowItWorks': 'RallySync ทำงานอย่างไร',
+      'guide.bulkPaste.step2': 'ใส่พันธมิตรไว้ใน [วงเล็บเหลี่ยม] และกลุ่มไว้ใน {วงเล็บปีกกา} เพื่อจัดกลุ่ม',
+      'guide.bulkPaste.step3': 'ดูตัวอย่างแล้วกดนำเข้า'
   });
 })(typeof globalThis !== 'undefined' ? globalThis : this);

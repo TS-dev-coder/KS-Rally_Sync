@@ -579,6 +579,14 @@
 
       'tp.nextHour': '次の正時',
       'tp.nextHalf': '次の30分刻み',
-      'tp.nextQuarter': '次の15分刻み'
+      'tp.nextQuarter': '次の15分刻み',
+
+      'nav.guide': 'ガイド',
+      'guide.pageTitle': 'ガイド',
+      'guide.pageSub': 'Kingshotから行軍時間を読み取る方法と、それぞれの数値がどこから来るのか。',
+      'guide.sectionInGame': 'Kingshotで数値を調べる',
+      'guide.sectionHowItWorks': 'RallySyncの仕組み',
+      'guide.bulkPaste.step2': 'グループ分けするには、同盟を[角括弧]で、部隊を{波括弧}で囲みます。',
+      'guide.bulkPaste.step3': 'プレビューを確認してからインポートします。'
   });
 })(typeof globalThis !== 'undefined' ? globalThis : this);

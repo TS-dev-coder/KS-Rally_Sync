@@ -711,7 +711,23 @@
     // one more is a comma splice that hides where each warning ends. Chinese
     // takes ； for exactly this reason (GB/T 15834); Japanese takes 、;
     // Thai takes a bare space, which is how Thai separates clauses.
-    'calc.listJoiner': '; '
+    'calc.listJoiner': '; ',
+
+    // The Guide tab, plus two roster-paste steps that had no key at all:
+    // the extractor stopped at the "]" inside "[Alliance]".
+    // The SYNTAX is the punctuation -- rosterImport reads /\[([^\]]+)\]/ and
+    // /\{([^}]+)\}/ -- while the words inside are the player's own alliance
+    // and squad names. Naming the brackets rather than demonstrating them
+    // with a braced word keeps the sentence fully translatable: "{Squad}"
+    // was indistinguishable from a real placeholder to every check we have,
+    // so five reviewers were told to translate something that could not pass.
+    'guide.bulkPaste.step2': 'Put an alliance in [square brackets] and a squad in {curly braces} to group them.',
+    'guide.bulkPaste.step3': 'Check the preview, then import.',
+    'guide.pageSub': 'How to read a march time out of Kingshot, and where every value comes from.',
+    'guide.pageTitle': 'Guide',
+    'guide.sectionHowItWorks': 'How RallySync works',
+    'guide.sectionInGame': 'Finding values in Kingshot',
+    'nav.guide': 'Guide'
   };
 
   /**

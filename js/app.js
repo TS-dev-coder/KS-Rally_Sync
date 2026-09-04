@@ -22,6 +22,7 @@
     { key: 'roster', labelKey: 'nav.leads', icon: 'users', view: 'roster' },
     { key: 'targets', labelKey: 'nav.targets', icon: 'pin', view: 'targets' },
     { key: 'calibrate', labelKey: 'nav.tune', icon: 'sliders', view: 'calibrate' },
+    { key: 'guide', labelKey: 'nav.guide', icon: 'help', view: 'guide' },
     { key: 'settings', labelKey: 'nav.more', icon: 'menu', view: 'settings' }
   ];
 

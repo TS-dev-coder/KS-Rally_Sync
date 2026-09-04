@@ -2,7 +2,7 @@
 ;(function (root) {
   'use strict';
   root.RallySync.i18n.register('ar', {
-'nav.calculate': 'احسب', 'nav.leads': 'القادة', 'nav.targets': 'الأهداف', 'nav.tune': 'ضبط', 'nav.more': 'المزيد',
+'nav.calculate': 'احسب', 'nav.leads': 'القادة', 'nav.targets': 'الأهداف', 'nav.tune': 'ضبط', 'nav.guide': 'الدليل', 'nav.more': 'المزيد',
       'row.on': 'على', 'row.type': 'النوع', 'row.march': 'الزحف', 'row.departs': 'المغادرة', 'row.lands': 'الوصول',
       'row.from': 'من', 'row.to': 'إلى', 'row.dist': 'المسافة', 'row.speed': 'السرعة', 'row.power': 'القوة',
       'badge.measured': 'مقاس', 'badge.calibrated': 'معاير', 'badge.estimated': 'تقديري', 'badge.blocked': 'محجوب',
@@ -202,7 +202,13 @@
       'guide.bulkPaste.note': 'الأسطر التي يتعذّر قراءتها تُدرَج على حدة بدل تخطيها بصمت، حتى لا يسقط أحد من القائمة.',
       'guide.bulkPaste.step0': 'لاعب واحد في كل سطر: الاسم، X، Y، ثم نسبة زيادة سرعة الزحف.',
       'guide.bulkPaste.step1': 'الفواصل والمسافات والأقواس ووسوم x:/y: كلها مقبولة.',
+      'guide.bulkPaste.step2': 'ضع التحالف بين [أقواس مربعة] والفرقة بين {أقواس معقوفة} للتجميع.',
+      'guide.bulkPaste.step3': 'راجع المعاينة ثم استورد.',
       'guide.bulkPaste.title': 'لصق قائمة القادة',
+      'guide.pageSub': 'كيف تقرأ زمن الزحف من Kingshot، ومن أين تأتي كل قيمة.',
+      'guide.pageTitle': 'الدليل',
+      'guide.sectionHowItWorks': 'كيف يعمل RallySync',
+      'guide.sectionInGame': 'إيجاد القيم داخل Kingshot',
       'guide.cityCoords.note': 'يجب أن تكون الإحداثيات لمدينة انطلاق الحشد. وإن انتقل أحدهم فحدّثها هنا.',
       'guide.cityCoords.step0': 'انتقل إلى خريطة العالم.',
       'guide.cityCoords.step1': 'اضغط على مدينة اللاعب.',

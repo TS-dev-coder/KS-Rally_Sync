@@ -313,7 +313,7 @@
       'focus.measured': '實測',
       'focus.measuredNote': '這個數字來自一次真實行軍，所以是精確的。',
       'focus.onTarget': '目標：{name}',
-      'focus.rallyFallback': '隊長',
+      'focus.rallyFallback': '領主',
       'focus.tapAt': '點擊時間',
       'focus.tapRallyIn': '距點擊集結',
       'focus.waiting': '等待中',

@@ -149,6 +149,26 @@ node tools/i18n-report.js de --json  the same, as a translator's worklist
 node tools/i18n-report.js --audit    placeholder mismatches and English leftovers
 ```
 
+### Finding the game's own word
+
+The hardest part of this was not translating — it was discovering that a correct translation
+can still be the wrong word. Russian «Сбор» for *rally* is this client's word for resource
+*gathering*; German "Sammlung" is a dictionary translation where Kingshot uses the loanword
+"Rally"; Turkish players look for **İntikal Hızı**, not the dictionary's *Yürüyüş Hızı*.
+
+Two sources settle these, in this order:
+
+1. **The App Store release notes, read against the English ones.** Century Games publishes the
+   same notes per storefront, so one sentence — the rally-target list — gives an exact 1:1 of
+   every structure name this app targets. `apps.apple.com/<cc>/app/kingshot/id6739554056`.
+2. **The Help Center**, same article ID per language: `centurygames.helpshift.com/hc/<lang>/140-kingshot/`.
+
+When they disagree, prefer the one whose context matches the string's job. Our target picker
+mirrors an in-game enumeration, so the release notes' list beats an article's prose — that is
+how `Sede` beat `Cuartel`, `Torre` beat `Torreta`, and 砲台 beat 砲塔.
+
+Neither source documents the Bonus Overview menu in any language. Some things need a client.
+
 Two rules the tests enforce, both learned the hard way:
 
 **A key holds a whole sentence, never a fragment.** `T.t('cal.fittedTo') + n + ' samples'`

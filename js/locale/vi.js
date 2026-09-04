@@ -313,7 +313,7 @@
       'focus.measured': 'đã đo',
       'focus.measuredNote': 'Số này lấy từ một lần hành quân thật nên nó chính xác.',
       'focus.onTarget': 'vào {name}',
-      'focus.rallyFallback': 'Chỉ huy',
+      'focus.rallyFallback': 'Lãnh Chúa',
       'focus.tapAt': 'Bấm lúc',
       'focus.tapRallyIn': 'BẤM TẬP KẾT SAU',
       'focus.waiting': 'chờ',
